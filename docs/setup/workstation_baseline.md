@@ -1,13 +1,16 @@
 # Workstation Baseline
 
 ## Chapter
-1.1  Install & Verify Developer Toolchain (Windows)
+
+1.1 Install & Verify Developer Toolchain (Windows)
 
 ## OS
+
 - OS Name: Microsoft Windows 11 Pro
 - OS Version: 10.0.26200 N/A Build 26200
 
 ## Installed Tool Versions
+
 - Git: 2.53.0.windows.1
 - Node.js: v24.14.0
 - npm: 11.9.0
@@ -19,10 +22,12 @@
 - VS Code: 1.110.0
 
 ## WSL Status
+
 - Ubuntu running on WSL version 2
 - docker-desktop running on WSL version 2
 
 ## VS Code Extensions Verified
+
 - dbaeumer.vscode-eslint
 - esbenp.prettier-vscode
 - prisma.prisma
@@ -30,6 +35,7 @@
 - eamodio.gitlens
 
 ## Verification Summary
+
 - Git CLI available and global username/email configured
 - Node.js and npm available
 - pnpm available through corepack
@@ -40,4 +46,5 @@
 - Required VS Code extensions installed and listed
 
 ## Deviations
+
 - None

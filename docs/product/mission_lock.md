@@ -1,12 +1,15 @@
-# Mission Lock  MIMO Laundry OS
+# Mission Lock MIMO Laundry OS
 
 ## System Name
+
 MIMO Laundry OS (Multi-Hub + Multi-Affiliate + Zoned Drivers)
 
 ## Product Goal
+
 MIMO Laundry OS is considered **done** for MVP when it is live and usable to run daily laundry operations end-to-end in production for a real business, with configuration-driven support for multiple hubs, multiple affiliate shops, multiple drivers, and zone-based operations.
 
 ## Operational Definition of Done
+
 The system must provide:
 
 1. **Live production surfaces**
@@ -54,11 +57,14 @@ The system must provide:
    - Privileged actions are audit logged
 
 ## MVP Delivery Decision
+
 For MVP:
+
 - Customer experience is delivered through **web**
 - Driver experience is delivered through **mobile**
 - Customer native mobile app may be added after MVP and is explicitly out of MVP unless later approved
 
 ## Done Means Business Ready
+
 MVP is complete only when the production system can support real orders across at least one live zone using the full operating chain:
-customer order  pickup/dropoff  hub intake  processing  dispatch  delivery  payment  receipt  commission/accounting trail.
+customer order pickup/dropoff hub intake processing dispatch delivery payment receipt commission/accounting trail.

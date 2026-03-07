@@ -1,6 +1,7 @@
-# MVP Scope  MIMO Laundry OS
+# MVP Scope MIMO Laundry OS
 
 ## In MVP
+
 - Multi-hub-ready architecture
 - Zone-based operating model
 - Customer web ordering and tracking
@@ -15,6 +16,7 @@
 - Bilingual UI support (English and Swahili)
 
 ## Explicitly Not in MVP
+
 - Auto-dispatch or route optimization
 - Live GPS map tracking for customers
 - Customer native mobile app
@@ -34,4 +36,5 @@
 - Automated fraud scoring
 
 ## Scope Guardrail
+
 Anything not listed in **In MVP** is out of scope unless added through an explicit future chapter or backlog decision.

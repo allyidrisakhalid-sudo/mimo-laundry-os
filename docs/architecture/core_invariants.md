@@ -6,6 +6,7 @@ Change rule: Any future change requires an explicit architecture change request 
 ## 0.2.1 Multi-hub from day 1
 
 Rule:
+
 - The data model, API, and authorization model must support multiple hubs from day 1.
 - The system must never assume a single hub in code, schema, API contracts, or permission rules.
 - A Hub entity must exist even if operations start with only one hub.
@@ -14,11 +15,13 @@ Rule:
 - Adding hub #2 must be an admin or configuration operation, never a code rewrite.
 
 Future test expectation:
+
 - Create hub #2 through configuration or admin flows and confirm orders, permissions, and listings work without code changes.
 
 ## 0.2.2 Zones are the routing backbone
 
 Rule:
+
 - Zones must be first-class routing entities across operations.
 - The system must never treat zones as optional metadata for routing decisions.
 - Every hub must link to at least one zone.
@@ -29,11 +32,13 @@ Rule:
 - Hub assignment and driver assignment must be zone-aware.
 
 Future test expectation:
+
 - Create multiple zones and verify hub assignment, affiliate mapping, and driver task assignment all follow zone resolution rules.
 
 ## 0.2.3 Order timeline is immutable (event truth)
 
 Rule:
+
 - Order state must be derived from an append-only OrderEvents timeline.
 - OrderEvents must never be edited or deleted once recorded.
 - Corrections must always be recorded as new events, never as silent mutation of prior events.
@@ -42,11 +47,13 @@ Rule:
 - Operational notes must never replace event truth for state transitions.
 
 Future test expectation:
+
 - Perform order creation, intake, processing, exception logging, dispatch, and delivery actions and confirm each action appends at least one immutable event.
 
 ## 0.2.4 Versioned pricing locked per order
 
 Rule:
+
 - Pricing must be versioned and tied to effective dates.
 - The system must never recalculate an existing order against a newer pricing plan version.
 - Every order must store the pricing plan identifier and sufficient version snapshot data to preserve pricing truth.
@@ -55,11 +62,13 @@ Rule:
 - Final invoice line items must be stored permanently for traceability.
 
 Future test expectation:
+
 - Activate a new pricing plan version and confirm existing orders retain old pricing while new orders use the new plan.
 
 ## 0.2.5 Payments and accounting are traceable ledgers
 
 Rule:
+
 - Every financial movement must be recorded as traceable ledger entries.
 - The system must never rely on manual off-system adjustments as the source of truth.
 - Payments, refunds, credits, and adjustments must carry references to their originating business action.
@@ -68,11 +77,13 @@ Rule:
 - Dashboard totals must always be traceable back to immutable financial records.
 
 Future test expectation:
+
 - Record payment, refund, commission accrual, payout, and daily close, then trace every reported total back to stored ledger entries.
 
 ## 0.2.6 RBAC and audit logs for privileged actions
 
 Rule:
+
 - Every privileged action must be both authorized and auditable.
 - The system must define and enforce at least these roles: Customer, Driver, HubStaff, AffiliateStaff, Admin, DevAdmin.
 - Affiliate staff must only access orders and records for their own shop.
@@ -84,4 +95,5 @@ Rule:
 - A privileged change must never be unattributed.
 
 Future test expectation:
+
 - Attempt cross-scope access for each role and verify denial behavior, then perform privileged actions and verify audit records capture actor, action, target, and timestamp.
