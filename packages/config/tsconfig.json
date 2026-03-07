@@ -1,0 +1,11 @@
+{
+  "extends": "tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noEmit": true
+  },
+  "include": ["src", "**/*.ts", "**/*.tsx"]
+}

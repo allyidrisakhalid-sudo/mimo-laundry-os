@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "node -e \"console.log('mobile build ok')\"",
-    "lint": "node -e \"console.log('mobile lint ok')\"",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx,.mjs,.cjs --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "node -e \"console.log('mobile test ok')\""
   },

@@ -7,8 +7,8 @@
   "types": "src/index.ts",
   "scripts": {
     "build": "node -e \"console.log('types build ok')\"",
-    "lint": "node -e \"console.log('types lint ok')\"",
-    "typecheck": "node -e \"console.log('types typecheck ok')\"",
-    "test": "node -e \"console.log('types test ok')\""
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx,.mjs,.cjs --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

@@ -1,0 +1,9 @@
+.git
+node_modules
+.turbo
+coverage
+dist
+build
+out
+.next
+expo-env.d.ts

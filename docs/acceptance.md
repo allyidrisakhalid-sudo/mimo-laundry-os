@@ -44,3 +44,12 @@
 - Gate satisfied: Install/build/test commands run repo-wide successfully.
 
 - Cleaned generated Turbo cache artifacts from version control and restored clean working tree state.
+
+## Chapter 2.2 PASS
+
+- Enforced repo-wide TypeScript strict mode through shared config in packages/config.
+- Added root Prettier and ESLint configuration as the single formatting/lint source of truth.
+- Configured Husky, lint-staged, and commitlint for commit-time enforcement.
+- Added Vitest baseline with passing sample tests in apps/api and packages/types.
+- Added docs/changelog_policy.md and locked chapter-based changelog updates.
+- Gate satisfied: lint + format + typecheck + sample tests pass, and commit conventions are enforced.

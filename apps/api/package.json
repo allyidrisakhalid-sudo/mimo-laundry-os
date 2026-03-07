@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "node ./src/dev.js",
     "build": "node -e \"console.log('api build ok')\"",
-    "lint": "node -e \"console.log('api lint ok')\"",
-    "typecheck": "node -e \"console.log('api typecheck ok')\"",
-    "test": "node -e \"console.log('api test ok')\""
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx,.mjs,.cjs --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }

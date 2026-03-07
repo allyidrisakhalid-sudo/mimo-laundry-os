@@ -38,3 +38,13 @@
 - Created docs/repo/monorepo_structure.md documenting the monorepo skeleton.
 
 - Ignored Turbo cache artifacts and removed generated .turbo files from version control.
+
+## Chapter 2.2 completed
+
+- Added shared TypeScript strict config in packages/config and updated workspaces to extend it.
+- Added root ESLint and Prettier configuration with repo-wide lint/format scripts.
+- Added Vitest baseline tests in apps/api and packages/types.
+- Added Husky, lint-staged, and commitlint enforcement for standardized commits.
+- Added docs/changelog_policy.md and recorded Chapter 2.2 completion.
+
+- Pre-commit enforcement probe for Chapter 2.2.
