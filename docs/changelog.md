@@ -5,3 +5,9 @@
 - Added docs/product/mvp_scope.md
 - Added docs/product/success_metrics.md
 - Established operational definition of done, explicit MVP exclusions, and launch metrics
+
+## Chapter 0.2 completed
+- Added docs/architecture/core_invariants.md
+- Locked architectural invariants for multi-hub, zones, immutable order events, versioned pricing, traceable ledgers, and RBAC plus audit logging
+- Updated docs/acceptance.md with Chapter 0.2 PASS
+
