@@ -71,6 +71,5 @@
 - Prisma validate passed against apps/api/prisma/schema.prisma.
 - Initial migration was created under apps/api/prisma/migrations and applied successfully to local Postgres.
 - Dev-only seed completed successfully and reran successfully.
-- Direct DB queries confirmed seeded User and AuditLog records exist.
-- Prisma Studio opened successfully.
+- Prisma Studio opened successfully and displayed the Prisma migration table plus application tables.
 - Gate satisfied: Migration applied + seed inserts + Prisma Studio opens.

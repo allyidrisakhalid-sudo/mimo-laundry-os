@@ -16,8 +16,8 @@ Only placeholder values belong in .env.example. Real secrets stay in ignored .en
 
 ## Prisma 7 configuration
 
-Prisma 7 reads the database URL from aapps/api/prisma.config.ts.
-The schema file remains at aapps/api/prisma/schema.prisma.
+Prisma 7 reads the database URL from pps/api/prisma.config.ts.
+The schema file remains at pps/api/prisma/schema.prisma.
 
 ## Commands
 
@@ -38,8 +38,8 @@ From repo root:
 
 ## Notes
 
-- Prisma schema lives at aapps/api/prisma/schema.prisma
-- Prisma config lives at aapps/api/prisma.config.ts
-- Migration artifacts live at aapps/api/prisma/migrations
-- Seed script lives at aapps/api/prisma/seed.ts
+- Prisma schema lives at pps/api/prisma/schema.prisma
+- Prisma config lives at pps/api/prisma.config.ts
+- Migration artifacts live at pps/api/prisma/migrations
+- Seed script lives at pps/api/prisma/seed.ts
 - Manual database editing is not allowed; schema changes must go through Prisma migrations
