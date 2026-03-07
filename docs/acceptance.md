@@ -53,3 +53,14 @@
 - Added Vitest baseline with passing sample tests in apps/api and packages/types.
 - Added docs/changelog_policy.md and locked chapter-based changelog updates.
 - Gate satisfied: lint + format + typecheck + sample tests pass, and commit conventions are enforced.
+
+## Chapter 3.1 PASS
+
+- Added compose.yaml with Postgres and Redis services, explicit ports, healthchecks, and named Postgres volume.
+- Added docs/setup/local_infra.md documenting services, ports, volumes, start/stop, verification, and safe reset steps.
+- Expanded .env.example with local infrastructure defaults for Postgres and Redis.
+- Verified Postgres connectivity to database mimo_laundry_os as user mimo.
+- Verified Redis ping returned PONG.
+- Verified containers restart cleanly and Postgres data persisted after restart using chapter_3_1_persistence_check.
+- Confirmed .env remains untracked; only .env.example is committed.
+- Gate satisfied: DB reachable; Redis ping ok; containers restart cleanly.

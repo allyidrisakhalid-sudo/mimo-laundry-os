@@ -48,3 +48,9 @@
 - Added docs/changelog_policy.md and recorded Chapter 2.2 completion.
 
 - Pre-commit enforcement probe for Chapter 2.2.
+
+## Chapter 3.1 completed
+
+- Added Docker Compose local infrastructure for Postgres and Redis with healthchecks and persistent Postgres volume.
+- Added docs/setup/local_infra.md for local infrastructure operations and safe reset guidance.
+- Expanded .env.example with Postgres and Redis local defaults.
