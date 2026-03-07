@@ -54,3 +54,9 @@
 - Added Docker Compose local infrastructure for Postgres and Redis with healthchecks and persistent Postgres volume.
 - Added docs/setup/local_infra.md for local infrastructure operations and safe reset guidance.
 - Expanded .env.example with Postgres and Redis local defaults.
+
+## Chapter 3.2 completed
+
+- Added Prisma schema, Prisma 7 config, initial migration, and Prisma client generation for apps/api.
+- Added dev-only seed system with baseline users and audit log records.
+- Added docs/setup/database_prisma.md documenting DATABASE_URL, migrate, seed, studio, and local reset flow.

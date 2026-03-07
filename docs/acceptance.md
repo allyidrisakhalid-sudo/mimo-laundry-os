@@ -64,3 +64,13 @@
 - Verified containers restart cleanly and Postgres data persisted after restart using chapter_3_1_persistence_check.
 - Confirmed .env remains untracked; only .env.example is committed.
 - Gate satisfied: DB reachable; Redis ping ok; containers restart cleanly.
+
+## Chapter 3.2 PASS
+
+- Pre-flight retest confirmed postgres and redis containers are running from Chapter 3.1.
+- Prisma validate passed against apps/api/prisma/schema.prisma.
+- Initial migration was created under apps/api/prisma/migrations and applied successfully to local Postgres.
+- Dev-only seed completed successfully and reran successfully.
+- Direct DB queries confirmed seeded User and AuditLog records exist.
+- Prisma Studio opened successfully.
+- Gate satisfied: Migration applied + seed inserts + Prisma Studio opens.
