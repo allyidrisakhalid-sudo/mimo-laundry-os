@@ -12,3 +12,11 @@
 - Verified each invariant includes at least one future test expectation.
 - Verified invariants remain consistent with Chapter 0.1 mission, MVP scope, and success metrics.
 - Freeze rule: future changes require an architecture change request document and approval before implementation.
+
+## Chapter 1.1 PASS
+- Verified Git, Node.js, npm, pnpm, corepack, Docker, Docker Compose, WSL2, and VS Code CLI.
+- Verified required VS Code extensions are installed: ESLint, Prettier, Prisma, Docker, and GitLens.
+- Verified Docker runtime by successfully running the hello-world container.
+- Created docs/setup/workstation_baseline.md with workstation proof and versions.
+- Gate satisfied: Version checks all pass; Docker runs containers.
+
