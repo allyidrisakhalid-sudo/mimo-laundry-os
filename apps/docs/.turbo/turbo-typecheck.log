@@ -1,5 +1,0 @@
-
-> @mimo/docs-app@0.0.1 typecheck D:\mimo-laundry-os\apps\docs
-> node -e "console.log('docs typecheck ok')"
-
-docs typecheck ok

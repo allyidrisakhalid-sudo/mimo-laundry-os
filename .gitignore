@@ -13,3 +13,8 @@ node_modules/
 *.p12
 credentials*.json
 secrets/
+
+# Turbo cache
+.turbo/
+**/.turbo/
+

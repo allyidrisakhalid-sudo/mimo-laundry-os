@@ -1,5 +1,0 @@
-
-> @mimo/sdk@0.0.1 typecheck D:\mimo-laundry-os\packages\sdk
-> node -e "console.log('sdk typecheck ok')"
-
-sdk typecheck ok

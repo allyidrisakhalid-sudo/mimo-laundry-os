@@ -1,5 +1,0 @@
-
-> @mimo/sdk@0.0.1 lint D:\mimo-laundry-os\packages\sdk
-> node -e "console.log('sdk lint ok')"
-
-sdk lint ok

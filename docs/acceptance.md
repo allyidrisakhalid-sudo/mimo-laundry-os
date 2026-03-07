@@ -42,3 +42,5 @@
 - Verified smoke-level startup for API, web, and mobile.
 - Created docs/repo/monorepo_structure.md documenting the monorepo skeleton.
 - Gate satisfied: Install/build/test commands run repo-wide successfully.
+
+- Cleaned generated Turbo cache artifacts from version control and restored clean working tree state.

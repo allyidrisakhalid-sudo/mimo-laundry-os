@@ -1,5 +1,0 @@
-
-> @mimo/ui@0.0.1 lint D:\mimo-laundry-os\packages\ui
-> node -e "console.log('ui lint ok')"
-
-ui lint ok

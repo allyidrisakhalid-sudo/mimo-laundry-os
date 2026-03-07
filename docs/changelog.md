@@ -36,3 +36,5 @@
 - Verified pnpm install completed successfully across the workspace.
 - Verified repo-wide build, lint, typecheck, and test commands completed successfully.
 - Created docs/repo/monorepo_structure.md documenting the monorepo skeleton.
+
+- Ignored Turbo cache artifacts and removed generated .turbo files from version control.

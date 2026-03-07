@@ -1,5 +1,0 @@
-
-> @mimo/config@0.0.1 typecheck D:\mimo-laundry-os\packages\config
-> node -e "console.log('config typecheck ok')"
-
-config typecheck ok

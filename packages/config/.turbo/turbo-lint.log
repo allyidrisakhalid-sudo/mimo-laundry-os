@@ -1,5 +1,0 @@
-
-> @mimo/config@0.0.1 lint D:\mimo-laundry-os\packages\config
-> node -e "console.log('config lint ok')"
-
-config lint ok

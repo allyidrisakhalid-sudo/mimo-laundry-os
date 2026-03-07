@@ -1,5 +1,0 @@
-
-> @mimo/api@0.0.1 typecheck D:\mimo-laundry-os\apps\api
-> node -e "console.log('api typecheck ok')"
-
-api typecheck ok
