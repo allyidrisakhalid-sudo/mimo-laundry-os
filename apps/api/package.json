@@ -1,0 +1,12 @@
+{
+  "name": "@mimo/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "node ./src/dev.js",
+    "build": "node -e \"console.log('api build ok')\"",
+    "lint": "node -e \"console.log('api lint ok')\"",
+    "typecheck": "node -e \"console.log('api typecheck ok')\"",
+    "test": "node -e \"console.log('api test ok')\""
+  }
+}

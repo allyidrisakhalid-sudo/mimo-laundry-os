@@ -1,0 +1,5 @@
+
+> @mimo/types@0.0.1 lint D:\mimo-laundry-os\packages\types
+> node -e "console.log('types lint ok')"
+
+types lint ok

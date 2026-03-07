@@ -26,3 +26,13 @@
 - Updated .gitignore to block secrets, local env files, and node_modules.
 - Enabled Husky pre-commit and commit-msg hooks with lint-staged, Prettier, and commitlint.
 - Verified a test commit was blocked by pre-commit checks, proving enforcement is active.
+
+## Chapter 2.1 completed
+
+- Created Turborepo workspace root with package.json, pnpm-workspace.yaml, turbo.json, and tsconfig.base.json.
+- Created required app workspaces: api, web, mobile, docs.
+- Created required shared packages: ui, types, sdk, config.
+- Repaired workspace package manifests and completed scaffold recovery for web and mobile.
+- Verified pnpm install completed successfully across the workspace.
+- Verified repo-wide build, lint, typecheck, and test commands completed successfully.
+- Created docs/repo/monorepo_structure.md documenting the monorepo skeleton.

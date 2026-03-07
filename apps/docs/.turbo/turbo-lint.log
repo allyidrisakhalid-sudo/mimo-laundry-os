@@ -1,0 +1,5 @@
+
+> @mimo/docs-app@0.0.1 lint D:\mimo-laundry-os\apps\docs
+> node -e "console.log('docs lint ok')"
+
+docs lint ok

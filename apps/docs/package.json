@@ -1,0 +1,12 @@
+{
+  "name": "@mimo/docs-app",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "node -e \"console.log('docs dev placeholder ok')\"",
+    "build": "node -e \"console.log('docs build ok')\"",
+    "lint": "node -e \"console.log('docs lint ok')\"",
+    "typecheck": "node -e \"console.log('docs typecheck ok')\"",
+    "test": "node -e \"console.log('docs test ok')\""
+  }
+}

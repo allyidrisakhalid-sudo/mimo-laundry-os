@@ -1,0 +1,5 @@
+
+> mobile@1.0.0 lint D:\mimo-laundry-os\apps\mobile
+> node -e "console.log('mobile lint ok')"
+
+mobile lint ok

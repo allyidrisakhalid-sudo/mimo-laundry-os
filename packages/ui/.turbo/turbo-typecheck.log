@@ -1,0 +1,5 @@
+
+> @mimo/ui@0.0.1 typecheck D:\mimo-laundry-os\packages\ui
+> node -e "console.log('ui typecheck ok')"
+
+ui typecheck ok

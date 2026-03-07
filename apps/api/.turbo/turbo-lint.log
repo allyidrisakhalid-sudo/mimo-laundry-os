@@ -1,0 +1,5 @@
+
+> @mimo/api@0.0.1 lint D:\mimo-laundry-os\apps\api
+> node -e "console.log('api lint ok')"
+
+api lint ok

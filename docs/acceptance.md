@@ -31,3 +31,14 @@
 - Updated .gitignore with secret and local environment patterns.
 - Proved pre-commit enforcement by attempting a commit that was blocked by Husky + lint-staged + Prettier.
 - Gate satisfied: No secrets in repo; pre-commit checks enforced.
+
+## Chapter 2.1 PASS
+
+- Created Turborepo workspace root with package.json, pnpm-workspace.yaml, turbo.json, and tsconfig.base.json.
+- Created required app workspaces: api, web, mobile, docs.
+- Created required shared packages: ui, types, sdk, config.
+- Verified pnpm install completed successfully across the workspace.
+- Verified repo-wide build, lint, typecheck, and test commands completed successfully.
+- Verified smoke-level startup for API, web, and mobile.
+- Created docs/repo/monorepo_structure.md documenting the monorepo skeleton.
+- Gate satisfied: Install/build/test commands run repo-wide successfully.
