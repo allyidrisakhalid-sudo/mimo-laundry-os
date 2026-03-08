@@ -1,403 +1,322 @@
 import "dotenv/config";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  CommissionAppliesTo,
-  CommissionPlanType,
+  PrismaClient,
+  DriverAvailabilityStatus,
   OrderChannel,
   OrderSourceType,
-  PrismaClient,
+  TripStatus,
+  TripStopStatus,
+  TripStopType,
+  TripType,
   UserRole,
+  VehicleType,
 } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const zoneA = await prisma.zone.upsert({
-    where: { name: "Zone A" },
-    update: {
-      boundaries: { type: "manual", label: "Zone A boundary descriptor" },
-      metadata: { seedKey: "zone-a" },
-    },
-    create: {
+  await prisma.tripStop.deleteMany();
+  await prisma.trip.deleteMany();
+  await prisma.driverProfile.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.affiliateStaffProfile.deleteMany();
+  await prisma.affiliateShop.deleteMany();
+  await prisma.commissionPlan.deleteMany();
+  await prisma.hubStaffProfile.deleteMany();
+  await prisma.hub.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.zone.deleteMany();
+
+  const zoneA = await prisma.zone.create({
+    data: {
       name: "Zone A",
       boundaries: { type: "manual", label: "Zone A boundary descriptor" },
       metadata: { seedKey: "zone-a" },
     },
   });
 
-  const zoneB = await prisma.zone.upsert({
-    where: { name: "Zone B" },
-    update: {
-      boundaries: { type: "manual", label: "Zone B boundary descriptor" },
-      metadata: { seedKey: "zone-b" },
-    },
-    create: {
+  const zoneB = await prisma.zone.create({
+    data: {
       name: "Zone B",
       boundaries: { type: "manual", label: "Zone B boundary descriptor" },
       metadata: { seedKey: "zone-b" },
     },
   });
 
-  const hubA = await prisma.hub.upsert({
-    where: { name: "Sinza Hub" },
-    update: {
-      zoneId: zoneA.id,
-      addressLabel: "Sinza Hub",
-      capacityKgPerDay: 500,
-      capacityOrdersPerDay: 120,
-      supportsTiers: { standard: true, express: true, sameDay: false },
-      isActive: true,
-    },
-    create: {
+  const sinzaHub = await prisma.hub.create({
+    data: {
       name: "Sinza Hub",
       zoneId: zoneA.id,
-      addressLabel: "Sinza Hub",
+      addressLabel: "Sinza Mori Hub",
       capacityKgPerDay: 500,
       capacityOrdersPerDay: 120,
-      supportsTiers: { standard: true, express: true, sameDay: false },
-      isActive: true,
+      supportsTiers: ["STANDARD", "EXPRESS"],
     },
   });
 
-  const hubB = await prisma.hub.upsert({
-    where: { name: "Mbezi Hub" },
-    update: {
-      zoneId: zoneB.id,
-      addressLabel: "Mbezi Hub",
-      capacityKgPerDay: 650,
-      capacityOrdersPerDay: 160,
-      supportsTiers: { standard: true, express: true, sameDay: true },
-      isActive: true,
-    },
-    create: {
+  const mbeziHub = await prisma.hub.create({
+    data: {
       name: "Mbezi Hub",
       zoneId: zoneB.id,
-      addressLabel: "Mbezi Hub",
+      addressLabel: "Mbezi Beach Hub",
       capacityKgPerDay: 650,
-      capacityOrdersPerDay: 160,
-      supportsTiers: { standard: true, express: true, sameDay: true },
-      isActive: true,
+      capacityOrdersPerDay: 150,
+      supportsTiers: ["STANDARD", "EXPRESS", "SAME_DAY"],
     },
   });
 
-  const hubStaffUserA = await prisma.user.upsert({
-    where: { email: "hub.staff.sinza@mimo.local" },
-    update: {
-      fullName: "Sinza Hub Staff",
-      role: UserRole.HUB_STAFF,
-      isActive: true,
-      passwordHash: "dev-only-placeholder",
-    },
-    create: {
+  const hubStaffSinzaUser = await prisma.user.create({
+    data: {
       email: "hub.staff.sinza@mimo.local",
       fullName: "Sinza Hub Staff",
       role: UserRole.HUB_STAFF,
-      passwordHash: "dev-only-placeholder",
-      isActive: true,
     },
   });
 
-  const hubStaffUserB = await prisma.user.upsert({
-    where: { email: "hub.staff.mbezi@mimo.local" },
-    update: {
-      fullName: "Mbezi Hub Staff",
-      role: UserRole.HUB_STAFF,
-      isActive: true,
-      passwordHash: "dev-only-placeholder",
-    },
-    create: {
+  const hubStaffMbeziUser = await prisma.user.create({
+    data: {
       email: "hub.staff.mbezi@mimo.local",
       fullName: "Mbezi Hub Staff",
       role: UserRole.HUB_STAFF,
-      passwordHash: "dev-only-placeholder",
-      isActive: true,
     },
   });
 
-  await prisma.hubStaffProfile.upsert({
-    where: { userId: hubStaffUserA.id },
-    update: {
-      hubId: hubA.id,
+  await prisma.hubStaffProfile.create({
+    data: {
+      userId: hubStaffSinzaUser.id,
+      hubId: sinzaHub.id,
       jobTitle: "Hub Supervisor",
-      isActive: true,
-    },
-    create: {
-      userId: hubStaffUserA.id,
-      hubId: hubA.id,
-      jobTitle: "Hub Supervisor",
-      isActive: true,
     },
   });
 
-  await prisma.hubStaffProfile.upsert({
-    where: { userId: hubStaffUserB.id },
-    update: {
-      hubId: hubB.id,
+  await prisma.hubStaffProfile.create({
+    data: {
+      userId: hubStaffMbeziUser.id,
+      hubId: mbeziHub.id,
       jobTitle: "Hub Supervisor",
-      isActive: true,
-    },
-    create: {
-      userId: hubStaffUserB.id,
-      hubId: hubB.id,
-      jobTitle: "Hub Supervisor",
-      isActive: true,
     },
   });
 
-  const commissionPlanA = await prisma.commissionPlan.upsert({
-    where: { name: "Shop Fixed TZS 1500" },
-    update: {
-      type: CommissionPlanType.FIXED_PER_ORDER,
-      fixedAmountTzs: 1500,
-      percentRate: null,
-      appliesTo: CommissionAppliesTo.SHOP_ONLY,
-      isActive: true,
-    },
-    create: {
+  const fixedPlan = await prisma.commissionPlan.create({
+    data: {
       name: "Shop Fixed TZS 1500",
-      type: CommissionPlanType.FIXED_PER_ORDER,
+      kind: "FIXED_PER_ORDER",
       fixedAmountTzs: 1500,
-      percentRate: null,
-      appliesTo: CommissionAppliesTo.SHOP_ONLY,
-      isActive: true,
+      notes: "Flat commission per eligible order",
     },
   });
 
-  const commissionPlanB = await prisma.commissionPlan.upsert({
-    where: { name: "Shop Service 12.5 Percent" },
-    update: {
-      type: CommissionPlanType.PERCENT_OF_SERVICE,
-      fixedAmountTzs: null,
-      percentRate: "12.50",
-      appliesTo: CommissionAppliesTo.SHOP_ONLY,
-      isActive: true,
-    },
-    create: {
+  const percentPlan = await prisma.commissionPlan.create({
+    data: {
       name: "Shop Service 12.5 Percent",
-      type: CommissionPlanType.PERCENT_OF_SERVICE,
-      fixedAmountTzs: null,
-      percentRate: "12.50",
-      appliesTo: CommissionAppliesTo.SHOP_ONLY,
-      isActive: true,
+      kind: "PERCENT_OF_SERVICE_VALUE",
+      percentageBps: 1250,
+      notes: "12.5% service commission",
     },
   });
 
-  const affiliateShopA = await prisma.affiliateShop.upsert({
-    where: { code: "SHOP-A" },
-    update: {
-      name: "Affiliate Shop A",
-      zoneId: zoneA.id,
-      commissionPlanId: commissionPlanA.id,
-      addressLabel: "Msasani Affiliate Pickup Counter",
-      contactPhone: "+255700000101",
-      isActive: true,
-    },
-    create: {
+  const shopA = await prisma.affiliateShop.create({
+    data: {
       code: "SHOP-A",
       name: "Affiliate Shop A",
       zoneId: zoneA.id,
-      commissionPlanId: commissionPlanA.id,
+      commissionPlanId: fixedPlan.id,
       addressLabel: "Msasani Affiliate Pickup Counter",
       contactPhone: "+255700000101",
-      isActive: true,
     },
   });
 
-  const affiliateShopB = await prisma.affiliateShop.upsert({
-    where: { code: "SHOP-B" },
-    update: {
-      name: "Affiliate Shop B",
-      zoneId: zoneB.id,
-      commissionPlanId: commissionPlanB.id,
-      addressLabel: "Mbezi Affiliate Collection Point",
-      contactPhone: "+255700000202",
-      isActive: true,
-    },
-    create: {
+  const shopB = await prisma.affiliateShop.create({
+    data: {
       code: "SHOP-B",
       name: "Affiliate Shop B",
       zoneId: zoneB.id,
-      commissionPlanId: commissionPlanB.id,
+      commissionPlanId: percentPlan.id,
       addressLabel: "Mbezi Affiliate Collection Point",
       contactPhone: "+255700000202",
-      isActive: true,
     },
   });
 
-  const affiliateStaffUserA = await prisma.user.upsert({
-    where: { email: "affiliate.staff.shopa@mimo.local" },
-    update: {
-      fullName: "Affiliate Shop A Staff",
-      role: UserRole.AFFILIATE_STAFF,
-      isActive: true,
-      passwordHash: "dev-only-placeholder",
-    },
-    create: {
+  const affiliateStaffAUser = await prisma.user.create({
+    data: {
       email: "affiliate.staff.shopa@mimo.local",
       fullName: "Affiliate Shop A Staff",
       role: UserRole.AFFILIATE_STAFF,
-      passwordHash: "dev-only-placeholder",
-      isActive: true,
     },
   });
 
-  const affiliateStaffUserB = await prisma.user.upsert({
-    where: { email: "affiliate.staff.shopb@mimo.local" },
-    update: {
-      fullName: "Affiliate Shop B Staff",
-      role: UserRole.AFFILIATE_STAFF,
-      isActive: true,
-      passwordHash: "dev-only-placeholder",
-    },
-    create: {
+  const affiliateStaffBUser = await prisma.user.create({
+    data: {
       email: "affiliate.staff.shopb@mimo.local",
       fullName: "Affiliate Shop B Staff",
       role: UserRole.AFFILIATE_STAFF,
-      passwordHash: "dev-only-placeholder",
-      isActive: true,
     },
   });
 
-  await prisma.affiliateStaffProfile.upsert({
-    where: { userId: affiliateStaffUserA.id },
-    update: {
-      affiliateShopId: affiliateShopA.id,
-      jobTitle: "Shop Clerk",
-      isActive: true,
-    },
-    create: {
-      userId: affiliateStaffUserA.id,
-      affiliateShopId: affiliateShopA.id,
-      jobTitle: "Shop Clerk",
-      isActive: true,
+  await prisma.affiliateStaffProfile.create({
+    data: {
+      userId: affiliateStaffAUser.id,
+      affiliateShopId: shopA.id,
+      jobTitle: "Counter Staff",
     },
   });
 
-  await prisma.affiliateStaffProfile.upsert({
-    where: { userId: affiliateStaffUserB.id },
-    update: {
-      affiliateShopId: affiliateShopB.id,
-      jobTitle: "Shop Supervisor",
-      isActive: true,
-    },
-    create: {
-      userId: affiliateStaffUserB.id,
-      affiliateShopId: affiliateShopB.id,
-      jobTitle: "Shop Supervisor",
-      isActive: true,
+  await prisma.affiliateStaffProfile.create({
+    data: {
+      userId: affiliateStaffBUser.id,
+      affiliateShopId: shopB.id,
+      jobTitle: "Counter Staff",
     },
   });
 
-  await prisma.driver.upsert({
-    where: { email: "driver.a@mimo.local" },
-    update: {
-      fullName: "Driver A",
-      zoneId: zoneA.id,
-    },
-    create: {
+  const driverAUser = await prisma.user.create({
+    data: {
       email: "driver.a@mimo.local",
       fullName: "Driver A",
-      zoneId: zoneA.id,
+      role: UserRole.DRIVER,
     },
   });
 
-  await prisma.driver.upsert({
-    where: { email: "driver.b@mimo.local" },
-    update: {
-      fullName: "Driver B",
-      zoneId: zoneB.id,
-    },
-    create: {
+  const driverBUser = await prisma.user.create({
+    data: {
       email: "driver.b@mimo.local",
       fullName: "Driver B",
-      zoneId: zoneB.id,
+      role: UserRole.DRIVER,
     },
   });
 
-  await prisma.customerAddress.upsert({
-    where: { id: "00000000-0000-0000-0000-000000000001" },
-    update: {
-      customerName: "Customer A",
-      addressLine: "Msasani Sample Address",
-      zoneId: zoneA.id,
-    },
-    create: {
-      id: "00000000-0000-0000-0000-000000000001",
-      customerName: "Customer A",
-      addressLine: "Msasani Sample Address",
-      zoneId: zoneA.id,
+  const driverA = await prisma.driverProfile.create({
+    data: {
+      userId: driverAUser.id,
+      homeZoneId: zoneA.id,
+      phone: "+255700100001",
+      vehicleType: VehicleType.MOTORBIKE,
+      vehiclePlate: "T123 ABC",
+      isActive: true,
+      availabilityStatus: DriverAvailabilityStatus.AVAILABLE,
+      lastStatusAt: new Date(),
     },
   });
 
-  const orderA = await prisma.order.upsert({
-    where: { orderNumber: "AFF-SHOP-A-001" },
-    update: {
+  const driverB = await prisma.driverProfile.create({
+    data: {
+      userId: driverBUser.id,
+      homeZoneId: zoneB.id,
+      phone: "+255700100002",
+      vehicleType: VehicleType.CAR,
+      vehiclePlate: "T456 DEF",
+      isActive: true,
+      availabilityStatus: DriverAvailabilityStatus.ON_TRIP,
+      lastStatusAt: new Date(),
+    },
+  });
+
+  const apiOrderA = await prisma.order.create({
+    data: {
+      orderNumber: "AFF-SHOP-A-API-001",
       sourceType: OrderSourceType.AFFILIATE,
-      affiliateShopId: affiliateShopA.id,
+      affiliateShopId: shopA.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: affiliateShopA.zoneId,
-      customerName: "Shop A Walk-in Customer",
-      customerPhone: "+255711000001",
-      notes: "Seeded affiliate order for SHOP-A",
+      orderZoneId: zoneA.id,
+      customerName: "API Customer A",
+      customerPhone: "+255711100001",
+      notes: "Created via affiliate API",
     },
-    create: {
+  });
+
+  const orderA = await prisma.order.create({
+    data: {
       orderNumber: "AFF-SHOP-A-001",
       sourceType: OrderSourceType.AFFILIATE,
-      affiliateShopId: affiliateShopA.id,
+      affiliateShopId: shopA.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: affiliateShopA.zoneId,
+      orderZoneId: zoneA.id,
       customerName: "Shop A Walk-in Customer",
       customerPhone: "+255711000001",
       notes: "Seeded affiliate order for SHOP-A",
     },
   });
 
-  const orderB = await prisma.order.upsert({
-    where: { orderNumber: "AFF-SHOP-B-001" },
-    update: {
+  const orderB = await prisma.order.create({
+    data: {
+      orderNumber: "AFF-SHOP-B-001",
       sourceType: OrderSourceType.AFFILIATE,
-      affiliateShopId: affiliateShopB.id,
+      affiliateShopId: shopB.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: affiliateShopB.zoneId,
+      orderZoneId: zoneB.id,
       customerName: "Shop B Walk-in Customer",
       customerPhone: "+255711000002",
       notes: "Seeded affiliate order for SHOP-B",
     },
-    create: {
-      orderNumber: "AFF-SHOP-B-001",
-      sourceType: OrderSourceType.AFFILIATE,
-      affiliateShopId: affiliateShopB.id,
-      channel: OrderChannel.SHOP_DROP,
-      orderZoneId: affiliateShopB.zoneId,
-      customerName: "Shop B Walk-in Customer",
-      customerPhone: "+255711000002",
-      notes: "Seeded affiliate order for SHOP-B",
+  });
+
+  const tripA = await prisma.trip.create({
+    data: {
+      type: TripType.PICKUP,
+      zoneId: zoneA.id,
+      hubId: sinzaHub.id,
+      driverId: driverA.id,
+      status: TripStatus.PLANNED,
+      scheduledFor: new Date(),
+    },
+  });
+
+  const tripB = await prisma.trip.create({
+    data: {
+      type: TripType.DELIVERY,
+      zoneId: zoneB.id,
+      hubId: mbeziHub.id,
+      driverId: driverB.id,
+      status: TripStatus.IN_PROGRESS,
+      scheduledFor: new Date(),
+      startedAt: new Date(),
+    },
+  });
+
+  await prisma.tripStop.create({
+    data: {
+      tripId: tripA.id,
+      orderId: orderA.id,
+      stopType: TripStopType.PICKUP,
+      sequence: 1,
+      status: TripStopStatus.PENDING,
+      notes: "Pickup from Affiliate Shop A",
+    },
+  });
+
+  await prisma.tripStop.create({
+    data: {
+      tripId: tripB.id,
+      orderId: orderB.id,
+      stopType: TripStopType.DROPOFF,
+      sequence: 1,
+      status: TripStopStatus.DONE,
+      notes: "Deliver to customer in Zone B",
     },
   });
 
   console.log("Seed complete");
   console.log({
     zones: [zoneA.name, zoneB.name],
-    hubs: [hubA.name, hubB.name],
-    hubStaffUsers: [hubStaffUserA.email, hubStaffUserB.email],
-    commissionPlans: [commissionPlanA.name, commissionPlanB.name],
-    affiliateShops: [affiliateShopA.code, affiliateShopB.code],
-    affiliateStaffUsers: [affiliateStaffUserA.email, affiliateStaffUserB.email],
-    orders: [orderA.orderNumber, orderB.orderNumber],
-    drivers: ["driver.a@mimo.local", "driver.b@mimo.local"],
+    hubs: [sinzaHub.name, mbeziHub.name],
+    hubStaffUsers: [hubStaffSinzaUser.email, hubStaffMbeziUser.email],
+    commissionPlans: [fixedPlan.name, percentPlan.name],
+    affiliateShops: [shopA.code, shopB.code],
+    affiliateStaffUsers: [affiliateStaffAUser.email, affiliateStaffBUser.email],
+    orders: [apiOrderA.orderNumber, orderA.orderNumber, orderB.orderNumber],
+    drivers: [driverAUser.email, driverBUser.email],
+    trips: [tripA.id, tripB.id],
   });
 }
 
 main()
   .catch((error) => {
     console.error(error);
-    process.exit(1);
+    process.exitCode = 1;
   })
   .finally(async () => {
     await prisma.$disconnect();

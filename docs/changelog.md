@@ -92,3 +92,10 @@
 - Updated seed data with commission plans, affiliate staff users, and affiliate-sourced sample orders.
 - Implemented affiliate login, affiliate profile, and shop-scoped affiliate order endpoints in the API.
 - Added docs/architecture/affiliates.md documenting affiliate shop, staff linkage, attribution, and scoping rules.
+
+## Chapter 4.4 completed
+
+- Added DriverProfile, Trip, and TripStop domain entities with availability and trip status enums.
+- Added admin driver and trip assignment endpoints plus driver-scoped trip/task endpoints.
+- Updated seed data with drivers, trips, and stops across zones.
+- Added docs/architecture/drivers_dispatch.md.

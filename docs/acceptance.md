@@ -124,3 +124,13 @@
 - Verified GET /v1/affiliate/orders returned only the authenticated shop's orders.
 - Verified cross-shop order access attempt returned 403 Forbidden.
 - Gate satisfied: Affiliate shop can log in and create/view its own orders only.
+
+## Chapter 4.4 PASS
+
+- Re-ran Chapter 4.3 pre-flight checks before implementation.
+- Added DriverProfile linked to Zone with availability and optional vehicle metadata.
+- Added Trip and TripStop models for pickup and delivery batches.
+- Verified admin can list drivers, create a trip, and attach order-linked stops.
+- Verified driver login works and driver profile/trips/tasks are scoped to the authenticated driver only.
+- Verified cross-driver trip access returns 403.
+- Gate satisfied: Admin can assign tasks; driver sees only assigned tasks.
