@@ -14,6 +14,27 @@ enum UserRole {
   HUB_STAFF
 }
 
+enum CommissionPlanType {
+  FIXED_PER_ORDER
+  PERCENT_OF_SERVICE
+}
+
+enum CommissionAppliesTo {
+  SHOP_ONLY
+  ALL_CHANNELS
+}
+
+enum OrderSourceType {
+  DIRECT
+  AFFILIATE
+}
+
+enum OrderChannel {
+  DOOR
+  SHOP_DROP
+  HYBRID
+}
+
 model Zone {
   id         String            @id @default(uuid())
   name       String            @unique
@@ -23,6 +44,7 @@ model Zone {
   shops      AffiliateShop[]
   drivers    Driver[]
   addresses  CustomerAddress[]
+  orders     Order[]
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
 }
@@ -47,15 +69,16 @@ model Hub {
 }
 
 model User {
-  id              String           @id @default(uuid())
-  email           String           @unique
-  fullName        String
-  role            UserRole
-  passwordHash    String?
-  isActive        Boolean          @default(true)
-  hubStaffProfile HubStaffProfile?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                     String                 @id @default(uuid())
+  email                  String                 @unique
+  fullName               String
+  role                   UserRole
+  passwordHash           String?
+  isActive               Boolean                @default(true)
+  hubStaffProfile        HubStaffProfile?
+  affiliateStaffProfile  AffiliateStaffProfile?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 }
 
 model HubStaffProfile {
@@ -72,16 +95,53 @@ model HubStaffProfile {
   @@index([hubId])
 }
 
+model CommissionPlan {
+  id              String               @id @default(uuid())
+  name            String               @unique
+  type            CommissionPlanType
+  fixedAmountTzs  Int?
+  percentRate     Decimal?             @db.Decimal(5, 2)
+  appliesTo       CommissionAppliesTo  @default(SHOP_ONLY)
+  isActive        Boolean              @default(true)
+  shops           AffiliateShop[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
 model AffiliateShop {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  name      String
-  zoneId    String
-  zone      Zone     @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String                  @id @default(uuid())
+  code              String                  @unique
+  name              String
+  zoneId            String
+  commissionPlanId  String?
+  addressLabel      String?
+  locationLat       Decimal?                @db.Decimal(10, 7)
+  locationLng       Decimal?                @db.Decimal(10, 7)
+  contactPhone      String?
+  isActive          Boolean                 @default(true)
+  zone              Zone                    @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  commissionPlan    CommissionPlan?         @relation(fields: [commissionPlanId], references: [id], onDelete: Restrict)
+  staffProfiles     AffiliateStaffProfile[]
+  orders            Order[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 
   @@index([zoneId])
+  @@index([commissionPlanId])
+}
+
+model AffiliateStaffProfile {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  affiliateShopId String
+  jobTitle        String?
+  isActive        Boolean        @default(true)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  affiliateShop   AffiliateShop  @relation(fields: [affiliateShopId], references: [id], onDelete: Restrict)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([affiliateShopId])
 }
 
 model Driver {
@@ -106,4 +166,25 @@ model CustomerAddress {
   updatedAt    DateTime @updatedAt
 
   @@index([zoneId])
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  orderNumber     String          @unique
+  sourceType      OrderSourceType
+  affiliateShopId String?
+  channel         OrderChannel
+  orderZoneId     String
+  customerName    String
+  customerPhone   String?
+  notes           String?
+  affiliateShop   AffiliateShop?  @relation(fields: [affiliateShopId], references: [id], onDelete: Restrict)
+  orderZone       Zone            @relation(fields: [orderZoneId], references: [id], onDelete: Restrict)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([affiliateShopId])
+  @@index([orderZoneId])
+  @@index([sourceType])
+  @@index([channel])
 }

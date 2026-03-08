@@ -84,3 +84,11 @@
 - Updated seed with multiple hubs across zones and hub staff users.
 - Added API endpoints for listing hubs, reading a hub, creating a hub, and listing hubs by zone.
 - Added docs/architecture/hubs.md.
+
+## Chapter 4.3 completed
+
+- Extended Prisma schema with CommissionPlan, AffiliateStaffProfile, and Order attribution fields for affiliate-sourced orders.
+- Added migrations for affiliate staff linkage and affiliate order attribution.
+- Updated seed data with commission plans, affiliate staff users, and affiliate-sourced sample orders.
+- Implemented affiliate login, affiliate profile, and shop-scoped affiliate order endpoints in the API.
+- Added docs/architecture/affiliates.md documenting affiliate shop, staff linkage, attribution, and scoping rules.

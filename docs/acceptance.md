@@ -109,3 +109,18 @@
 - Verified GET /v1/zones/:id/hubs returned the correct hub for the selected zone.
 - Verified POST /v1/hubs created Kigamboni Hub successfully under Zone A.
 - Gate satisfied: Create multiple hubs; assign to zones; list hubs by zone.
+
+## Chapter 4.3 PASS
+
+- Re-ran Chapter 4.2 pre-flight verification: docker services healthy, migrations in sync, seed succeeded, and zone-to-hub endpoints returned correct mappings.
+- Extended AffiliateShop with commission plan linkage, address label, contact phone, and active status fields.
+- Added CommissionPlan model with fixed-per-order and percent-of-service support.
+- Added AffiliateStaffProfile linking one affiliate staff user to exactly one affiliate shop in V1.
+- Added Order attribution fields: sourceType, affiliateShopId, channel, and orderZoneId.
+- Seeded SHOP-A and SHOP-B, one affiliate staff user per shop, and one affiliate-sourced sample order per shop.
+- Verified affiliate login via /v1/auth/affiliate/login.
+- Verified GET /v1/affiliate/me returned affiliate shop and commission plan details.
+- Verified POST /v1/affiliate/orders created an order with affiliateShopId and orderZoneId derived server-side from the authenticated affiliate shop.
+- Verified GET /v1/affiliate/orders returned only the authenticated shop's orders.
+- Verified cross-shop order access attempt returned 403 Forbidden.
+- Gate satisfied: Affiliate shop can log in and create/view its own orders only.
