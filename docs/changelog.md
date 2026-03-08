@@ -132,3 +132,5 @@
 - Added repeatable SDK generation and verification commands: refresh:openapi, gen, check, gen:sdk, and check:sdk.
 - Documented SDK workflow in docs/api/sdk_generation.md.
 - Added compile-lock enforcement so stale generated SDK output fails loudly until regenerated.
+
+- Completed Chapter 6.1 authentication with phone-based login, JWT access/refresh tokens, refresh rotation, logout revocation, protected auth route proof, and seeded staff/customer accounts.

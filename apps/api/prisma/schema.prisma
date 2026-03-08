@@ -8,79 +8,16 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  HUB_STAFF
+  CUSTOMER
   AFFILIATE_STAFF
   DRIVER
-  CUSTOMER
+  HUB_STAFF
+  DEV_ADMIN
 }
 
-enum VehicleType {
-  MOTORBIKE
-  CAR
-  VAN
-}
-
-enum DriverAvailabilityStatus {
-  OFFLINE
-  AVAILABLE
-  ON_TRIP
-  SUSPENDED
-}
-
-enum TripType {
-  PICKUP
-  DELIVERY
-}
-
-enum TripStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum TripStopType {
-  PICKUP
-  DROPOFF
-}
-
-enum TripStopStatus {
-  PENDING
-  DONE
-  FAILED
-  SKIPPED
-}
-
-enum OrderSourceType {
-  DIRECT
-  AFFILIATE
-}
-
-enum OrderChannel {
-  DOOR
-  SHOP_DROP
-  HYBRID
-}
-
-enum OrderTier {
-  STANDARD_48H
-  EXPRESS_24H
-  SAME_DAY
-}
-
-enum OrderStatusCurrent {
-  CREATED
-  PICKUP_SCHEDULED
-  PICKED_UP
-  RECEIVED_AT_HUB
-  WASHING_STARTED
-  DRYING_STARTED
-  IRONING_STARTED
-  PACKED
-  OUT_FOR_DELIVERY
-  DELIVERED
-  PAYMENT_DUE
-  PAID
+enum UserStatus {
+  ACTIVE
+  DISABLED
 }
 
 enum BagStatus {
@@ -91,6 +28,19 @@ enum BagStatus {
   PACKED
   OUT_FOR_DELIVERY
   DELIVERED
+}
+
+enum DriverAvailabilityStatus {
+  OFFLINE
+  AVAILABLE
+  ON_TRIP
+  SUSPENDED
+}
+
+enum OrderChannel {
+  DOOR
+  SHOP_DROP
+  HYBRID
 }
 
 enum OrderEventType {
@@ -111,13 +61,6 @@ enum OrderEventType {
   ISSUE_RESOLVED
 }
 
-enum OrderIssueType {
-  DAMAGE
-  MISSING_ITEM
-  DELAY
-  REFUND_REQUEST
-}
-
 enum OrderIssueStatus {
   OPEN
   INVESTIGATING
@@ -125,167 +68,222 @@ enum OrderIssueStatus {
   REJECTED
 }
 
+enum OrderIssueType {
+  DAMAGE
+  MISSING_ITEM
+  DELAY
+  REFUND_REQUEST
+}
+
+enum OrderSourceType {
+  DIRECT
+  AFFILIATE
+}
+
+enum OrderStatusCurrent {
+  CREATED
+  PICKUP_SCHEDULED
+  PICKED_UP
+  RECEIVED_AT_HUB
+  WASHING_STARTED
+  DRYING_STARTED
+  IRONING_STARTED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  PAYMENT_DUE
+  PAID
+}
+
+enum OrderTier {
+  STANDARD_48H
+  EXPRESS_24H
+  SAME_DAY
+}
+
+enum TripStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TripStopStatus {
+  PENDING
+  DONE
+  FAILED
+  SKIPPED
+}
+
+enum TripStopType {
+  PICKUP
+  DROPOFF
+}
+
+enum TripType {
+  PICKUP
+  DELIVERY
+}
+
+enum VehicleType {
+  MOTORBIKE
+  CAR
+  VAN
+}
+
 model Zone {
-  id                String             @id @default(uuid())
-  name              String             @unique
-  boundaries        Json
-  metadata          Json?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  hubs              Hub[]
-  affiliateShops    AffiliateShop[]
-  orders            Order[]
-  customerAddresses CustomerAddress[]
-  driverProfiles    DriverProfile[]
-  trips             Trip[]
-}
-
-model User {
-  id                    String                @id @default(uuid())
-  email                 String                @unique
-  fullName              String
-  role                  UserRole
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  hubStaffProfile       HubStaffProfile?
-  affiliateStaffProfile AffiliateStaffProfile?
-  driverProfile         DriverProfile?
-  customerAddresses     CustomerAddress[]
-  customerOrders        Order[]               @relation("CustomerOrders")
-}
-
-model CustomerAddress {
-  id              String    @id @default(uuid())
-  userId          String?
-  label           String
-  contactName     String?
-  phone           String?
-  addressLine1    String
-  addressLine2    String?
-  zoneId          String
-  locationLat     Float?
-  locationLng     Float?
-  notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  zone            Zone      @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  pickupOrders    Order[]   @relation("PickupAddressOrders")
-  dropoffOrders   Order[]   @relation("DropoffAddressOrders")
+  id         String            @id @default(cuid())
+  name       String            @unique
+  boundaries Json
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  affiliates AffiliateShop[]
+  addresses  CustomerAddress[]
+  drivers    DriverProfile[]
+  hubs       Hub[]
+  Order      Order[]
+  Trip       Trip[]
 }
 
 model Hub {
-  id                   String           @id @default(uuid())
-  name                 String           @unique
+  id                   String            @id @default(cuid())
+  name                 String            @unique
   zoneId               String
+  isActive             Boolean           @default(true)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
   addressLabel         String
-  locationLat          Float?
-  locationLng          Float?
   capacityKgPerDay     Int?
   capacityOrdersPerDay Int?
+  locationLat          Float?
+  locationLng          Float?
   supportsTiers        Json
-  isActive             Boolean          @default(true)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  zone                 Zone             @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  staffProfiles        HubStaffProfile[]
-  orders               Order[]
-  trips                Trip[]
-}
-
-model HubStaffProfile {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  hubId     String
-  jobTitle  String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hub       Hub      @relation(fields: [hubId], references: [id], onDelete: Restrict)
+  zone                 Zone              @relation(fields: [zoneId], references: [id])
+  HubStaffProfile      HubStaffProfile[]
+  Order                Order[]
+  Trip                 Trip[]
 }
 
 model CommissionPlan {
-  id                String          @id @default(uuid())
-  name              String          @unique
-  kind              String
-  fixedAmountTzs    Int?
-  percentageBps     Int?
-  notes             String?
-  isActive          Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  affiliateShops    AffiliateShop[]
+  id             String          @id
+  name           String          @unique
+  fixedAmountTzs Int?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime
+  kind           String
+  notes          String?
+  percentageBps  Int?
+  AffiliateShop  AffiliateShop[]
 }
 
 model AffiliateShop {
-  id               String                  @id @default(uuid())
-  code             String                  @unique
-  name             String
-  zoneId           String
-  commissionPlanId String
-  addressLabel     String
-  locationLat      Float?
-  locationLng      Float?
-  contactPhone     String?
-  isActive         Boolean                 @default(true)
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  zone             Zone                    @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  commissionPlan   CommissionPlan          @relation(fields: [commissionPlanId], references: [id], onDelete: Restrict)
-  staffProfiles    AffiliateStaffProfile[]
-  orders           Order[]
+  id                    String                  @id @default(cuid())
+  name                  String
+  code                  String                  @unique
+  zoneId                String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  addressLabel          String
+  commissionPlanId      String
+  contactPhone          String?
+  isActive              Boolean                 @default(true)
+  locationLat           Float?
+  locationLng           Float?
+  CommissionPlan        CommissionPlan          @relation(fields: [commissionPlanId], references: [id])
+  zone                  Zone                    @relation(fields: [zoneId], references: [id])
+  AffiliateStaffProfile AffiliateStaffProfile[]
+  orders                Order[]
 }
 
-model AffiliateStaffProfile {
-  id              String         @id @default(uuid())
-  userId          String         @unique
-  affiliateShopId String
-  jobTitle        String?
-  isActive        Boolean        @default(true)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  affiliateShop   AffiliateShop  @relation(fields: [affiliateShopId], references: [id], onDelete: Restrict)
+model User {
+  id                    String                 @id @default(cuid())
+  email                 String?                @unique
+  phone                 String                 @unique
+  fullName              String
+  passwordHash          String
+  role                  UserRole
+  status                UserStatus             @default(ACTIVE)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  AffiliateStaffProfile AffiliateStaffProfile?
+  CustomerAddress       CustomerAddress[]
+  driverProfile         DriverProfile?
+  HubStaffProfile       HubStaffProfile?
+  Order                 Order[]
+  refreshTokens         RefreshToken[]
 }
 
 model DriverProfile {
-  id                 String                     @id @default(uuid())
-  userId             String                     @unique
+  id                 String                   @id @default(cuid())
+  userId             String                   @unique
   homeZoneId         String
   phone              String?
   vehicleType        VehicleType?
   vehiclePlate       String?
-  isActive           Boolean                    @default(true)
-  availabilityStatus DriverAvailabilityStatus   @default(OFFLINE)
+  isActive           Boolean                  @default(true)
+  availabilityStatus DriverAvailabilityStatus @default(OFFLINE)
   lastStatusAt       DateTime?
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
-  user               User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  homeZone           Zone                       @relation(fields: [homeZoneId], references: [id], onDelete: Restrict)
-  trips              Trip[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  homeZone           Zone                     @relation(fields: [homeZoneId], references: [id])
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Trip               Trip[]
 }
 
-model Trip {
-  id           String      @id @default(uuid())
-  type         TripType
-  zoneId       String
-  hubId        String?
-  driverId     String
-  status       TripStatus  @default(PLANNED)
-  scheduledFor DateTime?
-  startedAt    DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  zone         Zone        @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  hub          Hub?        @relation(fields: [hubId], references: [id], onDelete: SetNull)
-  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Restrict)
-  stops        TripStop[]
+model CustomerAddress {
+  id                                            String   @id @default(cuid())
+  userId                                        String?
+  label                                         String
+  contactName                                   String?
+  phone                                         String?
+  addressLine1                                  String
+  addressLine2                                  String?
+  zoneId                                        String
+  locationLat                                   Float?
+  locationLng                                   Float?
+  notes                                         String?
+  createdAt                                     DateTime @default(now())
+  updatedAt                                     DateTime @updatedAt
+  User                                          User?    @relation(fields: [userId], references: [id])
+  zone                                          Zone     @relation(fields: [zoneId], references: [id])
+  Order_Order_dropoffAddressIdToCustomerAddress Order[]  @relation("Order_dropoffAddressIdToCustomerAddress")
+  Order_Order_pickupAddressIdToCustomerAddress  Order[]  @relation("Order_pickupAddressIdToCustomerAddress")
+}
+
+model Order {
+  id                                                      String             @id @default(cuid())
+  orderNumber                                             String             @unique
+  sourceType                                              OrderSourceType
+  affiliateShopId                                         String?
+  channel                                                 OrderChannel
+  customerName                                            String
+  customerPhone                                           String?
+  notes                                                   String?
+  createdAt                                               DateTime           @default(now())
+  updatedAt                                               DateTime           @updatedAt
+  customerUserId                                          String?
+  tier                                                    OrderTier
+  zoneId                                                  String
+  hubId                                                   String
+  pickupAddressId                                         String?
+  dropoffAddressId                                        String?
+  statusCurrent                                           OrderStatusCurrent
+  bags                                                    Bag[]
+  affiliateShop                                           AffiliateShop?     @relation(fields: [affiliateShopId], references: [id])
+  User                                                    User?              @relation(fields: [customerUserId], references: [id])
+  CustomerAddress_Order_dropoffAddressIdToCustomerAddress CustomerAddress?   @relation("Order_dropoffAddressIdToCustomerAddress", fields: [dropoffAddressId], references: [id])
+  Hub                                                     Hub                @relation(fields: [hubId], references: [id])
+  CustomerAddress_Order_pickupAddressIdToCustomerAddress  CustomerAddress?   @relation("Order_pickupAddressIdToCustomerAddress", fields: [pickupAddressId], references: [id])
+  Zone                                                    Zone               @relation(fields: [zoneId], references: [id])
+  events                                                  OrderEvent[]
+  issues                                                  OrderIssue[]
+  TripStop                                                TripStop[]
 }
 
 model Bag {
-  id        String    @id @default(uuid())
+  id        String    @id @default(cuid())
   orderId   String
   tagCode   String    @unique
   bagStatus BagStatus @default(CREATED)
@@ -295,7 +293,7 @@ model Bag {
 }
 
 model OrderEvent {
-  id          String         @id @default(uuid())
+  id          String         @id @default(cuid())
   orderId     String
   eventType   OrderEventType
   occurredAt  DateTime       @default(now())
@@ -308,63 +306,90 @@ model OrderEvent {
 }
 
 model OrderIssue {
-  id              String           @id @default(uuid())
-  orderId         String
-  type            OrderIssueType
-  status          OrderIssueStatus @default(OPEN)
+  id               String           @id @default(cuid())
+  orderId          String
+  type             OrderIssueType
+  status           OrderIssueStatus @default(OPEN)
   reportedByUserId String?
-  reportedAt      DateTime         @default(now())
-  description     String
-  resolutionNotes String?
-  resolvedAt      DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reportedAt       DateTime         @default(now())
+  description      String
+  resolutionNotes  String?
+  resolvedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  order            Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model AffiliateStaffProfile {
+  id              String        @id
+  userId          String        @unique
+  affiliateShopId String
+  jobTitle        String?
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  AffiliateShop   AffiliateShop @relation(fields: [affiliateShopId], references: [id])
+  User            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HubStaffProfile {
+  id        String   @id
+  userId    String   @unique
+  hubId     String
+  jobTitle  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Hub       Hub      @relation(fields: [hubId], references: [id])
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Trip {
+  id            String        @id
+  type          TripType
+  zoneId        String
+  hubId         String?
+  driverId      String
+  status        TripStatus    @default(PLANNED)
+  scheduledFor  DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  DriverProfile DriverProfile @relation(fields: [driverId], references: [id])
+  Hub           Hub?          @relation(fields: [hubId], references: [id])
+  Zone          Zone          @relation(fields: [zoneId], references: [id])
+  TripStop      TripStop[]
 }
 
 model TripStop {
-  id         String         @id @default(uuid())
-  tripId     String
-  orderId    String
-  stopType   TripStopType
-  sequence   Int
-  status     TripStopStatus @default(PENDING)
-  notes      String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-  trip       Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  order      Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  id        String         @id
+  tripId    String
+  orderId   String
+  stopType  TripStopType
+  sequence  Int
+  status    TripStopStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime
+  Order     Order          @relation(fields: [orderId], references: [id])
+  Trip      Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, sequence])
 }
 
-model Order {
-  id               String              @id @default(uuid())
-  orderNumber      String              @unique
-  customerUserId   String?
-  channel          OrderChannel
-  tier             OrderTier
-  sourceType       OrderSourceType
-  affiliateShopId  String?
-  zoneId           String
-  hubId            String
-  pickupAddressId  String?
-  dropoffAddressId String?
-  statusCurrent    OrderStatusCurrent
-  customerName     String
-  customerPhone    String?
-  notes            String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  customerUser     User?               @relation("CustomerOrders", fields: [customerUserId], references: [id], onDelete: SetNull)
-  affiliateShop    AffiliateShop?      @relation(fields: [affiliateShopId], references: [id], onDelete: SetNull)
-  zone             Zone                @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  hub              Hub                 @relation(fields: [hubId], references: [id], onDelete: Restrict)
-  pickupAddress    CustomerAddress?    @relation("PickupAddressOrders", fields: [pickupAddressId], references: [id], onDelete: SetNull)
-  dropoffAddress   CustomerAddress?    @relation("DropoffAddressOrders", fields: [dropoffAddressId], references: [id], onDelete: SetNull)
-  bags             Bag[]
-  events           OrderEvent[]
-  issues           OrderIssue[]
-  tripStops        TripStop[]
-}
+model RefreshToken {
+  id                String   @id @default(cuid())
+  userId            String
+  tokenHash         String   @unique
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  replacedByTokenId String?
+  userAgent         String?
+  ipAddress         String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt])
+}

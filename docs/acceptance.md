@@ -179,3 +179,23 @@
 - Verified apps/mobile imports @mimo/sdk and typechecks/builds successfully.
 - Proved compile lock by simulating generated-file drift and confirming pnpm check:sdk failed until regeneration restored alignment.
 - Gate satisfied: Web and mobile import SDK and build successfully.
+
+## Chapter 6.1 PASS
+
+- Re-ran Chapter 5.2 pre-flight successfully: repo build passed, API reachable, Swagger UI reachable, SDK build passed.
+- Added authentication flow for customers and staff using phone number as primary identity in +255 format.
+- Implemented POST /v1/auth/register, POST /v1/auth/login, POST /v1/auth/refresh, POST /v1/auth/logout, and protected GET /v1/auth/me.
+- Implemented access tokens and refresh tokens with server-side hashed refresh token persistence and rotation.
+- Verified customer registration succeeded.
+- Verified customer login returned access token and refresh token.
+- Verified protected route returned 401 without bearer token.
+- Verified protected route returned 200 with valid bearer token.
+- Verified refresh rotation revoked the old refresh token.
+- Verified logout revoked the active refresh token.
+- Verified seeded staff accounts logged in with correct role claims:
+  - ADMIN
+  - HUB_STAFF
+  - DRIVER
+  - AFFILIATE_STAFF
+- Added docs/security/authentication.md documenting identity rules, token TTLs, rotation, logout behavior, and session revocation rules.
+- Gate satisfied: Tokens issued; refresh works; protected routes block without token.
