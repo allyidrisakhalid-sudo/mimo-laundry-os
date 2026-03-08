@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "node ./src/dev.js",
+    "dev": "tsx ./src/dev.ts",
     "build": "node -e \"console.log('api build ok')\"",
     "lint": "eslint src --ext .ts,.tsx,.js,.jsx,.mjs,.cjs --max-warnings 0",
     "typecheck": "tsc --noEmit",

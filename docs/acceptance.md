@@ -73,3 +73,27 @@
 - Dev-only seed completed successfully and reran successfully.
 - Prisma Studio opened successfully and displayed the Prisma migration table plus application tables.
 - Gate satisfied: Migration applied + seed inserts + Prisma Studio opens.
+
+## Chapter 4.1 PASS
+
+- Re-ran Chapter 3.2 pre-flight verification successfully before implementation.
+- Added Zone as a first-class entity in Prisma.
+- Added required zone foreign keys for Hub, AffiliateShop, Driver.homeZoneId, and CustomerAddress.
+- Added DriverSecondaryZone as schema-ready support for future secondary zone assignment.
+- Applied and committed migrations for zone entity and zone assignment links.
+- Updated seed to create Zone A and Zone B plus linked Hub A/Hub B, Affiliate Shop A/Affiliate Shop B, Driver A/Driver B, and a customer address in Zone A.
+- Verified API returns correct zone mappings for hubs, affiliates, and drivers.
+- Verified Prisma Studio shows zone-linked records.
+- Gate satisfied: Zones can be created; objects can be linked; queries return correct mappings.
+
+## Chapter 4.1 PASS
+
+- Re-ran Chapter 3.2 pre-flight verification successfully before implementation.
+- Added Zone as a first-class entity in Prisma.
+- Added required zone foreign keys for Hub, AffiliateShop, Driver.homeZoneId, and CustomerAddress.
+- Added DriverSecondaryZone as schema-ready support for future secondary zone assignment.
+- Applied and committed migrations for zone entity and zone assignment links.
+- Updated seed to create Zone A and Zone B plus linked Hub A/Hub B, Affiliate Shop A/Affiliate Shop B, Driver A/Driver B, and a customer address in Zone A.
+- Verified API returns correct zone mappings for hubs, affiliates, and drivers.
+- Verified Prisma Studio shows zone-linked records.
+- Gate satisfied: Zones can be created; objects can be linked; queries return correct mappings.

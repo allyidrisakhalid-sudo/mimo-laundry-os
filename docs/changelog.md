@@ -60,3 +60,19 @@
 - Added Prisma schema, Prisma 7 config, initial migration, and Prisma client generation for apps/api.
 - Added dev-only seed system with baseline users and audit log records.
 - Added docs/setup/database_prisma.md documenting DATABASE_URL, migrate, seed, studio, and local reset flow.
+
+## Chapter 4.1 completed
+
+- Added Zone model and required zone relationships for Hub, AffiliateShop, Driver, DriverSecondaryZone, CustomerProfile, and CustomerAddress.
+- Added migrations for zone entity and zone assignment links.
+- Added seed data for Zone A and Zone B with linked hubs, affiliate shops, drivers, and customer address.
+- Implemented minimal zone API endpoints and mapping queries in the current API runtime.
+- Added docs/architecture/zones.md documenting zone rules and derivation.
+
+## Chapter 4.1 completed
+
+- Added Zone model and required zone relationships for Hub, AffiliateShop, Driver, DriverSecondaryZone, CustomerProfile, and CustomerAddress.
+- Added migrations for zone entity and zone assignment links.
+- Added seed data for Zone A and Zone B with linked hubs, affiliate shops, drivers, and customer address.
+- Implemented minimal zone API endpoints and mapping queries in the current API runtime.
+- Added docs/architecture/zones.md documenting zone rules and derivation.
