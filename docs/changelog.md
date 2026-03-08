@@ -99,3 +99,10 @@
 - Added admin driver and trip assignment endpoints plus driver-scoped trip/task endpoints.
 - Updated seed data with drivers, trips, and stops across zones.
 - Added docs/architecture/drivers_dispatch.md.
+
+## Chapter 4.4 completed
+
+- Added DriverProfile, Trip, and TripStop domain entities with availability and trip status enums.
+- Added admin driver and trip assignment endpoints plus driver-scoped trip/task endpoints.
+- Updated seed data with drivers, trips, and stops across zones.
+- Added docs/architecture/drivers_dispatch.md.
