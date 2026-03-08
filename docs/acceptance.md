@@ -155,3 +155,16 @@
 - Verified API flow: create order, auto-create bag, append events, read timeline, create issue, resolve issue.
 - Verified issue actions append explicit ISSUE_OPENED and ISSUE_RESOLVED events.
 - Gate satisfied: Create order append events read timeline reliably.
+
+## Chapter 5.1 PASS
+
+- Re-ran Chapter 4.5 pre-flight: docker healthy, migrations in sync, seed succeeded, Prisma Studio showed Order/Bag/OrderEvent/OrderIssue, and API health returned 200.
+- Swagger UI endpoint responded successfully at http://localhost:3001/api.
+- OpenAPI JSON endpoint responded successfully at http://localhost:3001/api/openapi.json.
+- Verified POST /v1/auth/login succeeded for affiliate.staff.shopa@mimo.local.
+- Verified POST /v1/orders created order API-ORDER-0006 successfully with zone-to-hub routing.
+- Verified GET /v1/orders/:id/timeline returned immutable ORDER_CREATED event data for the new order.
+- Verified validation error responses use standardized schema: errorCode, message, details, traceId, timestamp.
+- Verified forbidden responses use standardized schema: errorCode, message, details, traceId, timestamp.
+- Documented OpenAPI v1 contract in docs/api/openapi_v1.md.
+- Gate satisfied: Swagger UI renders; example requests validate against server.

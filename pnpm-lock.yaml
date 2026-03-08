@@ -67,6 +67,9 @@ importers:
       pg:
         specifier: ^8.20.0
         version: 8.20.0
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@5.2.1)
     devDependencies:
       "@types/cors":
         specifier: ^2.8.19
@@ -74,6 +77,9 @@ importers:
       "@types/express":
         specifier: ^5.0.6
         version: 5.0.6
+      "@types/swagger-ui-express":
+        specifier: ^4.1.8
+        version: 4.1.8
       prisma:
         specifier: ^7.4.2
         version: 7.4.2(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
@@ -2543,6 +2549,12 @@ packages:
         integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==,
       }
 
+  "@scarf/scarf@1.4.0":
+    resolution:
+      {
+        integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==,
+      }
+
   "@simple-libs/stream-utils@1.2.0":
     resolution:
       {
@@ -2881,6 +2893,12 @@ packages:
     resolution:
       {
         integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==,
+      }
+
+  "@types/swagger-ui-express@4.1.8":
+    resolution:
+      {
+        integrity: sha512-AhZV8/EIreHFmBV5wAs0gzJUNq9JbbSXgJLQubCC0jtIo6prnI9MIRRxnU4MZX9RB9yXxF1V4R7jtLl/Wcj31g==,
       }
 
   "@types/yargs-parser@21.0.3":
@@ -8092,6 +8110,21 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
+  swagger-ui-dist@5.32.0:
+    resolution:
+      {
+        integrity: sha512-nKZB0OuDvacB0s/lC2gbge+RigYvGRGpLLMWMFxaTUwfM+CfndVk9Th2IaTinqXiz6Mn26GK2zriCpv6/+5m3Q==,
+      }
+
+  swagger-ui-express@5.0.1:
+    resolution:
+      {
+        integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==,
+      }
+    engines: { node: ">= v0.10.32" }
+    peerDependencies:
+      express: ">=4.0.0 || >=5.0.0-beta"
+
   tailwindcss@4.2.1:
     resolution:
       {
@@ -10527,6 +10560,8 @@ snapshots:
 
   "@rtsao/scc@1.1.0": {}
 
+  "@scarf/scarf@1.4.0": {}
+
   "@simple-libs/stream-utils@1.2.0": {}
 
   "@sinclair/typebox@0.27.10": {}
@@ -10721,6 +10756,11 @@ snapshots:
       "@types/node": 20.19.37
 
   "@types/stack-utils@2.0.3": {}
+
+  "@types/swagger-ui-express@4.1.8":
+    dependencies:
+      "@types/express": 5.0.6
+      "@types/serve-static": 2.2.0
 
   "@types/yargs-parser@21.0.3": {}
 
@@ -14357,6 +14397,15 @@ snapshots:
       supports-color: 7.2.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  swagger-ui-dist@5.32.0:
+    dependencies:
+      "@scarf/scarf": 1.4.0
+
+  swagger-ui-express@5.0.1(express@5.2.1):
+    dependencies:
+      express: 5.2.1
+      swagger-ui-dist: 5.32.0
 
   tailwindcss@4.2.1: {}
 

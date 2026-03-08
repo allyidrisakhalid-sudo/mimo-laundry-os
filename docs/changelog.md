@@ -114,3 +114,12 @@
 - Updated seed with sample orders, bags, timeline events, and delay issue data.
 - Added admin order/timeline/issue API endpoints and verified append-only event flow.
 - Added docs/architecture/orders_timeline.md documenting order truth rules and issue lifecycle.
+
+## Chapter 5.1 completed
+
+- Added executable OpenAPI v1 contract and Swagger UI at /api.
+- Added OpenAPI JSON endpoint at /api/openapi.json.
+- Documented auth, orders, tracking, hub, driver, affiliate, and admin endpoint groups in docs/api/openapi_v1.md.
+- Implemented standardized API error schema with errorCode, message, details, traceId, and timestamp.
+- Added contract-to-database enum mapping for order channel/tier compatibility with current Prisma schema.
+- Verified login, create order, and read timeline requests against the running API.
