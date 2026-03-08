@@ -97,3 +97,15 @@
 - Verified API returns correct zone mappings for hubs, affiliates, and drivers.
 - Verified Prisma Studio shows zone-linked records.
 - Gate satisfied: Zones can be created; objects can be linked; queries return correct mappings.
+
+## Chapter 4.2 PASS
+
+- Pre-flight retest of Chapter 4.1 passed: Docker healthy, migrations in sync, seed passed, zones API returned records.
+- Added Hub model with required zoneId FK and stored capacity/tier support fields.
+- Added HubStaffProfile with unique userId and hub linkage; HUB_STAFF role added to UserRole.
+- Regenerated Prisma client, reset local dev database, and applied migration 20260308081805_init.
+- Seed now creates Zone A and Zone B, Sinza Hub and Mbezi Hub, plus one hub staff user for each hub.
+- Verified GET /v1/hubs returned hubs with zone and staff mappings.
+- Verified GET /v1/zones/:id/hubs returned the correct hub for the selected zone.
+- Verified POST /v1/hubs created Kigamboni Hub successfully under Zone A.
+- Gate satisfied: Create multiple hubs; assign to zones; list hubs by zone.

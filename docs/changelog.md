@@ -76,3 +76,11 @@
 - Added seed data for Zone A and Zone B with linked hubs, affiliate shops, drivers, and customer address.
 - Implemented minimal zone API endpoints and mapping queries in the current API runtime.
 - Added docs/architecture/zones.md documenting zone rules and derivation.
+
+## Chapter 4.2 completed
+
+- Added Hub entity with required zone mapping, location label, stored capacity fields, tier support flags, and active status.
+- Added HubStaffProfile and HUB_STAFF role support for one-hub-per-staff assignment in V1.
+- Updated seed with multiple hubs across zones and hub staff users.
+- Added API endpoints for listing hubs, reading a hub, creating a hub, and listing hubs by zone.
+- Added docs/architecture/hubs.md.

@@ -1,182 +1,142 @@
-import dotenv from "dotenv";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import "dotenv/config";
 import { PrismaClient, UserRole } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-dotenv.config({ path: path.join(__dirname, "../.env") });
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
-}
-
-const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@mimo.local" },
-    update: { role: UserRole.ADMIN },
-    create: {
-      email: "admin@mimo.local",
-      role: UserRole.ADMIN,
-    },
-  });
-
-  const customer = await prisma.user.upsert({
-    where: { email: "customer@mimo.local" },
-    update: { role: UserRole.CUSTOMER },
-    create: {
-      email: "customer@mimo.local",
-      role: UserRole.CUSTOMER,
-    },
-  });
-
-  const affiliateUserA = await prisma.user.upsert({
-    where: { email: "affiliate.a@mimo.local" },
-    update: { role: UserRole.AFFILIATE },
-    create: {
-      email: "affiliate.a@mimo.local",
-      role: UserRole.AFFILIATE,
-    },
-  });
-
-  const affiliateUserB = await prisma.user.upsert({
-    where: { email: "affiliate.b@mimo.local" },
-    update: { role: UserRole.AFFILIATE },
-    create: {
-      email: "affiliate.b@mimo.local",
-      role: UserRole.AFFILIATE,
-    },
-  });
-
-  const hubStaffUserA = await prisma.user.upsert({
-    where: { email: "hubstaff.a@mimo.local" },
-    update: { role: UserRole.HUB_STAFF },
-    create: {
-      email: "hubstaff.a@mimo.local",
-      role: UserRole.HUB_STAFF,
-    },
-  });
-
-  const hubStaffUserB = await prisma.user.upsert({
-    where: { email: "hubstaff.b@mimo.local" },
-    update: { role: UserRole.HUB_STAFF },
-    create: {
-      email: "hubstaff.b@mimo.local",
-      role: UserRole.HUB_STAFF,
-    },
-  });
-
-  const driverUserA = await prisma.user.upsert({
-    where: { email: "driver.a@mimo.local" },
-    update: { role: UserRole.DRIVER },
-    create: {
-      email: "driver.a@mimo.local",
-      role: UserRole.DRIVER,
-    },
-  });
-
-  const driverUserB = await prisma.user.upsert({
-    where: { email: "driver.b@mimo.local" },
-    update: { role: UserRole.DRIVER },
-    create: {
-      email: "driver.b@mimo.local",
-      role: UserRole.DRIVER,
-    },
-  });
-
-  const customerProfile = await prisma.customerProfile.upsert({
-    where: { userId: customer.id },
-    update: {},
-    create: {
-      userId: customer.id,
-    },
-  });
-
   const zoneA = await prisma.zone.upsert({
     where: { name: "Zone A" },
     update: {
-      boundaries: {
-        type: "manual",
-        label: "Zone A boundary descriptor",
-      },
-      metadata: {
-        seedKey: "zone-a",
-      },
+      boundaries: { type: "manual", label: "Zone A boundary descriptor" },
+      metadata: { seedKey: "zone-a" },
     },
     create: {
       name: "Zone A",
-      boundaries: {
-        type: "manual",
-        label: "Zone A boundary descriptor",
-      },
-      metadata: {
-        seedKey: "zone-a",
-      },
+      boundaries: { type: "manual", label: "Zone A boundary descriptor" },
+      metadata: { seedKey: "zone-a" },
     },
   });
 
   const zoneB = await prisma.zone.upsert({
     where: { name: "Zone B" },
     update: {
-      boundaries: {
-        type: "manual",
-        label: "Zone B boundary descriptor",
-      },
-      metadata: {
-        seedKey: "zone-b",
-      },
+      boundaries: { type: "manual", label: "Zone B boundary descriptor" },
+      metadata: { seedKey: "zone-b" },
     },
     create: {
       name: "Zone B",
-      boundaries: {
-        type: "manual",
-        label: "Zone B boundary descriptor",
-      },
-      metadata: {
-        seedKey: "zone-b",
-      },
+      boundaries: { type: "manual", label: "Zone B boundary descriptor" },
+      metadata: { seedKey: "zone-b" },
     },
   });
 
-  await prisma.hub.upsert({
-    where: { code: "HUB-A" },
+  const hubA = await prisma.hub.upsert({
+    where: { name: "Sinza Hub" },
     update: {
-      name: "Hub A",
       zoneId: zoneA.id,
-      staffUserId: hubStaffUserA.id,
+      addressLabel: "Sinza Hub",
+      capacityKgPerDay: 500,
+      capacityOrdersPerDay: 120,
+      supportsTiers: { standard: true, express: true, sameDay: false },
       isActive: true,
     },
     create: {
-      name: "Hub A",
-      code: "HUB-A",
+      name: "Sinza Hub",
       zoneId: zoneA.id,
-      staffUserId: hubStaffUserA.id,
+      addressLabel: "Sinza Hub",
+      capacityKgPerDay: 500,
+      capacityOrdersPerDay: 120,
+      supportsTiers: { standard: true, express: true, sameDay: false },
       isActive: true,
     },
   });
 
-  await prisma.hub.upsert({
-    where: { code: "HUB-B" },
+  const hubB = await prisma.hub.upsert({
+    where: { name: "Mbezi Hub" },
     update: {
-      name: "Hub B",
       zoneId: zoneB.id,
-      staffUserId: hubStaffUserB.id,
+      addressLabel: "Mbezi Hub",
+      capacityKgPerDay: 650,
+      capacityOrdersPerDay: 160,
+      supportsTiers: { standard: true, express: true, sameDay: true },
       isActive: true,
     },
     create: {
-      name: "Hub B",
-      code: "HUB-B",
+      name: "Mbezi Hub",
       zoneId: zoneB.id,
-      staffUserId: hubStaffUserB.id,
+      addressLabel: "Mbezi Hub",
+      capacityKgPerDay: 650,
+      capacityOrdersPerDay: 160,
+      supportsTiers: { standard: true, express: true, sameDay: true },
+      isActive: true,
+    },
+  });
+
+  const hubStaffUserA = await prisma.user.upsert({
+    where: { email: "hub.staff.sinza@mimo.local" },
+    update: {
+      fullName: "Sinza Hub Staff",
+      role: UserRole.HUB_STAFF,
+      isActive: true,
+    },
+    create: {
+      email: "hub.staff.sinza@mimo.local",
+      fullName: "Sinza Hub Staff",
+      role: UserRole.HUB_STAFF,
+      passwordHash: "dev-only-placeholder",
+      isActive: true,
+    },
+  });
+
+  const hubStaffUserB = await prisma.user.upsert({
+    where: { email: "hub.staff.mbezi@mimo.local" },
+    update: {
+      fullName: "Mbezi Hub Staff",
+      role: UserRole.HUB_STAFF,
+      isActive: true,
+    },
+    create: {
+      email: "hub.staff.mbezi@mimo.local",
+      fullName: "Mbezi Hub Staff",
+      role: UserRole.HUB_STAFF,
+      passwordHash: "dev-only-placeholder",
+      isActive: true,
+    },
+  });
+
+  await prisma.hubStaffProfile.upsert({
+    where: { userId: hubStaffUserA.id },
+    update: {
+      hubId: hubA.id,
+      jobTitle: "Hub Supervisor",
+      isActive: true,
+    },
+    create: {
+      userId: hubStaffUserA.id,
+      hubId: hubA.id,
+      jobTitle: "Hub Supervisor",
+      isActive: true,
+    },
+  });
+
+  await prisma.hubStaffProfile.upsert({
+    where: { userId: hubStaffUserB.id },
+    update: {
+      hubId: hubB.id,
+      jobTitle: "Hub Supervisor",
+      isActive: true,
+    },
+    create: {
+      userId: hubStaffUserB.id,
+      hubId: hubB.id,
+      jobTitle: "Hub Supervisor",
       isActive: true,
     },
   });
@@ -186,15 +146,11 @@ async function main() {
     update: {
       name: "Affiliate Shop A",
       zoneId: zoneA.id,
-      staffUserId: affiliateUserA.id,
-      isActive: true,
     },
     create: {
-      name: "Affiliate Shop A",
       code: "SHOP-A",
+      name: "Affiliate Shop A",
       zoneId: zoneA.id,
-      staffUserId: affiliateUserA.id,
-      isActive: true,
     },
   });
 
@@ -203,90 +159,62 @@ async function main() {
     update: {
       name: "Affiliate Shop B",
       zoneId: zoneB.id,
-      staffUserId: affiliateUserB.id,
-      isActive: true,
     },
     create: {
-      name: "Affiliate Shop B",
       code: "SHOP-B",
+      name: "Affiliate Shop B",
       zoneId: zoneB.id,
-      staffUserId: affiliateUserB.id,
-      isActive: true,
     },
   });
 
   await prisma.driver.upsert({
-    where: { userId: driverUserA.id },
+    where: { email: "driver.a@mimo.local" },
     update: {
-      homeZoneId: zoneA.id,
-      isActive: true,
+      fullName: "Driver A",
+      zoneId: zoneA.id,
     },
     create: {
-      userId: driverUserA.id,
-      homeZoneId: zoneA.id,
-      isActive: true,
+      email: "driver.a@mimo.local",
+      fullName: "Driver A",
+      zoneId: zoneA.id,
     },
   });
 
   await prisma.driver.upsert({
-    where: { userId: driverUserB.id },
+    where: { email: "driver.b@mimo.local" },
     update: {
-      homeZoneId: zoneB.id,
-      isActive: true,
+      fullName: "Driver B",
+      zoneId: zoneB.id,
     },
     create: {
-      userId: driverUserB.id,
-      homeZoneId: zoneB.id,
-      isActive: true,
+      email: "driver.b@mimo.local",
+      fullName: "Driver B",
+      zoneId: zoneB.id,
     },
   });
 
   await prisma.customerAddress.upsert({
-    where: { id: "11111111-1111-1111-1111-111111111111" },
+    where: { id: "00000000-0000-0000-0000-000000000001" },
     update: {
-      customerId: customerProfile.id,
+      customerName: "Customer A",
+      addressLine: "Msasani Sample Address",
       zoneId: zoneA.id,
-      label: "Home",
-      line1: "Mikocheni Block A",
-      city: "Dar es Salaam",
-      postalCode: "14112",
-      notes: "Seeded default customer address",
-      isDefault: true,
     },
     create: {
-      id: "11111111-1111-1111-1111-111111111111",
-      customerId: customerProfile.id,
+      id: "00000000-0000-0000-0000-000000000001",
+      customerName: "Customer A",
+      addressLine: "Msasani Sample Address",
       zoneId: zoneA.id,
-      label: "Home",
-      line1: "Mikocheni Block A",
-      city: "Dar es Salaam",
-      postalCode: "14112",
-      notes: "Seeded default customer address",
-      isDefault: true,
     },
-  });
-
-  await prisma.auditLog.createMany({
-    data: [
-      { actorId: admin.id, action: "seed.admin.created_or_verified" },
-      { actorId: customer.id, action: "seed.customer.created_or_verified" },
-      { actorId: affiliateUserA.id, action: "seed.affiliate_a.created_or_verified" },
-      { actorId: affiliateUserB.id, action: "seed.affiliate_b.created_or_verified" },
-      { actorId: hubStaffUserA.id, action: "seed.hubstaff_a.created_or_verified" },
-      { actorId: hubStaffUserB.id, action: "seed.hubstaff_b.created_or_verified" },
-      { actorId: driverUserA.id, action: "seed.driver_a.created_or_verified" },
-      { actorId: driverUserB.id, action: "seed.driver_b.created_or_verified" },
-      { actorId: admin.id, action: "seed.zone_links.created_or_verified" },
-    ],
   });
 
   console.log("Seed complete");
   console.log({
-    zones: ["Zone A", "Zone B"],
-    hubs: ["HUB-A", "HUB-B"],
+    zones: [zoneA.name, zoneB.name],
+    hubs: [hubA.name, hubB.name],
+    hubStaffUsers: [hubStaffUserA.email, hubStaffUserB.email],
     affiliateShops: ["SHOP-A", "SHOP-B"],
     drivers: ["driver.a@mimo.local", "driver.b@mimo.local"],
-    customerAddressZone: "Zone A",
   });
 }
 

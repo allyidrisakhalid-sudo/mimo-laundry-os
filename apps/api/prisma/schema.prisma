@@ -9,125 +9,101 @@ datasource db {
 enum UserRole {
   ADMIN
   CUSTOMER
-  AFFILIATE
-  HUB_STAFF
+  AFFILIATE_STAFF
   DRIVER
-}
-
-model User {
-  id                String           @id @default(uuid())
-  email             String           @unique
-  role              UserRole
-  createdAt         DateTime         @default(now())
-  auditLogs         AuditLog[]
-  driverProfile     Driver?
-  customerProfile   CustomerProfile?
-  affiliateStaffFor AffiliateShop[]  @relation("AffiliateShopStaffUser")
-  hubStaffFor       Hub[]            @relation("HubStaffUser")
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  actorId   String?
-  action    String
-  createdAt DateTime @default(now())
-  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
-
-  @@index([actorId])
-  @@index([createdAt])
+  HUB_STAFF
 }
 
 model Zone {
-  id                   String                @id @default(uuid())
-  name                 String                @unique
-  boundaries           Json
-  metadata             Json?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  hubs                 Hub[]
-  affiliateShops       AffiliateShop[]
-  driversHome          Driver[]              @relation("DriverHomeZone")
-  driverSecondaryZones DriverSecondaryZone[]
-  customerAddresses    CustomerAddress[]
+  id         String            @id @default(uuid())
+  name       String            @unique
+  boundaries Json?
+  metadata   Json?
+  hubs       Hub[]
+  shops      AffiliateShop[]
+  drivers    Driver[]
+  addresses  CustomerAddress[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 }
 
 model Hub {
-  id          String   @id @default(uuid())
-  name        String
-  code        String   @unique
-  zoneId      String
-  staffUserId String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  zone        Zone     @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  staffUser   User?    @relation("HubStaffUser", fields: [staffUserId], references: [id], onDelete: SetNull)
+  id                   String            @id @default(uuid())
+  name                 String            @unique
+  zoneId               String
+  addressLabel         String
+  locationLat          Decimal?          @db.Decimal(10, 7)
+  locationLng          Decimal?          @db.Decimal(10, 7)
+  capacityKgPerDay     Int?
+  capacityOrdersPerDay Int?
+  supportsTiers        Json
+  isActive             Boolean           @default(true)
+  zone                 Zone              @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  staffProfiles        HubStaffProfile[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([zoneId])
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String           @unique
+  fullName        String
+  role            UserRole
+  passwordHash    String?
+  isActive        Boolean          @default(true)
+  hubStaffProfile HubStaffProfile?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model HubStaffProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  hubId     String
+  jobTitle  String?
+  isActive  Boolean  @default(true)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hub       Hub      @relation(fields: [hubId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hubId])
 }
 
 model AffiliateShop {
-  id          String            @id @default(uuid())
-  name        String
-  code        String            @unique
-  zoneId      String
-  staffUserId String?
-  isActive    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  zone        Zone              @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  staffUser   User?             @relation("AffiliateShopStaffUser", fields: [staffUserId], references: [id], onDelete: SetNull)
-  addresses   CustomerAddress[]
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  zoneId    String
+  zone      Zone     @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([zoneId])
 }
 
 model Driver {
-  id                 String                @id @default(uuid())
-  userId             String                @unique
-  homeZoneId         String
-  isActive           Boolean               @default(true)
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  homeZone           Zone                  @relation("DriverHomeZone", fields: [homeZoneId], references: [id], onDelete: Restrict)
-  secondaryZoneLinks DriverSecondaryZone[]
-}
-
-model DriverSecondaryZone {
-  driverId  String
+  id        String   @id @default(uuid())
+  email     String   @unique
+  fullName  String
   zoneId    String
+  zone      Zone     @relation(fields: [zoneId], references: [id], onDelete: Restrict)
   createdAt DateTime @default(now())
-  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  zone      Zone     @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
 
-  @@id([driverId, zoneId])
   @@index([zoneId])
-}
-
-model CustomerProfile {
-  id        String            @id @default(uuid())
-  userId    String            @unique
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  addresses CustomerAddress[]
 }
 
 model CustomerAddress {
-  id              String          @id @default(uuid())
-  customerId      String
-  zoneId          String
-  affiliateShopId String?
-  label           String
-  line1           String
-  line2           String?
-  city            String
-  postalCode      String?
-  notes           String?
-  isDefault       Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  customer        CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  zone            Zone            @relation(fields: [zoneId], references: [id], onDelete: Restrict)
-  affiliateShop   AffiliateShop?  @relation(fields: [affiliateShopId], references: [id], onDelete: SetNull)
+  id           String   @id @default(uuid())
+  customerName String
+  addressLine  String
+  zoneId       String
+  zone         Zone     @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([zoneId])
-  @@index([affiliateShopId])
 }
