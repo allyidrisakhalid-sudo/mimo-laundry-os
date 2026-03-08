@@ -168,3 +168,14 @@
 - Verified forbidden responses use standardized schema: errorCode, message, details, traceId, timestamp.
 - Documented OpenAPI v1 contract in docs/api/openapi_v1.md.
 - Gate satisfied: Swagger UI renders; example requests validate against server.
+
+## Chapter 5.2 PASS
+
+- Re-ran Chapter 5.1 pre-flight and verified Swagger UI at /api, OpenAPI JSON at /api/openapi.json, and health endpoint at /health.
+- Generated TypeScript SDK in packages/sdk from saved OpenAPI snapshot using openapi-typescript.
+- Added SDK scripts: refresh:openapi, gen, and check.
+- Added root scripts: pnpm gen:sdk and pnpm check:sdk.
+- Verified apps/web imports @mimo/sdk and builds successfully.
+- Verified apps/mobile imports @mimo/sdk and typechecks/builds successfully.
+- Proved compile lock by simulating generated-file drift and confirming pnpm check:sdk failed until regeneration restored alignment.
+- Gate satisfied: Web and mobile import SDK and build successfully.

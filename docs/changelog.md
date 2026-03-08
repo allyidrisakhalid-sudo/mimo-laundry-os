@@ -123,3 +123,12 @@
 - Implemented standardized API error schema with errorCode, message, details, traceId, and timestamp.
 - Added contract-to-database enum mapping for order channel/tier compatibility with current Prisma schema.
 - Verified login, create order, and read timeline requests against the running API.
+
+## Chapter 5.2 completed
+
+- Added generated OpenAPI SDK package under packages/sdk with saved openapi.json snapshot and generated TypeScript types.
+- Added typed client factory export for shared API access from web and mobile.
+- Wired apps/web and apps/mobile to consume @mimo/sdk with minimal health endpoint placeholders.
+- Added repeatable SDK generation and verification commands: refresh:openapi, gen, check, gen:sdk, and check:sdk.
+- Documented SDK workflow in docs/api/sdk_generation.md.
+- Added compile-lock enforcement so stale generated SDK output fails loudly until regenerated.
