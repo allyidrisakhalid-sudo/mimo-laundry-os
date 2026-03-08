@@ -6,6 +6,11 @@ import {
   DriverAvailabilityStatus,
   OrderChannel,
   OrderSourceType,
+  OrderEventType,
+  OrderIssueStatus,
+  OrderIssueType,
+  OrderStatusCurrent,
+  OrderTier,
   TripStatus,
   TripStopStatus,
   TripStopType,
@@ -19,6 +24,9 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  await prisma.orderIssue.deleteMany();
+  await prisma.orderEvent.deleteMany();
+  await prisma.bag.deleteMany();
   await prisma.tripStop.deleteMany();
   await prisma.trip.deleteMany();
   await prisma.driverProfile.deleteMany();
@@ -221,7 +229,10 @@ async function main() {
       sourceType: OrderSourceType.AFFILIATE,
       affiliateShopId: shopA.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: zoneA.id,
+      tier: OrderTier.STANDARD_48H,
+      zoneId: zoneA.id,
+      hubId: sinzaHub.id,
+      statusCurrent: OrderStatusCurrent.CREATED,
       customerName: "API Customer A",
       customerPhone: "+255711100001",
       notes: "Created via affiliate API",
@@ -234,7 +245,10 @@ async function main() {
       sourceType: OrderSourceType.AFFILIATE,
       affiliateShopId: shopA.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: zoneA.id,
+      tier: OrderTier.STANDARD_48H,
+      zoneId: zoneA.id,
+      hubId: sinzaHub.id,
+      statusCurrent: OrderStatusCurrent.CREATED,
       customerName: "Shop A Walk-in Customer",
       customerPhone: "+255711000001",
       notes: "Seeded affiliate order for SHOP-A",
@@ -247,10 +261,76 @@ async function main() {
       sourceType: OrderSourceType.AFFILIATE,
       affiliateShopId: shopB.id,
       channel: OrderChannel.SHOP_DROP,
-      orderZoneId: zoneB.id,
+      tier: OrderTier.STANDARD_48H,
+      zoneId: zoneB.id,
+      hubId: mbeziHub.id,
+      statusCurrent: OrderStatusCurrent.CREATED,
       customerName: "Shop B Walk-in Customer",
       customerPhone: "+255711000002",
       notes: "Seeded affiliate order for SHOP-B",
+    },
+  });
+
+  const apiOrderABag = await prisma.bag.create({
+    data: {
+      orderId: apiOrderA.id,
+      tagCode: "BAG-AFF-SHOP-A-API-001",
+      bagStatus: "CREATED",
+    },
+  });
+
+  const orderABag = await prisma.bag.create({
+    data: {
+      orderId: orderA.id,
+      tagCode: "BAG-AFF-SHOP-A-001",
+      bagStatus: "CREATED",
+    },
+  });
+
+  const orderBBag = await prisma.bag.create({
+    data: {
+      orderId: orderB.id,
+      tagCode: "BAG-AFF-SHOP-B-001",
+      bagStatus: "CREATED",
+    },
+  });
+
+  const apiOrderAEvent = await prisma.orderEvent.create({
+    data: {
+      orderId: apiOrderA.id,
+      eventType: OrderEventType.ORDER_CREATED,
+      actorRole: "SYSTEM",
+      notes: "Initial order creation event",
+      payloadJson: { source: "seed", orderNumber: apiOrderA.orderNumber },
+    },
+  });
+
+  const orderAEvent = await prisma.orderEvent.create({
+    data: {
+      orderId: orderA.id,
+      eventType: OrderEventType.ORDER_CREATED,
+      actorRole: "AFFILIATE_STAFF",
+      notes: "Affiliate shop created order",
+      payloadJson: { source: "seed", orderNumber: orderA.orderNumber },
+    },
+  });
+
+  const orderBEvent = await prisma.orderEvent.create({
+    data: {
+      orderId: orderB.id,
+      eventType: OrderEventType.ORDER_CREATED,
+      actorRole: "AFFILIATE_STAFF",
+      notes: "Affiliate shop created order",
+      payloadJson: { source: "seed", orderNumber: orderB.orderNumber },
+    },
+  });
+
+  const orderAIssue = await prisma.orderIssue.create({
+    data: {
+      orderId: orderA.id,
+      type: OrderIssueType.DELAY,
+      status: OrderIssueStatus.OPEN,
+      description: "Customer informed of expected delay for delivery window.",
     },
   });
 
@@ -308,6 +388,9 @@ async function main() {
     affiliateShops: [shopA.code, shopB.code],
     affiliateStaffUsers: [affiliateStaffAUser.email, affiliateStaffBUser.email],
     orders: [apiOrderA.orderNumber, orderA.orderNumber, orderB.orderNumber],
+    bags: [apiOrderABag.tagCode, orderABag.tagCode, orderBBag.tagCode],
+    events: [apiOrderAEvent.eventType, orderAEvent.eventType, orderBEvent.eventType],
+    issues: [orderAIssue.type],
     drivers: [driverAUser.email, driverBUser.email],
     trips: [tripA.id, tripB.id],
   });

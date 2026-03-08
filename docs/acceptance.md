@@ -144,3 +144,14 @@
 - Verified driver login works and driver profile/trips/tasks are scoped to the authenticated driver only.
 - Verified cross-driver trip access returns 403.
 - Gate satisfied: Admin can assign tasks; driver sees only assigned tasks.
+
+## Chapter 4.5 PASS
+
+- Re-ran prior chapter pre-flight checks: Docker healthy, migrations and seed succeeded, prior driver and affiliate scoping still worked.
+- Added Order core truth fields: customerUserId, channel, tier, sourceType, affiliateShopId, zoneId, hubId, pickupAddressId, dropoffAddressId, statusCurrent.
+- Added Bag entity with unique tagCode and linked one bag per order in V1.
+- Added append-only OrderEvent timeline and verified ordered retrieval through API.
+- Added OrderIssue entity with explicit issue types and lifecycle statuses.
+- Verified API flow: create order, auto-create bag, append events, read timeline, create issue, resolve issue.
+- Verified issue actions append explicit ISSUE_OPENED and ISSUE_RESOLVED events.
+- Gate satisfied: Create order append events read timeline reliably.

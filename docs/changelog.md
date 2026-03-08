@@ -106,3 +106,11 @@
 - Added admin driver and trip assignment endpoints plus driver-scoped trip/task endpoints.
 - Updated seed data with drivers, trips, and stops across zones.
 - Added docs/architecture/drivers_dispatch.md.
+
+## Chapter 4.5 completed
+
+- Added Order truth model fields for channel, tier, zone, hub, addresses, and statusCurrent.
+- Added Bag, OrderEvent, and OrderIssue models with supporting enums and migrations.
+- Updated seed with sample orders, bags, timeline events, and delay issue data.
+- Added admin order/timeline/issue API endpoints and verified append-only event flow.
+- Added docs/architecture/orders_timeline.md documenting order truth rules and issue lifecycle.
