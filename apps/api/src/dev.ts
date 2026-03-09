@@ -22,6 +22,25 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET ?? "dev-refresh-se
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30;
 
+type Role = "CUSTOMER" | "AFFILIATE_STAFF" | "DRIVER" | "HUB_STAFF" | "ADMIN" | "DEV_ADMIN";
+
+type AuthenticatedUser = {
+  id: string;
+  phone: string;
+  email: string | null;
+  fullName: string;
+  role: Role;
+  status: string;
+};
+
+type ScopeContext = {
+  userId: string;
+  role: Role;
+  affiliateShopId: string | null;
+  driverId: string | null;
+  hubId: string | null;
+};
+
 function json(res: http.ServerResponse, statusCode: number, payload: unknown) {
   res.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(payload));
@@ -59,6 +78,14 @@ function parseAuthHeader(req: http.IncomingMessage) {
   return header.slice("Bearer ".length);
 }
 
+function getString(row: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "string") return value;
+  }
+  return null;
+}
+
 async function readJsonBody(req: http.IncomingMessage) {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -75,7 +102,7 @@ async function readJsonBody(req: http.IncomingMessage) {
   }
 }
 
-function signAccessToken(user: { id: string; phone: string; role: string }) {
+function signAccessToken(user: { id: string; phone: string; role: Role }) {
   return jwt.sign(
     {
       sub: user.id,
@@ -104,8 +131,19 @@ function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function toUserDto(user: Record<string, unknown>) {
+  return {
+    id: getString(user, "id"),
+    phone: getString(user, "phone"),
+    email: getString(user, "email"),
+    fullName: getString(user, "fullName", "fullname"),
+    role: getString(user, "role"),
+    status: getString(user, "status"),
+  };
+}
+
 async function issueTokens(
-  user: { id: string; phone: string; role: string },
+  user: { id: string; phone: string; role: Role },
   req: http.IncomingMessage
 ) {
   const accessToken = signAccessToken(user);
@@ -134,13 +172,19 @@ async function issueTokens(
   };
 }
 
-async function authenticate(req: http.IncomingMessage) {
+async function authenticate(req: http.IncomingMessage): Promise<AuthenticatedUser | null> {
   const token = parseAuthHeader(req);
   if (!token) return null;
 
   try {
     const payload = jwt.verify(token, ACCESS_TOKEN_SECRET) as jwt.JwtPayload;
-    if (payload.typ !== "access" || typeof payload.sub !== "string") return null;
+    if (
+      payload.typ !== "access" ||
+      typeof payload.sub !== "string" ||
+      typeof payload.role !== "string"
+    ) {
+      return null;
+    }
 
     const result = await pool.query(
       `
@@ -154,13 +198,267 @@ async function authenticate(req: http.IncomingMessage) {
 
     if (result.rows.length === 0) return null;
 
-    const user = result.rows[0];
-    if (user.status !== "ACTIVE") return null;
+    const row = result.rows[0] as Record<string, unknown>;
+    const role = getString(row, "role");
+    const status = getString(row, "status");
+    const fullName = getString(row, "fullName", "fullname");
+    const phone = getString(row, "phone");
 
-    return user;
+    if (!role || !status || !fullName || !phone) return null;
+    if (status !== "ACTIVE") return null;
+    if (role !== payload.role) return null;
+
+    return {
+      id: getString(row, "id") ?? "",
+      phone,
+      email: getString(row, "email"),
+      fullName,
+      role: role as Role,
+      status,
+    };
   } catch {
     return null;
   }
+}
+
+async function requireAuth(req: http.IncomingMessage, res: http.ServerResponse) {
+  const user = await authenticate(req);
+  if (!user) {
+    sendError(res, 401, "UNAUTHORIZED", "Bearer access token is required");
+    return null;
+  }
+  return user;
+}
+
+function hasAnyRole(user: AuthenticatedUser, roles: Role[]) {
+  return roles.includes(user.role);
+}
+
+function requireRoles(
+  user: AuthenticatedUser,
+  res: http.ServerResponse,
+  roles: Role[],
+  action = "perform this action"
+) {
+  if (!hasAnyRole(user, roles)) {
+    sendError(res, 403, "FORBIDDEN", `Role ${user.role} is not allowed to ${action}`);
+    return false;
+  }
+  return true;
+}
+
+async function resolveScope(user: AuthenticatedUser): Promise<ScopeContext> {
+  const scope: ScopeContext = {
+    userId: user.id,
+    role: user.role,
+    affiliateShopId: null,
+    driverId: null,
+    hubId: null,
+  };
+
+  if (user.role === "AFFILIATE_STAFF") {
+    const result = await pool.query(
+      `
+      SELECT "affiliateShopId"
+      FROM "AffiliateStaffProfile"
+      WHERE "userId" = $1 AND "isActive" = TRUE
+      LIMIT 1
+      `,
+      [user.id]
+    );
+    scope.affiliateShopId = getString(result.rows[0] ?? {}, "affiliateShopId", "affiliateshopid");
+  }
+
+  if (user.role === "DRIVER") {
+    const result = await pool.query(
+      `
+      SELECT "id"
+      FROM "DriverProfile"
+      WHERE "userId" = $1 AND "isActive" = TRUE
+      LIMIT 1
+      `,
+      [user.id]
+    );
+    scope.driverId = getString(result.rows[0] ?? {}, "id");
+  }
+
+  if (user.role === "HUB_STAFF") {
+    const result = await pool.query(
+      `
+      SELECT "hubId"
+      FROM "HubStaffProfile"
+      WHERE "userId" = $1 AND "isActive" = TRUE
+      LIMIT 1
+      `,
+      [user.id]
+    );
+    scope.hubId = getString(result.rows[0] ?? {}, "hubId", "hubid");
+  }
+
+  return scope;
+}
+
+async function createAuditLog(input: {
+  actorUserId: string;
+  actorRole: string;
+  actionCode: string;
+  targetResourceType: string;
+  targetResourceId: string;
+  reason: string;
+  beforeJson?: unknown;
+  afterJson?: unknown;
+}) {
+  await pool.query(
+    `
+    INSERT INTO "AuditLog" (
+      "id", "actorUserId", "actorRole", "actionCode", "targetResourceType", "targetResourceId",
+      "reason", "beforeJson", "afterJson", "createdAt"
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, NOW())
+    `,
+    [
+      crypto.randomUUID(),
+      input.actorUserId,
+      input.actorRole,
+      input.actionCode,
+      input.targetResourceType,
+      input.targetResourceId,
+      input.reason,
+      input.beforeJson === undefined ? null : JSON.stringify(input.beforeJson),
+      input.afterJson === undefined ? null : JSON.stringify(input.afterJson),
+    ]
+  );
+}
+
+async function fetchOrderById(orderId: string) {
+  const result = await pool.query(
+    `
+    SELECT
+      o."id",
+      o."orderNumber",
+      o."sourceType",
+      o."affiliateShopId",
+      o."channel",
+      o."customerName",
+      o."customerPhone",
+      o."notes",
+      o."createdAt",
+      o."updatedAt",
+      o."customerUserId",
+      o."tier",
+      o."zoneId",
+      o."hubId",
+      o."pickupAddressId",
+      o."dropoffAddressId",
+      o."statusCurrent"
+    FROM "Order" o
+    WHERE o."id" = $1
+    LIMIT 1
+    `,
+    [orderId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function fetchTripById(tripId: string) {
+  const result = await pool.query(
+    `
+    SELECT
+      t."id",
+      t."type",
+      t."zoneId",
+      t."hubId",
+      t."driverId",
+      t."status",
+      t."scheduledFor",
+      t."startedAt",
+      t."completedAt",
+      t."createdAt",
+      t."updatedAt"
+    FROM "Trip" t
+    WHERE t."id" = $1
+    LIMIT 1
+    `,
+    [tripId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function canReadOrder(user: AuthenticatedUser, scope: ScopeContext, orderId: string) {
+  const order = await fetchOrderById(orderId);
+  if (!order) {
+    return { order: null, allowed: false, reason: "NOT_FOUND" as const };
+  }
+
+  if (user.role === "ADMIN" || user.role === "DEV_ADMIN") {
+    return { order, allowed: true, reason: "ALLOWED" as const };
+  }
+
+  const affiliateShopId = getString(order, "affiliateShopId", "affiliateshopid");
+  const customerUserId = getString(order, "customerUserId", "customeruserid");
+  const hubId = getString(order, "hubId", "hubid");
+
+  if (user.role === "CUSTOMER") {
+    return { order, allowed: customerUserId === user.id, reason: "SCOPED" as const };
+  }
+
+  if (user.role === "AFFILIATE_STAFF") {
+    return {
+      order,
+      allowed: !!scope.affiliateShopId && affiliateShopId === scope.affiliateShopId,
+      reason: "SCOPED" as const,
+    };
+  }
+
+  if (user.role === "HUB_STAFF") {
+    return { order, allowed: !!scope.hubId && hubId === scope.hubId, reason: "SCOPED" as const };
+  }
+
+  if (user.role === "DRIVER") {
+    const stopResult = await pool.query(
+      `
+      SELECT ts."id"
+      FROM "TripStop" ts
+      INNER JOIN "Trip" t ON t."id" = ts."tripId"
+      WHERE ts."orderId" = $1
+        AND t."driverId" = $2
+      LIMIT 1
+      `,
+      [orderId, scope.driverId]
+    );
+
+    return { order, allowed: stopResult.rows.length > 0, reason: "SCOPED" as const };
+  }
+
+  return { order, allowed: false, reason: "SCOPED" as const };
+}
+
+async function canReadTrip(user: AuthenticatedUser, scope: ScopeContext, tripId: string) {
+  const trip = await fetchTripById(tripId);
+  if (!trip) {
+    return { trip: null, allowed: false, reason: "NOT_FOUND" as const };
+  }
+
+  if (user.role === "ADMIN" || user.role === "DEV_ADMIN") {
+    return { trip, allowed: true, reason: "ALLOWED" as const };
+  }
+
+  if (user.role === "DRIVER") {
+    return {
+      trip,
+      allowed: !!scope.driverId && getString(trip, "driverId", "driverid") === scope.driverId,
+      reason: "SCOPED" as const,
+    };
+  }
+
+  return { trip, allowed: false, reason: "SCOPED" as const };
+}
+
+function pathParam(pathname: string, expression: RegExp) {
+  const match = pathname.match(expression);
+  return match ? match[1] : null;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -255,20 +553,23 @@ const server = http.createServer(async (req, res) => {
 
       const user = result.rows[0];
 
-      if (user.status !== "ACTIVE") {
+      if (getString(user, "status") !== "ACTIVE") {
         return sendError(res, 403, "ACCOUNT_DISABLED", "User account is disabled");
       }
 
-      const ok = await bcrypt.compare(password, user.passwordhash ?? user.passwordHash);
+      const ok = await bcrypt.compare(
+        password,
+        getString(user, "passwordhash", "passwordHash") ?? ""
+      );
       if (!ok) {
         return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid phone or password");
       }
 
       const tokens = await issueTokens(
         {
-          id: user.id,
-          phone: user.phone,
-          role: user.role,
+          id: getString(user, "id") ?? "",
+          phone: getString(user, "phone") ?? "",
+          role: (getString(user, "role") ?? "CUSTOMER") as Role,
         },
         req
       );
@@ -276,12 +577,12 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         data: {
           user: {
-            id: user.id,
-            phone: user.phone,
-            email: user.email,
-            fullName: user.fullName ?? user.fullname,
-            role: user.role,
-            status: user.status,
+            id: getString(user, "id"),
+            phone: getString(user, "phone"),
+            email: getString(user, "email"),
+            fullName: getString(user, "fullName", "fullname"),
+            role: getString(user, "role"),
+            status: getString(user, "status"),
           },
           tokens,
         },
@@ -343,12 +644,12 @@ const server = http.createServer(async (req, res) => {
         [payload.sub]
       );
 
-      if (userResult.rows.length === 0 || userResult.rows[0].status !== "ACTIVE") {
+      if (userResult.rows.length === 0 || getString(userResult.rows[0], "status") !== "ACTIVE") {
         return sendError(res, 401, "INVALID_REFRESH_TOKEN", "User is not active");
       }
 
       const user = userResult.rows[0];
-      const newRefreshToken = signRefreshToken({ id: user.id });
+      const newRefreshToken = signRefreshToken({ id: getString(user, "id") ?? "" });
       const replacementId = crypto.randomUUID();
 
       await pool.query(
@@ -358,7 +659,7 @@ const server = http.createServer(async (req, res) => {
         `,
         [
           replacementId,
-          user.id,
+          getString(user, "id"),
           hashToken(newRefreshToken),
           new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000),
           req.headers["user-agent"]?.toString() ?? null,
@@ -375,17 +676,21 @@ const server = http.createServer(async (req, res) => {
         [existing.id, replacementId]
       );
 
-      const accessToken = signAccessToken({ id: user.id, phone: user.phone, role: user.role });
+      const accessToken = signAccessToken({
+        id: getString(user, "id") ?? "",
+        phone: getString(user, "phone") ?? "",
+        role: (getString(user, "role") ?? "CUSTOMER") as Role,
+      });
 
       return json(res, 200, {
         data: {
           user: {
-            id: user.id,
-            phone: user.phone,
-            email: user.email,
-            fullName: user.fullName ?? user.fullname,
-            role: user.role,
-            status: user.status,
+            id: getString(user, "id"),
+            phone: getString(user, "phone"),
+            email: getString(user, "email"),
+            fullName: getString(user, "fullName", "fullname"),
+            role: getString(user, "role"),
+            status: getString(user, "status"),
           },
           tokens: {
             accessToken,
@@ -439,20 +744,261 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "GET" && url.pathname === "/v1/auth/me") {
-      const user = await authenticate(req);
-      if (!user) {
-        return sendError(res, 401, "UNAUTHORIZED", "Bearer access token is required");
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      return json(res, 200, { data: { user } });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/admin/users") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "access admin-only users list")) return;
+
+      const result = await pool.query(
+        `
+        SELECT "id", "phone", "email", "fullName", "role", "status"
+        FROM "User"
+        ORDER BY "createdAt" ASC
+        `
+      );
+
+      return json(res, 200, {
+        data: {
+          users: result.rows.map((row) => toUserDto(row)),
+        },
+      });
+    }
+
+    const orderId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)$/);
+    if (method === "GET" && orderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      const scope = await resolveScope(user);
+      const decision = await canReadOrder(user, scope, orderId);
+
+      if (!decision.order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      if (!decision.allowed) {
+        return sendError(res, 403, "FORBIDDEN", "You are not allowed to access this order");
       }
 
       return json(res, 200, {
         data: {
-          user: {
-            id: user.id,
-            phone: user.phone,
-            email: user.email,
-            fullName: user.fullName ?? user.fullname,
-            role: user.role,
-            status: user.status,
+          order: decision.order,
+          scope: {
+            role: scope.role,
+            affiliateShopId: scope.affiliateShopId,
+            driverId: scope.driverId,
+            hubId: scope.hubId,
+          },
+        },
+      });
+    }
+
+    const tripId = pathParam(url.pathname, /^\/v1\/trips\/([^/]+)$/);
+    if (method === "GET" && tripId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      const scope = await resolveScope(user);
+      const decision = await canReadTrip(user, scope, tripId);
+
+      if (!decision.trip) {
+        return sendError(res, 404, "TRIP_NOT_FOUND", "Trip was not found");
+      }
+
+      if (!decision.allowed) {
+        return sendError(res, 403, "FORBIDDEN", "You are not allowed to access this trip");
+      }
+
+      return json(res, 200, {
+        data: {
+          trip: decision.trip,
+          scope: {
+            role: scope.role,
+            driverId: scope.driverId,
+          },
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/audit-logs") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "access audit logs")) return;
+
+      const targetResourceType = url.searchParams.get("targetResourceType");
+      const targetResourceId = url.searchParams.get("targetResourceId");
+
+      let query = `
+        SELECT
+          "id", "actorUserId", "actorRole", "actionCode", "targetResourceType",
+          "targetResourceId", "reason", "beforeJson", "afterJson", "createdAt"
+        FROM "AuditLog"
+      `;
+      const params: string[] = [];
+
+      if (targetResourceType && targetResourceId) {
+        query += ` WHERE "targetResourceType" = $1 AND "targetResourceId" = $2`;
+        params.push(targetResourceType, targetResourceId);
+      }
+
+      query += ` ORDER BY "createdAt" DESC`;
+
+      const result = await pool.query(query, params);
+      return json(res, 200, { data: { auditLogs: result.rows } });
+    }
+
+    const assignHubOrderId = pathParam(
+      url.pathname,
+      /^\/v1\/dev\/override\/orders\/([^/]+)\/assign-hub$/
+    );
+    if (method === "POST" && assignHubOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DEV_ADMIN"], "use DevAdmin override assign-hub")) return;
+
+      const body = await readJsonBody(req);
+      const hubId = String(body.hubId ?? "").trim();
+      const reason = String(body.reason ?? "").trim();
+
+      if (!hubId || !reason) {
+        return sendError(res, 400, "VALIDATION_ERROR", "hubId and reason are required");
+      }
+
+      const order = await fetchOrderById(assignHubOrderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const hubCheck = await pool.query(`SELECT "id" FROM "Hub" WHERE "id" = $1 LIMIT 1`, [hubId]);
+      if (hubCheck.rows.length === 0) {
+        return sendError(res, 404, "HUB_NOT_FOUND", "Hub was not found");
+      }
+
+      const beforeHubId = getString(order, "hubId", "hubid");
+
+      await pool.query(
+        `
+        UPDATE "Order"
+        SET "hubId" = $2, "updatedAt" = NOW()
+        WHERE "id" = $1
+        `,
+        [assignHubOrderId, hubId]
+      );
+
+      await createAuditLog({
+        actorUserId: user.id,
+        actorRole: user.role,
+        actionCode: "DEV_OVERRIDE_ASSIGN_HUB",
+        targetResourceType: "Order",
+        targetResourceId: assignHubOrderId,
+        reason,
+        beforeJson: { hubId: beforeHubId },
+        afterJson: { hubId },
+      });
+
+      const updatedOrder = await fetchOrderById(assignHubOrderId);
+
+      return json(res, 200, {
+        data: {
+          order: updatedOrder,
+          override: {
+            actionCode: "DEV_OVERRIDE_ASSIGN_HUB",
+            reason,
+          },
+        },
+      });
+    }
+
+    const appendEventOrderId = pathParam(
+      url.pathname,
+      /^\/v1\/dev\/override\/orders\/([^/]+)\/append-event$/
+    );
+    if (method === "POST" && appendEventOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DEV_ADMIN"], "use DevAdmin override append-event")) return;
+
+      const body = await readJsonBody(req);
+      const eventType = String(body.eventType ?? "").trim();
+      const notes = String(body.notes ?? "").trim();
+      const reason = String(body.reason ?? "").trim();
+
+      if (!eventType || !reason) {
+        return sendError(res, 400, "VALIDATION_ERROR", "eventType and reason are required");
+      }
+
+      const validEventTypes = new Set([
+        "ORDER_CREATED",
+        "PICKUP_SCHEDULED",
+        "PICKED_UP",
+        "RECEIVED_AT_HUB",
+        "WASHING_STARTED",
+        "DRYING_STARTED",
+        "IRONING_STARTED",
+        "PACKED",
+        "OUT_FOR_DELIVERY",
+        "DELIVERED",
+        "PAYMENT_DUE",
+        "PAID",
+        "ISSUE_OPENED",
+        "ISSUE_UPDATED",
+        "ISSUE_RESOLVED",
+      ]);
+
+      if (!validEventTypes.has(eventType)) {
+        return sendError(res, 400, "VALIDATION_ERROR", "eventType is not supported");
+      }
+
+      const order = await fetchOrderById(appendEventOrderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const eventId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "OrderEvent" (
+          "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+        )
+        VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7::jsonb, NOW())
+        `,
+        [
+          eventId,
+          appendEventOrderId,
+          eventType,
+          user.id,
+          user.role,
+          notes || null,
+          JSON.stringify({ source: "dev_override", reason }),
+        ]
+      );
+
+      await createAuditLog({
+        actorUserId: user.id,
+        actorRole: user.role,
+        actionCode: "DEV_OVERRIDE_APPEND_EVENT",
+        targetResourceType: "Order",
+        targetResourceId: appendEventOrderId,
+        reason,
+        beforeJson: { appendedEvent: null },
+        afterJson: { appendedEvent: { id: eventId, eventType, notes: notes || null } },
+      });
+
+      return json(res, 200, {
+        data: {
+          appendedEvent: {
+            id: eventId,
+            orderId: appendEventOrderId,
+            eventType,
+            notes: notes || null,
+          },
+          override: {
+            actionCode: "DEV_OVERRIDE_APPEND_EVENT",
+            reason,
           },
         },
       });

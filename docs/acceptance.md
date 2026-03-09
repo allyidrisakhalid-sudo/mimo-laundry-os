@@ -199,3 +199,19 @@
   - AFFILIATE_STAFF
 - Added docs/security/authentication.md documenting identity rules, token TTLs, rotation, logout behavior, and session revocation rules.
 - Gate satisfied: Tokens issued; refresh works; protected routes block without token.
+
+## Chapter 6.2 PASS
+
+- Re-ran Chapter 6.1 pre-flight and confirmed protected auth route returned 401 without token.
+- Confirmed admin-only endpoint /v1/admin/users returned 403 for AFFILIATE_STAFF and 200 for ADMIN.
+- Confirmed Affiliate Staff A cross-shop access to order_scope_b returned 403.
+- Confirmed Driver A cross-driver access to rip_driver_b returned 403.
+- Confirmed Hub Staff A cross-hub access to order_scope_b returned 403.
+- Confirmed Customer A cross-customer access to order_scope_b returned 403.
+- Confirmed ADMIN could access order_scope_b and rip_driver_b successfully.
+- Confirmed non-DEV_ADMIN could not call dev override endpoint and received 403.
+- Confirmed DEV_ADMIN override endpoint required
+  eason and returned 400 when omitted.
+- Confirmed DEV_ADMIN override assign-hub and append-event endpoints both returned 200 when called with valid reason.
+- Confirmed audit logs were created for both DEV_ADMIN overrides and fetched successfully for order_scope_b.
+- Gate satisfied: Attempted cross-scope access returns 403 consistently.

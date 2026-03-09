@@ -18,6 +18,7 @@ async function main() {
 
     await client.query("BEGIN");
 
+    await client.query('DELETE FROM "AuditLog"');
     await client.query('DELETE FROM "RefreshToken"');
     await client.query('DELETE FROM "TripStop"');
     await client.query('DELETE FROM "Trip"');
@@ -35,59 +36,66 @@ async function main() {
     await client.query('DELETE FROM "Hub"');
     await client.query('DELETE FROM "Zone"');
 
-    const zoneRes = await client.query(
+    await client.query(
       `
       INSERT INTO "Zone" ("id", "name", "boundaries", "metadata", "createdAt", "updatedAt")
-      VALUES ('zone_a', 'Zone A', $1::jsonb, $2::jsonb, NOW(), NOW())
-      RETURNING "id"
+      VALUES
+        ('zone_a', 'Zone A', $1::jsonb, $2::jsonb, NOW(), NOW()),
+        ('zone_b', 'Zone B', $3::jsonb, $4::jsonb, NOW(), NOW())
       `,
       [
         JSON.stringify({ type: "Polygon", label: "Zone A" }),
-        JSON.stringify({ city: "Dar es Salaam" }),
+        JSON.stringify({ city: "Dar es Salaam", area: "Kigamboni" }),
+        JSON.stringify({ type: "Polygon", label: "Zone B" }),
+        JSON.stringify({ city: "Dar es Salaam", area: "Mbagala" }),
       ]
     );
-    const zoneId = zoneRes.rows[0].id;
 
-    const commissionPlanRes = await client.query(
+    await client.query(
       `
       INSERT INTO "CommissionPlan" ("id", "name", "fixedAmountTzs", "isActive", "createdAt", "updatedAt", "kind", "notes", "percentageBps")
-      VALUES ('plan_shop_pct_10', 'Shop 10 Percent', NULL, TRUE, NOW(), NOW(), 'PERCENTAGE', 'Default affiliate plan', 1000)
-      RETURNING "id"
+      VALUES
+        ('plan_shop_pct_10', 'Shop 10 Percent', NULL, TRUE, NOW(), NOW(), 'PERCENTAGE', 'Default affiliate plan', 1000),
+        ('plan_shop_pct_12', 'Shop 12 Percent', NULL, TRUE, NOW(), NOW(), 'PERCENTAGE', 'Secondary affiliate plan', 1200)
       `
     );
-    const commissionPlanId = commissionPlanRes.rows[0].id;
 
-    const hubRes = await client.query(
+    await client.query(
       `
       INSERT INTO "Hub" (
         "id", "name", "zoneId", "isActive", "createdAt", "updatedAt",
         "addressLabel", "capacityKgPerDay", "capacityOrdersPerDay", "locationLat", "locationLng", "supportsTiers"
       )
-      VALUES (
-        'hub_kigamboni', 'Kigamboni Hub', $1, TRUE, NOW(), NOW(),
-        'Kigamboni, Dar es Salaam', 500, 120, NULL, NULL, $2::jsonb
-      )
-      RETURNING "id"
+      VALUES
+        (
+          'hub_kigamboni', 'Kigamboni Hub', 'zone_a', TRUE, NOW(), NOW(),
+          'Kigamboni, Dar es Salaam', 500, 120, NULL, NULL, $1::jsonb
+        ),
+        (
+          'hub_mbagala', 'Mbagala Hub', 'zone_b', TRUE, NOW(), NOW(),
+          'Mbagala, Dar es Salaam', 450, 100, NULL, NULL, $1::jsonb
+        )
       `,
-      [zoneId, JSON.stringify(["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"])]
+      [JSON.stringify(["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"])]
     );
-    const hubId = hubRes.rows[0].id;
 
-    const affiliateShopRes = await client.query(
+    await client.query(
       `
       INSERT INTO "AffiliateShop" (
         "id", "name", "code", "zoneId", "createdAt", "updatedAt",
         "addressLabel", "commissionPlanId", "contactPhone", "isActive", "locationLat", "locationLng"
       )
-      VALUES (
-        'shop_mikocheni', 'Mikocheni Affiliate', 'SHOP_MIKOCHENI', $1, NOW(), NOW(),
-        'Mikocheni, Dar es Salaam', $2, '+255700000004', TRUE, NULL, NULL
-      )
-      RETURNING "id"
-      `,
-      [zoneId, commissionPlanId]
+      VALUES
+        (
+          'shop_mikocheni', 'Mikocheni Affiliate', 'SHOP_MIKOCHENI', 'zone_a', NOW(), NOW(),
+          'Mikocheni, Dar es Salaam', 'plan_shop_pct_10', '+255700000004', TRUE, NULL, NULL
+        ),
+        (
+          'shop_mbagala', 'Mbagala Affiliate', 'SHOP_MBAGALA', 'zone_b', NOW(), NOW(),
+          'Mbagala, Dar es Salaam', 'plan_shop_pct_12', '+255700000009', TRUE, NULL, NULL
+        )
+      `
     );
-    const affiliateShopId = affiliateShopRes.rows[0].id;
 
     await client.query(
       `
@@ -97,7 +105,10 @@ async function main() {
         ('user_hub', 'hub@mimo.local', '+255700000002', 'Hub Staff User', $1, 'HUB_STAFF', 'ACTIVE', NOW(), NOW()),
         ('user_driver', 'driver@mimo.local', '+255700000003', 'Driver User', $1, 'DRIVER', 'ACTIVE', NOW(), NOW()),
         ('user_affiliate', 'affiliate@mimo.local', '+255700000004', 'Affiliate Staff User', $1, 'AFFILIATE_STAFF', 'ACTIVE', NOW(), NOW()),
-        ('user_customer', 'customer@mimo.local', '+255700000005', 'Seed Customer', $1, 'CUSTOMER', 'ACTIVE', NOW(), NOW())
+        ('user_customer', 'customer@mimo.local', '+255700000005', 'Seed Customer A', $1, 'CUSTOMER', 'ACTIVE', NOW(), NOW()),
+        ('user_devadmin', 'devadmin@mimo.local', '+255700000006', 'DevAdmin User', $1, 'DEV_ADMIN', 'ACTIVE', NOW(), NOW()),
+        ('user_customer_b', 'customerb@mimo.local', '+255700000007', 'Seed Customer B', $1, 'CUSTOMER', 'ACTIVE', NOW(), NOW()),
+        ('user_driver_b', 'driverb@mimo.local', '+255700000008', 'Driver User B', $1, 'DRIVER', 'ACTIVE', NOW(), NOW())
       `,
       [passwordHash]
     );
@@ -105,9 +116,8 @@ async function main() {
     await client.query(
       `
       INSERT INTO "HubStaffProfile" ("id", "userId", "hubId", "jobTitle", "isActive", "createdAt", "updatedAt")
-      VALUES ('hubstaff_user_hub', 'user_hub', $1, 'Hub Operations', TRUE, NOW(), NOW())
-      `,
-      [hubId]
+      VALUES ('hubstaff_user_hub', 'user_hub', 'hub_kigamboni', 'Hub Operations', TRUE, NOW(), NOW())
+      `
     );
 
     await client.query(
@@ -116,20 +126,23 @@ async function main() {
         "id", "userId", "homeZoneId", "phone", "vehicleType", "vehiclePlate",
         "isActive", "availabilityStatus", "lastStatusAt", "createdAt", "updatedAt"
       )
-      VALUES (
-        'driver_user_driver', 'user_driver', $1, '+255700000003', 'MOTORBIKE', 'MC-001',
-        TRUE, 'AVAILABLE', NOW(), NOW(), NOW()
-      )
-      `,
-      [zoneId]
+      VALUES
+        (
+          'driver_user_driver', 'user_driver', 'zone_a', '+255700000003', 'MOTORBIKE', 'MC-001',
+          TRUE, 'AVAILABLE', NOW(), NOW(), NOW()
+        ),
+        (
+          'driver_user_driver_b', 'user_driver_b', 'zone_b', '+255700000008', 'MOTORBIKE', 'MC-002',
+          TRUE, 'AVAILABLE', NOW(), NOW(), NOW()
+        )
+      `
     );
 
     await client.query(
       `
       INSERT INTO "AffiliateStaffProfile" ("id", "userId", "affiliateShopId", "jobTitle", "isActive", "createdAt", "updatedAt")
-      VALUES ('affiliate_user_affiliate', 'user_affiliate', $1, 'Counter Staff', TRUE, NOW(), NOW())
-      `,
-      [affiliateShopId]
+      VALUES ('affiliate_user_affiliate', 'user_affiliate', 'shop_mikocheni', 'Counter Staff', TRUE, NOW(), NOW())
+      `
     );
 
     await client.query(
@@ -138,12 +151,16 @@ async function main() {
         "id", "userId", "label", "contactName", "phone", "addressLine1", "addressLine2",
         "zoneId", "locationLat", "locationLng", "notes", "createdAt", "updatedAt"
       )
-      VALUES (
-        'addr_customer_home', 'user_customer', 'Home', 'Seed Customer', '+255700000005', 'Dar es Salaam', NULL,
-        $1, NULL, NULL, NULL, NOW(), NOW()
-      )
-      `,
-      [zoneId]
+      VALUES
+        (
+          'addr_customer_home_a', 'user_customer', 'Home', 'Seed Customer A', '+255700000005', 'Kigamboni, Dar es Salaam', NULL,
+          'zone_a', NULL, NULL, NULL, NOW(), NOW()
+        ),
+        (
+          'addr_customer_home_b', 'user_customer_b', 'Home', 'Seed Customer B', '+255700000007', 'Mbagala, Dar es Salaam', NULL,
+          'zone_b', NULL, NULL, NULL, NOW(), NOW()
+        )
+      `
     );
 
     await client.query(
@@ -153,19 +170,26 @@ async function main() {
         "createdAt", "updatedAt", "customerUserId", "tier", "zoneId", "hubId",
         "pickupAddressId", "dropoffAddressId", "statusCurrent"
       )
-      VALUES (
-        'order_0001', 'ORD-0001', 'DIRECT', NULL, 'DOOR', 'Seed Customer', '+255700000005', 'Seed order',
-        NOW(), NOW(), 'user_customer', 'STANDARD_48H', $1, $2,
-        'addr_customer_home', 'addr_customer_home', 'CREATED'
-      )
-      `,
-      [zoneId, hubId]
+      VALUES
+        (
+          'order_customer_a', 'ORD-0001', 'DIRECT', NULL, 'DOOR', 'Seed Customer A', '+255700000005', 'Customer A order',
+          NOW(), NOW(), 'user_customer', 'STANDARD_48H', 'zone_a', 'hub_kigamboni',
+          'addr_customer_home_a', 'addr_customer_home_a', 'CREATED'
+        ),
+        (
+          'order_scope_b', 'ORD-0002', 'AFFILIATE', 'shop_mbagala', 'SHOP_DROP', 'Seed Customer B', '+255700000007', 'Zone B scoped order',
+          NOW(), NOW(), 'user_customer_b', 'EXPRESS_24H', 'zone_b', 'hub_mbagala',
+          'addr_customer_home_b', 'addr_customer_home_b', 'CREATED'
+        )
+      `
     );
 
     await client.query(
       `
       INSERT INTO "Bag" ("id", "orderId", "tagCode", "bagStatus", "createdAt", "updatedAt")
-      VALUES ('bag_0001', 'order_0001', 'BAG-0001', 'CREATED', NOW(), NOW())
+      VALUES
+        ('bag_0001', 'order_customer_a', 'BAG-0001', 'CREATED', NOW(), NOW()),
+        ('bag_0002', 'order_scope_b', 'BAG-0002', 'CREATED', NOW(), NOW())
       `
     );
 
@@ -174,11 +198,45 @@ async function main() {
       INSERT INTO "OrderEvent" (
         "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
       )
-      VALUES (
-        'event_0001', 'order_0001', 'ORDER_CREATED', NOW(), 'user_admin', 'ADMIN', 'Seed order created', $1::jsonb, NOW()
-      )
+      VALUES
+        (
+          'event_0001', 'order_customer_a', 'ORDER_CREATED', NOW(), 'user_admin', 'ADMIN', 'Seed order A created', $1::jsonb, NOW()
+        ),
+        (
+          'event_0002', 'order_scope_b', 'ORDER_CREATED', NOW(), 'user_admin', 'ADMIN', 'Seed order B created', $2::jsonb, NOW()
+        )
       `,
-      [JSON.stringify({ source: "seed" })]
+      [JSON.stringify({ source: "seed_a" }), JSON.stringify({ source: "seed_b" })]
+    );
+
+    await client.query(
+      `
+      INSERT INTO "Trip" (
+        "id", "type", "zoneId", "hubId", "driverId", "status", "scheduledFor", "startedAt", "completedAt", "createdAt", "updatedAt"
+      )
+      VALUES
+        (
+          'trip_driver_a', 'PICKUP', 'zone_a', 'hub_kigamboni', 'driver_user_driver', 'PLANNED', NOW(), NULL, NULL, NOW(), NOW()
+        ),
+        (
+          'trip_driver_b', 'DELIVERY', 'zone_b', 'hub_mbagala', 'driver_user_driver_b', 'PLANNED', NOW(), NULL, NULL, NOW(), NOW()
+        )
+      `
+    );
+
+    await client.query(
+      `
+      INSERT INTO "TripStop" (
+        "id", "tripId", "orderId", "stopType", "sequence", "status", "notes", "createdAt", "updatedAt"
+      )
+      VALUES
+        (
+          'tripstop_0001', 'trip_driver_a', 'order_customer_a', 'PICKUP', 1, 'PENDING', 'Driver A stop', NOW(), NOW()
+        ),
+        (
+          'tripstop_0002', 'trip_driver_b', 'order_scope_b', 'DROPOFF', 1, 'PENDING', 'Driver B stop', NOW(), NOW()
+        )
+      `
     );
 
     await client.query("COMMIT");
@@ -187,9 +245,14 @@ async function main() {
     console.log("Default password for seeded users: Pass123!");
     console.log("ADMIN +255700000001");
     console.log("HUB_STAFF +255700000002");
-    console.log("DRIVER +255700000003");
-    console.log("AFFILIATE_STAFF +255700000004");
-    console.log("CUSTOMER +255700000005");
+    console.log("DRIVER_A +255700000003");
+    console.log("AFFILIATE_STAFF_A +255700000004");
+    console.log("CUSTOMER_A +255700000005");
+    console.log("DEV_ADMIN +255700000006");
+    console.log("CUSTOMER_B +255700000007");
+    console.log("DRIVER_B +255700000008");
+    console.log("Scoped order for forbidden access tests: order_scope_b");
+    console.log("Scoped trip for forbidden access tests: trip_driver_b");
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

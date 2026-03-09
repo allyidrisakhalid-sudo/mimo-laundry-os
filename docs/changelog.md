@@ -134,3 +134,13 @@
 - Added compile-lock enforcement so stale generated SDK output fails loudly until regenerated.
 
 - Completed Chapter 6.1 authentication with phone-based login, JWT access/refresh tokens, refresh rotation, logout revocation, protected auth route proof, and seeded staff/customer accounts.
+
+## Chapter 6.2 completed
+
+- Added role-based authorization enforcement and scoped resource access checks in the API.
+- Added admin-only endpoint protection and explicit 403 behavior for unauthorized roles.
+- Added server-derived scope resolution for affiliate staff, drivers, hub staff, and customers.
+- Added DEV_ADMIN override endpoints with mandatory reason field and audit logging.
+- Added AuditLog persistence and documentation in docs/security/authorization_rbac.md.
+- Added DEV_ADMIN and cross-scope seed data for repeatable authorization verification.
+- Fixed API workspace typecheck by adding itest as a dev dependency.

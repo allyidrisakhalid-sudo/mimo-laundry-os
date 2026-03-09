@@ -393,3 +393,20 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
 }
+model AuditLog {
+  id                 String   @id @default(cuid())
+  actorUserId        String?
+  actorRole          String?
+  actionCode         String
+  targetResourceType String
+  targetResourceId   String
+  reason             String
+  beforeJson         Json?
+  afterJson          Json?
+  createdAt          DateTime @default(now())
+  actor              User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([targetResourceType, targetResourceId])
+  @@index([createdAt])
+}
