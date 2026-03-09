@@ -173,3 +173,12 @@
 - Added Button, Input, Card, Badge, Toast, Modal, Skeleton, and OrderTimeline components
 - Added component gallery page in web app at /components
 - Added component library documentation at docs/ui/component_library_v1.md
+
+## Chapter 7.3 completed
+
+- Added i18next-based bilingual UI support for web and mobile
+- Added EN and SW translation files with initial key sets
+- Added runtime language switchers with persisted language preference
+- Added shared formatting helpers for TZS, date/time, and +255 phone display
+- Updated web component gallery and mobile app shell to use translation keys
+- Added docs/ui/i18n.md

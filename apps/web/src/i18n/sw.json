@@ -1,0 +1,64 @@
+{
+  "common": {
+    "language": "Lugha",
+    "english": "Kiingereza",
+    "swahili": "Kiswahili",
+    "ok": "Sawa",
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "close": "Funga"
+  },
+  "nav": {
+    "home": "Nyumbani",
+    "components": "Vipengele",
+    "settings": "Mipangilio"
+  },
+  "auth": {
+    "welcome": "Karibu Mimo",
+    "login": {
+      "title": "Ingia",
+      "subtitle": "Fikia Laundry OS",
+      "phone": "Namba ya simu",
+      "password": "Nenosiri",
+      "submit": "Ingia"
+    }
+  },
+  "home": {
+    "title": "Nyumbani kwa Mteja",
+    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji."
+  },
+  "componentsPage": {
+    "title": "Mimo UI Kit",
+    "subtitle": "Galeri ya vipengele ya Sura ya 7.2.",
+    "buttons": "Vitufe",
+    "inputs": "Viingizo",
+    "cards": "Kadi",
+    "customerName": "Jina la mteja",
+    "enterFullName": "Weka jina kamili",
+    "requiredForOrderCreation": "Inahitajika kwa kutengeneza oda",
+    "phoneNumber": "Namba ya simu",
+    "tzFormatLater": "Muundo wa TZ baadaye",
+    "password": "Nenosiri",
+    "enterPassword": "Weka nenosiri",
+    "errorExample": "Mfano wa kosa",
+    "invalidValue": "Thamani si sahihi",
+    "fieldRequired": "Sehemu hii inahitajika",
+    "defaultCard": "Kadi ya kawaida",
+    "standardSurface": "Kisanduku cha kawaida cha uso",
+    "useForDashboards": "Tumia kwa dashibodi, paneli, na fomu.",
+    "formatting": "Muundo wa eneo",
+    "moneyExample": "Mfano wa fedha",
+    "dateExample": "Mfano wa tarehe na muda",
+    "phoneExample": "Mfano wa simu",
+    "languageToggle": "Badili lugha",
+    "showSuccess": "Onyesha toast ya mafanikio",
+    "showInfo": "Onyesha toast ya taarifa",
+    "showError": "Onyesha toast ya kosa",
+    "toastSuccessTitle": "Imehifadhiwa kwa mafanikio",
+    "toastSuccessDescription": "Mabadiliko yako yamehifadhiwa.",
+    "toastInfoTitle": "Tahadhari",
+    "toastInfoDescription": "Taarifa mpya za uwasilishaji zinapatikana.",
+    "toastErrorTitle": "Hatua imeshindikana",
+    "toastErrorDescription": "Tafadhali jaribu tena."
+  }
+}

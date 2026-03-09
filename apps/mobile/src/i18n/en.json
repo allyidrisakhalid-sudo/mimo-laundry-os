@@ -1,0 +1,29 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "swahili": "Swahili"
+  },
+  "auth": {
+    "welcome": "Welcome to Mimo",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access Laundry OS",
+      "submit": "Login"
+    }
+  },
+  "home": {
+    "title": "Customer Home",
+    "subtitle": "Track orders, pickups, and deliveries."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language preference"
+  },
+  "formatting": {
+    "title": "Locale formatting",
+    "money": "Money example",
+    "date": "Date and time example",
+    "phone": "Phone example"
+  }
+}

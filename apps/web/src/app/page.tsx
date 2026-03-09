@@ -1,56 +1,23 @@
-import { createApiClient } from "@mimo/sdk";
-import { tokens } from "@mimo/ui";
+"use client";
 
-export default async function HomePage() {
-  const client = await createApiClient({
-    baseUrl: "http://localhost:3001",
-  });
+import "@/i18n";
+import { useTranslation } from "react-i18next";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
-  const { data, error } = await client.GET("/health");
+export default function HomePage() {
+  const { t } = useTranslation();
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: tokens.color.background,
-        color: tokens.color.textPrimary,
-        fontFamily: tokens.typography.fontFamily.sans,
-        padding: tokens.spacing[24],
-      }}
-    >
-      <h1
-        style={{
-          fontSize: tokens.typography.fontSize.h1,
-          lineHeight: tokens.typography.lineHeight.h1,
-          margin: 0,
-        }}
-      >
-        Laundry OS Web
-      </h1>
-      <p
-        style={{
-          color: tokens.color.textSecondary,
-          marginTop: tokens.spacing[12],
-          marginBottom: tokens.spacing[16],
-        }}
-      >
-        Chapter 7.1 base styling now uses shared UI tokens.
-      </p>
-      <p style={{ marginBottom: tokens.spacing[24] }}>
-        Open <a href="/ui-demo">/ui-demo</a> to view the design token demo page.
-      </p>
-      <pre
-        style={{
-          padding: tokens.spacing[16],
-          background: tokens.color.surface,
-          border: `1px solid ${tokens.color.border}`,
-          borderRadius: tokens.radius[12],
-          boxShadow: tokens.shadow.subtle,
-          overflowX: "auto",
-        }}
-      >
-        {JSON.stringify({ data, error: error ?? null }, null, 2)}
-      </pre>
+    <main className="p-8 space-y-6">
+      <LanguageToggle />
+      <div>
+        <h1 className="text-3xl font-bold">{t("home.title")}</h1>
+        <p className="mt-2 text-base">{t("home.subtitle")}</p>
+      </div>
+      <div>
+        <h2 className="text-xl font-semibold">{t("auth.login.title")}</h2>
+        <p>{t("auth.login.subtitle")}</p>
+      </div>
     </main>
   );
 }

@@ -1,0 +1,29 @@
+{
+  "common": {
+    "language": "Lugha",
+    "english": "Kiingereza",
+    "swahili": "Kiswahili"
+  },
+  "auth": {
+    "welcome": "Karibu Mimo",
+    "login": {
+      "title": "Ingia",
+      "subtitle": "Fikia Laundry OS",
+      "submit": "Ingia"
+    }
+  },
+  "home": {
+    "title": "Nyumbani kwa Mteja",
+    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji."
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "language": "Mapendeleo ya lugha"
+  },
+  "formatting": {
+    "title": "Muundo wa eneo",
+    "money": "Mfano wa fedha",
+    "date": "Mfano wa tarehe na muda",
+    "phone": "Mfano wa simu"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "swahili": "Swahili",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "components": "Components",
+    "settings": "Settings"
+  },
+  "auth": {
+    "welcome": "Welcome to Mimo",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access Laundry OS",
+      "phone": "Phone number",
+      "password": "Password",
+      "submit": "Login"
+    }
+  },
+  "home": {
+    "title": "Customer Home",
+    "subtitle": "Track orders, pickups, and deliveries."
+  },
+  "componentsPage": {
+    "title": "Mimo UI Kit",
+    "subtitle": "Chapter 7.2 component library gallery.",
+    "buttons": "Buttons",
+    "inputs": "Inputs",
+    "cards": "Cards",
+    "customerName": "Customer name",
+    "enterFullName": "Enter full name",
+    "requiredForOrderCreation": "Required for order creation",
+    "phoneNumber": "Phone number",
+    "tzFormatLater": "TZ format later",
+    "password": "Password",
+    "enterPassword": "Enter password",
+    "errorExample": "Error example",
+    "invalidValue": "Invalid value",
+    "fieldRequired": "This field is required",
+    "defaultCard": "Default card",
+    "standardSurface": "Standard surface container",
+    "useForDashboards": "Use for dashboards, panels, and forms.",
+    "formatting": "Locale formatting",
+    "moneyExample": "Money example",
+    "dateExample": "Date and time example",
+    "phoneExample": "Phone example",
+    "languageToggle": "Language toggle",
+    "showSuccess": "Show success toast",
+    "showInfo": "Show info toast",
+    "showError": "Show error toast",
+    "toastSuccessTitle": "Saved successfully",
+    "toastSuccessDescription": "Your changes were stored.",
+    "toastInfoTitle": "Heads up",
+    "toastInfoDescription": "New delivery updates are available.",
+    "toastErrorTitle": "Action failed",
+    "toastErrorDescription": "Please try again."
+  }
+}

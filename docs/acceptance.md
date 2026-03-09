@@ -266,3 +266,13 @@
 - Added web component gallery page at /components
 - Added docs/ui/component_library_v1.md
 - Gate proof required next: verify pnpm --filter ui build and open /components with no runtime errors
+
+## Chapter 7.3 PASS
+
+- Added bilingual EN/SW support for web and mobile using i18next + react-i18next
+- Added runtime language toggle for both apps
+- Added persisted language preference using localStorage on web and AsyncStorage on mobile
+- Replaced user-facing strings on the web component gallery and app home/login placeholders with translation keys
+- Added shared locale formatting helpers for TZS, date/time, and +255 phone display
+- Added documentation at docs/ui/i18n.md
+- Gate target for verification: toggle language; screens update; formats correct
