@@ -246,3 +246,23 @@
 - Verified pps/mobile imports shared tokens from @mimo/ui without type errors.
 - Added docs/ui/design_tokens.md documenting palette, typography, spacing, radii, and naming rules.
 - Gate satisfied: UI package renders demo page correctly.
+
+## Chapter 7.2 PASS
+
+- Re-ran previous chapter pre-flight verification successfully:
+  - pnpm -r typecheck
+  - pnpm -r lint
+  - pnpm -r test
+  - pnpm --filter web dev and verified /ui-demo
+- Implemented component library v1 in packages/ui/src/components
+- Added Button with required variants, sizes, loading, and disabled states
+- Added Input with label, helper text, error state, and required input types
+- Added Card with default, subtle, and clickable variants
+- Added Badge with neutral, info, success, warning, and danger variants
+- Added Toast system with success/info/error helpers, stacking, and auto-dismiss
+- Added controlled Modal with title/body/footer composition
+- Added SkeletonLine, SkeletonCard, and SkeletonList
+- Added OrderTimeline skeleton with done/current/pending/error states
+- Added web component gallery page at /components
+- Added docs/ui/component_library_v1.md
+- Gate proof required next: verify pnpm --filter ui build and open /components with no runtime errors

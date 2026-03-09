@@ -159,3 +159,17 @@
 - Wired pps/web global styling to consume shared UI tokens and added /ui-demo token showcase page.
 - Verified pps/mobile can import and use the same shared tokens package.
 - Added docs/ui/design_tokens.md.
+
+## Chapter 7.2 completed
+
+- Added first reusable UI component library in packages/ui
+- Added Button, Input, Card, Badge, Toast, Modal, Skeleton, and OrderTimeline components
+- Added component gallery page in web app at /components
+- Added component library documentation at docs/ui/component_library_v1.md
+
+## Chapter 7.2 completed
+
+- Added first reusable UI component library in packages/ui
+- Added Button, Input, Card, Badge, Toast, Modal, Skeleton, and OrderTimeline components
+- Added component gallery page in web app at /components
+- Added component library documentation at docs/ui/component_library_v1.md

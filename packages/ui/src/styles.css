@@ -101,3 +101,21 @@ svg {
   display: block;
   max-width: 100%;
 }
+
+.mimo-focus-ring {
+  outline: none;
+}
+
+.mimo-focus-ring:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--mimo-color-background),
+    0 0 0 4px var(--mimo-color-primary);
+}
+
+.mimo-section-title {
+  color: var(--mimo-color-text);
+}
+
+.mimo-muted {
+  color: var(--mimo-color-text-muted);
+}
