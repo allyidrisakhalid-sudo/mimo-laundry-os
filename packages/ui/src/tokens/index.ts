@@ -1,0 +1,70 @@
+export const tokens = {
+  color: {
+    primary: "#0F766E",
+    primaryActive: "#115E59",
+    primarySoft: "#CCFBF1",
+    accent: "#F97316",
+    accentSoft: "#FFEDD5",
+    background: "#F8FAFC",
+    surface: "#FFFFFF",
+    surface2: "#F1F5F9",
+    border: "#E2E8F0",
+    textPrimary: "#0F172A",
+    textSecondary: "#475569",
+    textDisabled: "#94A3B8",
+    statusSuccess: "#16A34A",
+    statusWarning: "#F59E0B",
+    statusDanger: "#DC2626",
+    statusInfo: "#2563EB",
+  },
+  typography: {
+    fontFamily: {
+      sans: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    },
+    fontSize: {
+      h1: "2.25rem",
+      h2: "1.875rem",
+      h3: "1.5rem",
+      body: "1rem",
+      small: "0.875rem",
+      caption: "0.75rem",
+    },
+    lineHeight: {
+      h1: "2.75rem",
+      h2: "2.25rem",
+      h3: "2rem",
+      body: "1.5rem",
+      small: "1.25rem",
+      caption: "1rem",
+    },
+    fontWeight: {
+      regular: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+  },
+  spacing: {
+    4: "4px",
+    8: "8px",
+    12: "12px",
+    16: "16px",
+    20: "20px",
+    24: "24px",
+    32: "32px",
+    40: "40px",
+    48: "48px",
+    64: "64px",
+  },
+  radius: {
+    8: "8px",
+    12: "12px",
+    16: "16px",
+    20: "20px",
+  },
+  shadow: {
+    subtle: "0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06)",
+  },
+} as const;
+
+export type DesignTokens = typeof tokens;

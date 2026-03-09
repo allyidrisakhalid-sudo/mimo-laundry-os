@@ -235,3 +235,14 @@
   - Confirmed corresponding audit entries exist with actorUserId, actorRole, actionCode, targetType, targetId, and occurredAt
   - Confirmed request metadata fields ipAddress and userAgent were captured
 - Gate satisfied: Key actions create audit entries with actor + timestamp.
+
+## Chapter 7.1 PASS
+
+- Re-ran prior chapter verification gate: repo-wide typecheck, lint, and test all passed before starting Chapter 7.1.
+- Implemented shared semantic design tokens in packages/ui for colors, typography, spacing, radii, and subtle shadow baseline.
+- Exported web-ready shared styles and token helpers from @mimo/ui.
+- Wired pps/web to import @mimo/ui/styles.css and apply shared token-driven base styling.
+- Added web demo route at /ui-demo showing color swatches, typography samples, spacing scale, and radii samples.
+- Verified pps/mobile imports shared tokens from @mimo/ui without type errors.
+- Added docs/ui/design_tokens.md documenting palette, typography, spacing, radii, and naming rules.
+- Gate satisfied: UI package renders demo page correctly.

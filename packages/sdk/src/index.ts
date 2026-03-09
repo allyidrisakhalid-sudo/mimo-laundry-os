@@ -1,3 +1,3 @@
-export type { paths, components, operations } from "./generated/api";
 export { createApiClient } from "./client";
-export type { ApiClient, CreateClientOptions, TokenProvider } from "./client";
+export type { CreateApiClientOptions } from "./client";
+export type { paths } from "./generated/api";

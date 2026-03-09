@@ -152,3 +152,10 @@
 - Wired audit recording for existing DevAdmin override actions: assign hub and append order event.
 - Added admin-only audit query endpoints: GET /v1/admin/audit and GET /v1/admin/audit/:id.
 - Verified privileged actions create audit entries with actor + timestamp and that non-admin users receive 403 on admin audit endpoints.
+
+## Chapter 7.1 completed
+
+- Added shared UI design tokens in packages/ui for semantic colors, typography, spacing, radii, and baseline shadows.
+- Wired pps/web global styling to consume shared UI tokens and added /ui-demo token showcase page.
+- Verified pps/mobile can import and use the same shared tokens package.
+- Added docs/ui/design_tokens.md.

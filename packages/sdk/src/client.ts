@@ -1,20 +1,21 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./generated/api";
 
-export type TokenProvider = () => string | null | undefined | Promise<string | null | undefined>;
-
-export type CreateClientOptions = {
+export type CreateApiClientOptions = {
   baseUrl: string;
-  tokenProvider?: TokenProvider;
-  headers?: HeadersInit;
+  tokenProvider?: (() => Promise<string | null> | string | null) | undefined;
+  headers?: Record<string, string> | undefined;
 };
 
-export async function createApiClient(options: CreateClientOptions) {
+export async function createApiClient(options: CreateApiClientOptions) {
   const token = options.tokenProvider ? await options.tokenProvider() : null;
 
-  const headers = new Headers(options.headers ?? {});
+  const headers: Record<string, string> = {
+    ...(options.headers ?? {}),
+  };
+
   if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
+    headers.Authorization = `Bearer ${token}`;
   }
 
   return createClient<paths>({
@@ -22,5 +23,3 @@ export async function createApiClient(options: CreateClientOptions) {
     headers,
   });
 }
-
-export type ApiClient = Awaited<ReturnType<typeof createApiClient>>;

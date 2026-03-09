@@ -1,0 +1,103 @@
+:root {
+  --mimo-color-primary: #0F766E;
+  --mimo-color-primary-active: #115E59;
+  --mimo-color-primary-soft: #CCFBF1;
+  --mimo-color-accent: #F97316;
+  --mimo-color-accent-soft: #FFEDD5;
+  --mimo-color-background: #F8FAFC;
+  --mimo-color-surface: #FFFFFF;
+  --mimo-color-surface-2: #F1F5F9;
+  --mimo-color-border: #E2E8F0;
+  --mimo-color-text-primary: #0F172A;
+  --mimo-color-text-secondary: #475569;
+  --mimo-color-text-disabled: #94A3B8;
+  --mimo-color-status-success: #16A34A;
+  --mimo-color-status-warning: #F59E0B;
+  --mimo-color-status-danger: #DC2626;
+  --mimo-color-status-info: #2563EB;
+  --mimo-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mimo-font-size-h1: 2.25rem;
+  --mimo-font-size-h2: 1.875rem;
+  --mimo-font-size-h3: 1.5rem;
+  --mimo-font-size-body: 1rem;
+  --mimo-font-size-small: 0.875rem;
+  --mimo-font-size-caption: 0.75rem;
+  --mimo-line-height-h1: 2.75rem;
+  --mimo-line-height-h2: 2.25rem;
+  --mimo-line-height-h3: 2rem;
+  --mimo-line-height-body: 1.5rem;
+  --mimo-line-height-small: 1.25rem;
+  --mimo-line-height-caption: 1rem;
+  --mimo-space-4: 4px;
+  --mimo-space-8: 8px;
+  --mimo-space-12: 12px;
+  --mimo-space-16: 16px;
+  --mimo-space-20: 20px;
+  --mimo-space-24: 24px;
+  --mimo-space-32: 32px;
+  --mimo-space-40: 40px;
+  --mimo-space-48: 48px;
+  --mimo-space-64: 64px;
+  --mimo-radius-8: 8px;
+  --mimo-radius-12: 12px;
+  --mimo-radius-16: 16px;
+  --mimo-radius-20: 20px;
+  --mimo-shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--mimo-color-background);
+  color: var(--mimo-color-text-primary);
+  font-family: var(--mimo-font-sans);
+  font-size: var(--mimo-font-size-body);
+  line-height: var(--mimo-line-height-body);
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--mimo-color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--mimo-color-primary-active);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--mimo-color-accent);
+  outline-offset: 2px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
