@@ -144,3 +144,11 @@
 - Added AuditLog persistence and documentation in docs/security/authorization_rbac.md.
 - Added DEV_ADMIN and cross-scope seed data for repeatable authorization verification.
 - Fixed API workspace typecheck by adding itest as a dev dependency.
+
+## Chapter 6.3 completed
+
+- Added AuditLog contract fields for actor, target, reason, before/after snapshots, request metadata, and occurredAt timestamp.
+- Added centralized audit recording helper in the API dev server.
+- Wired audit recording for existing DevAdmin override actions: assign hub and append order event.
+- Added admin-only audit query endpoints: GET /v1/admin/audit and GET /v1/admin/audit/:id.
+- Verified privileged actions create audit entries with actor + timestamp and that non-admin users receive 403 on admin audit endpoints.

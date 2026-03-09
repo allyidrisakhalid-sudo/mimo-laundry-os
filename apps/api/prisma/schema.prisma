@@ -213,6 +213,7 @@ model User {
   HubStaffProfile       HubStaffProfile?
   Order                 Order[]
   refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
 }
 
 model DriverProfile {
@@ -394,19 +395,23 @@ model RefreshToken {
   @@index([expiresAt])
 }
 model AuditLog {
-  id                 String   @id @default(cuid())
-  actorUserId        String?
-  actorRole          String?
-  actionCode         String
-  targetResourceType String
-  targetResourceId   String
-  reason             String
-  beforeJson         Json?
-  afterJson          Json?
-  createdAt          DateTime @default(now())
-  actor              User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorRole   String?
+  actionCode  String
+  targetType  String
+  targetId    String
+  reason      String?
+  beforeJson  Json?
+  afterJson   Json?
+  ipAddress   String?
+  userAgent   String?
+  occurredAt  DateTime @default(now())
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([actorUserId])
-  @@index([targetResourceType, targetResourceId])
-  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([occurredAt])
 }
+
+

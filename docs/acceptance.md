@@ -215,3 +215,23 @@
 - Confirmed DEV_ADMIN override assign-hub and append-event endpoints both returned 200 when called with valid reason.
 - Confirmed audit logs were created for both DEV_ADMIN overrides and fetched successfully for order_scope_b.
 - Gate satisfied: Attempted cross-scope access returns 403 consistently.
+
+## Chapter 6.3 PASS
+
+- Re-verified Chapter 6.2 pre-flight: scoped affiliate access to foreign order returned 403.
+- Added Prisma AuditLog contract with actorUserId, actorRole, actionCode, targetType, targetId, reason, beforeJson, afterJson, ipAddress, userAgent, and occurredAt.
+- Applied migration chapter_6_3_audit_log_contract successfully after resolving local dev schema drift with migrate reset.
+- Verified AuditLog accepts inserted records directly in the database.
+- Implemented centralized audit recording helper and request metadata capture in pps/api/src/dev.ts.
+- Verified DEV_OVERRIDE_ASSIGN_HUB creates audit entries automatically.
+- Verified DEV_OVERRIDE_APPEND_EVENT creates audit entries automatically.
+- Added admin-only audit endpoints:
+  - GET /v1/admin/audit
+  - GET /v1/admin/audit/:id
+- Verified admin can query audit logs successfully.
+- Verified non-admin access to admin audit endpoints returns 403.
+- Final gate proof:
+  - Performed 3 privileged actions on order_customer_a
+  - Confirmed corresponding audit entries exist with actorUserId, actorRole, actionCode, targetType, targetId, and occurredAt
+  - Confirmed request metadata fields ipAddress and userAgent were captured
+- Gate satisfied: Key actions create audit entries with actor + timestamp.

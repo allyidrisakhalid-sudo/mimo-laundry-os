@@ -298,34 +298,57 @@ async function resolveScope(user: AuthenticatedUser): Promise<ScopeContext> {
   return scope;
 }
 
-async function createAuditLog(input: {
-  actorUserId: string;
-  actorRole: string;
+function getRequestMeta(req: http.IncomingMessage) {
+  return {
+    ipAddress: req.socket.remoteAddress ?? null,
+    userAgent: req.headers["user-agent"]?.toString() ?? null,
+  };
+}
+
+async function recordAudit(input: {
+  actorUserId?: string | null;
+  actorRole?: string | null;
   actionCode: string;
-  targetResourceType: string;
-  targetResourceId: string;
-  reason: string;
-  beforeJson?: unknown;
-  afterJson?: unknown;
+  targetType: string;
+  targetId: string;
+  reason?: string | null;
+  before?: unknown;
+  after?: unknown;
+  requestMeta?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
 }) {
   await pool.query(
     `
     INSERT INTO "AuditLog" (
-      "id", "actorUserId", "actorRole", "actionCode", "targetResourceType", "targetResourceId",
-      "reason", "beforeJson", "afterJson", "createdAt"
+      "id",
+      "actorUserId",
+      "actorRole",
+      "actionCode",
+      "targetType",
+      "targetId",
+      "reason",
+      "beforeJson",
+      "afterJson",
+      "ipAddress",
+      "userAgent",
+      "occurredAt"
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10, $11, NOW())
     `,
     [
       crypto.randomUUID(),
-      input.actorUserId,
-      input.actorRole,
+      input.actorUserId ?? null,
+      input.actorRole ?? null,
       input.actionCode,
-      input.targetResourceType,
-      input.targetResourceId,
-      input.reason,
-      input.beforeJson === undefined ? null : JSON.stringify(input.beforeJson),
-      input.afterJson === undefined ? null : JSON.stringify(input.afterJson),
+      input.targetType,
+      input.targetId,
+      input.reason ?? null,
+      input.before === undefined ? null : JSON.stringify(input.before),
+      input.after === undefined ? null : JSON.stringify(input.after),
+      input.requestMeta?.ipAddress ?? null,
+      input.requestMeta?.userAgent ?? null,
     ]
   );
 }
@@ -828,26 +851,138 @@ const server = http.createServer(async (req, res) => {
       if (!user) return;
       if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "access audit logs")) return;
 
-      const targetResourceType = url.searchParams.get("targetResourceType");
-      const targetResourceId = url.searchParams.get("targetResourceId");
+      const targetType =
+        url.searchParams.get("targetType") ?? url.searchParams.get("targetResourceType");
+      const targetId = url.searchParams.get("targetId") ?? url.searchParams.get("targetResourceId");
 
       let query = `
         SELECT
-          "id", "actorUserId", "actorRole", "actionCode", "targetResourceType",
-          "targetResourceId", "reason", "beforeJson", "afterJson", "createdAt"
+          "id",
+          "actorUserId",
+          "actorRole",
+          "actionCode",
+          "targetType",
+          "targetId",
+          "reason",
+          "beforeJson",
+          "afterJson",
+          "ipAddress",
+          "userAgent",
+          "occurredAt"
         FROM "AuditLog"
       `;
       const params: string[] = [];
 
-      if (targetResourceType && targetResourceId) {
-        query += ` WHERE "targetResourceType" = $1 AND "targetResourceId" = $2`;
-        params.push(targetResourceType, targetResourceId);
+      if (targetType && targetId) {
+        query += ` WHERE "targetType" = $1 AND "targetId" = $2`;
+        params.push(targetType, targetId);
       }
 
-      query += ` ORDER BY "createdAt" DESC`;
+      query += ` ORDER BY "occurredAt" DESC`;
 
       const result = await pool.query(query, params);
       return json(res, 200, { data: { auditLogs: result.rows } });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/admin/audit") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "access admin audit logs")) return;
+
+      const actorUserId = url.searchParams.get("actorUserId");
+      const targetType = url.searchParams.get("targetType");
+      const targetId = url.searchParams.get("targetId");
+      const occurredFrom = url.searchParams.get("occurredFrom");
+      const occurredTo = url.searchParams.get("occurredTo");
+
+      let query = `
+        SELECT
+          "id",
+          "actorUserId",
+          "actorRole",
+          "actionCode",
+          "targetType",
+          "targetId",
+          "reason",
+          "beforeJson",
+          "afterJson",
+          "ipAddress",
+          "userAgent",
+          "occurredAt"
+        FROM "AuditLog"
+      `;
+
+      const conditions: string[] = [];
+      const params: string[] = [];
+
+      if (actorUserId) {
+        params.push(actorUserId);
+        conditions.push(`"actorUserId" = $${params.length}`);
+      }
+
+      if (targetType) {
+        params.push(targetType);
+        conditions.push(`"targetType" = $${params.length}`);
+      }
+
+      if (targetId) {
+        params.push(targetId);
+        conditions.push(`"targetId" = $${params.length}`);
+      }
+
+      if (occurredFrom) {
+        params.push(occurredFrom);
+        conditions.push(`"occurredAt" >= $${params.length}::timestamptz`);
+      }
+
+      if (occurredTo) {
+        params.push(occurredTo);
+        conditions.push(`"occurredAt" <= $${params.length}::timestamptz`);
+      }
+
+      if (conditions.length > 0) {
+        query += ` WHERE ` + conditions.join(" AND ");
+      }
+
+      query += ` ORDER BY "occurredAt" DESC`;
+
+      const result = await pool.query(query, params);
+      return json(res, 200, { data: { auditLogs: result.rows } });
+    }
+
+    const auditLogId = pathParam(url.pathname, /^\/v1\/admin\/audit\/([^/]+)$/);
+    if (method === "GET" && auditLogId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "access admin audit log detail")) return;
+
+      const result = await pool.query(
+        `
+        SELECT
+          "id",
+          "actorUserId",
+          "actorRole",
+          "actionCode",
+          "targetType",
+          "targetId",
+          "reason",
+          "beforeJson",
+          "afterJson",
+          "ipAddress",
+          "userAgent",
+          "occurredAt"
+        FROM "AuditLog"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [auditLogId]
+      );
+
+      if (result.rows.length === 0) {
+        return sendError(res, 404, "AUDIT_LOG_NOT_FOUND", "Audit log was not found");
+      }
+
+      return json(res, 200, { data: { auditLog: result.rows[0] } });
     }
 
     const assignHubOrderId = pathParam(
@@ -888,15 +1023,16 @@ const server = http.createServer(async (req, res) => {
         [assignHubOrderId, hubId]
       );
 
-      await createAuditLog({
+      await recordAudit({
         actorUserId: user.id,
         actorRole: user.role,
         actionCode: "DEV_OVERRIDE_ASSIGN_HUB",
-        targetResourceType: "Order",
-        targetResourceId: assignHubOrderId,
+        targetType: "ORDER",
+        targetId: assignHubOrderId,
         reason,
-        beforeJson: { hubId: beforeHubId },
-        afterJson: { hubId },
+        before: { hubId: beforeHubId },
+        after: { hubId },
+        requestMeta: getRequestMeta(req),
       });
 
       const updatedOrder = await fetchOrderById(assignHubOrderId);
@@ -977,15 +1113,16 @@ const server = http.createServer(async (req, res) => {
         ]
       );
 
-      await createAuditLog({
+      await recordAudit({
         actorUserId: user.id,
         actorRole: user.role,
         actionCode: "DEV_OVERRIDE_APPEND_EVENT",
-        targetResourceType: "Order",
-        targetResourceId: appendEventOrderId,
+        targetType: "ORDER",
+        targetId: appendEventOrderId,
         reason,
-        beforeJson: { appendedEvent: null },
-        afterJson: { appendedEvent: { id: eventId, eventType, notes: notes || null } },
+        before: { appendedEvent: null },
+        after: { appendedEvent: { id: eventId, eventType, notes: notes || null } },
+        requestMeta: getRequestMeta(req),
       });
 
       return json(res, 200, {
