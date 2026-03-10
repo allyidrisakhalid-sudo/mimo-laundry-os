@@ -182,3 +182,13 @@
 - Added shared formatting helpers for TZS, date/time, and +255 phone display
 - Updated web component gallery and mobile app shell to use translation keys
 - Added docs/ui/i18n.md
+
+## Chapter 8.1 completed
+
+- Added API health and DB connectivity endpoints for walking skeleton verification.
+- Updated inline OpenAPI output and regenerated SDK auth types.
+- Added root orchestrated dev startup script in scripts/dev.mjs.
+- Added web login shell with API status indicator.
+- Added mobile login shell with API status indicator.
+- Added docs/setup/walking_skeleton.md.
+- Verified end-to-end walking skeleton across API, web, and mobile web.

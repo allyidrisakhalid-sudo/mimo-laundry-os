@@ -17,6 +17,9 @@ const pool = new Pool({
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
+const APP_VERSION = process.env.npm_package_version ?? "0.0.1";
+const RAW_ENVIRONMENT = process.env.APP_ENV ?? process.env.NODE_ENV ?? "local";
+const ENVIRONMENT = RAW_ENVIRONMENT === "development" ? "local" : RAW_ENVIRONMENT;
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET ?? "dev-access-secret-change-me";
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET ?? "dev-refresh-secret-change-me";
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
@@ -41,7 +44,14 @@ type ScopeContext = {
   hubId: string | null;
 };
 
+function setCorsHeaders(res: http.ServerResponse) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+}
+
 function json(res: http.ServerResponse, statusCode: number, payload: unknown) {
+  setCorsHeaders(res);
   res.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(payload));
 }
@@ -189,7 +199,7 @@ async function authenticate(req: http.IncomingMessage): Promise<AuthenticatedUse
     const result = await pool.query(
       `
       SELECT "id", "phone", "email", "fullName", "role", "status"
-      FROM "User"
+      FROM public."User"
       WHERE "id" = $1
       LIMIT 1
       `,
@@ -489,11 +499,58 @@ const server = http.createServer(async (req, res) => {
     const method = req.method ?? "GET";
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
 
+    if (method === "OPTIONS") {
+      setCorsHeaders(res);
+      res.writeHead(204);
+      return res.end();
+    }
+
     if (method === "GET" && url.pathname === "/health") {
       return json(res, 200, { ok: true });
     }
 
+    if (method === "GET" && url.pathname === "/v1/health") {
+      try {
+        await pool.query("SELECT 1");
+        return json(res, 200, {
+          status: "ok",
+          version: APP_VERSION,
+          timestamp: new Date().toISOString(),
+          environment: ENVIRONMENT,
+          db: "ok",
+        });
+      } catch {
+        return json(res, 200, {
+          status: "ok",
+          version: APP_VERSION,
+          timestamp: new Date().toISOString(),
+          environment: ENVIRONMENT,
+          db: "down",
+        });
+      }
+    }
+
+    if (method === "GET" && url.pathname === "/v1/health/db") {
+      try {
+        await pool.query("SELECT 1 AS result");
+        return json(res, 200, {
+          status: "ok",
+          db: "ok",
+          timestamp: new Date().toISOString(),
+          check: "SELECT 1",
+        });
+      } catch (error) {
+        return sendError(
+          res,
+          500,
+          "DB_DOWN",
+          error instanceof Error ? error.message : "Database check failed"
+        );
+      }
+    }
+
     if (method === "GET" && url.pathname === "/api") {
+      setCorsHeaders(res);
       res.writeHead(302, { location: "/api/" });
       return res.end();
     }
@@ -502,6 +559,292 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         openapi: "3.1.0",
         info: { title: "Mimo API", version: "v1" },
+        paths: {
+          "/health": {
+            get: {
+              summary: "Health check",
+              responses: {
+                200: {
+                  description: "OK",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          ok: { type: "boolean" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/health": {
+            get: {
+              summary: "App health",
+              responses: {
+                200: {
+                  description: "OK",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          status: { type: "string", example: "ok" },
+                          version: { type: "string", example: "0.0.1" },
+                          timestamp: { type: "string", format: "date-time" },
+                          environment: { type: "string", example: "local" },
+                          db: { type: "string", enum: ["ok", "down"] },
+                        },
+                        required: ["status", "version", "timestamp", "environment", "db"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/health/db": {
+            get: {
+              summary: "Database health",
+              responses: {
+                200: {
+                  description: "DB OK",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          status: { type: "string", example: "ok" },
+                          db: { type: "string", example: "ok" },
+                          timestamp: { type: "string", format: "date-time" },
+                          check: { type: "string", example: "SELECT 1" },
+                        },
+                        required: ["status", "db", "timestamp", "check"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/auth/register": {
+            post: {
+              summary: "Register customer",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/RegisterRequest" },
+                  },
+                },
+              },
+              responses: {
+                201: {
+                  description: "Created",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/AuthResponse" },
+                    },
+                  },
+                },
+                400: {
+                  description: "Validation error",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/StandardError" },
+                    },
+                  },
+                },
+                409: {
+                  description: "Conflict",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/StandardError" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/auth/login": {
+            post: {
+              summary: "Login",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/LoginRequest" },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: "Authenticated",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/AuthResponse" },
+                    },
+                  },
+                },
+                401: {
+                  description: "Invalid credentials",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/StandardError" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/auth/refresh": {
+            post: {
+              summary: "Refresh token",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/RefreshRequest" },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: "Refreshed",
+                  content: {
+                    "application/json": {
+                      schema: { $ref: "#/components/schemas/AuthResponse" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/v1/auth/logout": {
+            post: {
+              summary: "Logout",
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/RefreshRequest" },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: "Logged out",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          data: {
+                            type: "object",
+                            properties: {
+                              loggedOut: { type: "boolean", example: true },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        components: {
+          schemas: {
+            LoginRequest: {
+              type: "object",
+              properties: {
+                phone: { type: "string", example: "+255712345678" },
+                password: { type: "string", example: "secret123" },
+              },
+              required: ["phone", "password"],
+            },
+            RegisterRequest: {
+              type: "object",
+              properties: {
+                phone: { type: "string", example: "+255712345678" },
+                fullName: { type: "string", example: "Walking Skeleton Customer" },
+                email: {
+                  type: "string",
+                  format: "email",
+                  nullable: true,
+                  example: "customer@mimo.local",
+                },
+                password: { type: "string", example: "secret123" },
+              },
+              required: ["phone", "fullName", "password"],
+            },
+            RefreshRequest: {
+              type: "object",
+              properties: {
+                refreshToken: { type: "string", example: "refresh-token" },
+              },
+              required: ["refreshToken"],
+            },
+            AuthUser: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                phone: { type: "string" },
+                email: { type: "string", nullable: true },
+                fullName: { type: "string" },
+                role: { type: "string" },
+                status: { type: "string" },
+              },
+              required: ["id", "phone", "fullName", "role", "status"],
+            },
+            AuthTokens: {
+              type: "object",
+              properties: {
+                accessToken: { type: "string" },
+                refreshToken: { type: "string" },
+                accessTokenExpiresInSeconds: { type: "number" },
+                refreshTokenExpiresInSeconds: { type: "number" },
+              },
+              required: [
+                "accessToken",
+                "refreshToken",
+                "accessTokenExpiresInSeconds",
+                "refreshTokenExpiresInSeconds",
+              ],
+            },
+            AuthResponse: {
+              type: "object",
+              properties: {
+                data: {
+                  type: "object",
+                  properties: {
+                    user: { $ref: "#/components/schemas/AuthUser" },
+                    tokens: { $ref: "#/components/schemas/AuthTokens" },
+                  },
+                  required: ["user", "tokens"],
+                },
+              },
+              required: ["data"],
+            },
+            StandardError: {
+              type: "object",
+              properties: {
+                error: {
+                  type: "object",
+                  properties: {
+                    code: { type: "string" },
+                    message: { type: "string" },
+                  },
+                  required: ["code", "message"],
+                },
+              },
+              required: ["error"],
+            },
+          },
+        },
       });
     }
 
@@ -524,7 +867,7 @@ const server = http.createServer(async (req, res) => {
       const existing = await pool.query(
         `
         SELECT "id"
-        FROM "User"
+        FROM public."User"
         WHERE "phone" = $1 OR ($2::text IS NOT NULL AND "email" = $2)
         LIMIT 1
         `,
@@ -545,7 +888,7 @@ const server = http.createServer(async (req, res) => {
 
       const created = await pool.query(
         `
-        INSERT INTO "User" ("id", "email", "phone", "fullName", "passwordHash", "role", "status", "createdAt", "updatedAt")
+        INSERT INTO public."User" ("id", "email", "phone", "fullName", "passwordHash", "role", "status", "createdAt", "updatedAt")
         VALUES ($1, $2, $3, $4, $5, 'CUSTOMER', 'ACTIVE', NOW(), NOW())
         RETURNING "id", "phone", "email", "fullName", "role", "status"
         `,
@@ -562,8 +905,8 @@ const server = http.createServer(async (req, res) => {
 
       const result = await pool.query(
         `
-        SELECT "id", "phone", "email", "fullName", "passwordHash", "role", "status"
-        FROM "User"
+        SELECT *
+        FROM public."User"
         WHERE "phone" = $1
         LIMIT 1
         `,
@@ -660,7 +1003,7 @@ const server = http.createServer(async (req, res) => {
       const userResult = await pool.query(
         `
         SELECT "id", "phone", "email", "fullName", "role", "status"
-        FROM "User"
+        FROM public."User"
         WHERE "id" = $1
         LIMIT 1
         `,
@@ -780,7 +1123,7 @@ const server = http.createServer(async (req, res) => {
       const result = await pool.query(
         `
         SELECT "id", "phone", "email", "fullName", "role", "status"
-        FROM "User"
+        FROM public."User"
         ORDER BY "createdAt" ASC
         `
       );

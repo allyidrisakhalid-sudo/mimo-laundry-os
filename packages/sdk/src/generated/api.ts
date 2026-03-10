@@ -21,14 +21,106 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
+        /** @description OK */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             "application/json": {
-              /** @example true */
               ok?: boolean;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** App health */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example ok */
+              status: string;
+              /** @example 0.0.1 */
+              version: string;
+              /** Format: date-time */
+              timestamp: string;
+              /** @example local */
+              environment: string;
+              /** @enum {string} */
+              db: "ok" | "down";
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/health/db": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Database health */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description DB OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example ok */
+              status: string;
+              /** @example ok */
+              db: string;
+              /** Format: date-time */
+              timestamp: string;
+              /** @example SELECT 1 */
+              check: string;
             };
           };
         };
@@ -65,6 +157,7 @@ export interface paths {
         };
       };
       responses: {
+        /** @description Created */
         201: {
           headers: {
             [name: string]: unknown;
@@ -73,7 +166,17 @@ export interface paths {
             "application/json": components["schemas"]["AuthResponse"];
           };
         };
+        /** @description Validation error */
         400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["StandardError"];
+          };
+        };
+        /** @description Conflict */
+        409: {
           headers: {
             [name: string]: unknown;
           };
@@ -112,6 +215,7 @@ export interface paths {
         };
       };
       responses: {
+        /** @description Authenticated */
         200: {
           headers: {
             [name: string]: unknown;
@@ -120,6 +224,7 @@ export interface paths {
             "application/json": components["schemas"]["AuthResponse"];
           };
         };
+        /** @description Invalid credentials */
         401: {
           headers: {
             [name: string]: unknown;
@@ -159,12 +264,13 @@ export interface paths {
         };
       };
       responses: {
+        /** @description Refreshed */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            "application/json": components["schemas"]["AuthTokens"];
+            "application/json": components["schemas"]["AuthResponse"];
           };
         };
       };
@@ -192,995 +298,24 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      requestBody?: never;
+      requestBody: {
+        content: {
+          "application/json": components["schemas"]["RefreshRequest"];
+        };
+      };
       responses: {
+        /** @description Logged out */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             "application/json": {
-              /** @example true */
-              ok?: boolean;
+              data?: {
+                /** @example true */
+                loggedOut?: boolean;
+              };
             };
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["CreateOrderRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["OrderResponse"];
-          };
-        };
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["StandardError"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get order by id */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["OrderResponse"];
-          };
-        };
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["StandardError"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders/{id}/timeline": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get order timeline */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["TimelineResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders/{id}/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Append order event */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["CreateOrderEventRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["TimelineEvent"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders/{id}/issues": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List issues for order */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    /** Create issue for order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["CreateIssueRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/orders/{id}/issues/{issueId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update issue */
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-          issueId: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["UpdateIssueRequest"];
-        };
-      };
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    trace?: never;
-  };
-  "/v1/tracking/orders/{orderNumber}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Public tracking by order number + phone */
-    get: {
-      parameters: {
-        query: {
-          phone: string;
-        };
-        header?: never;
-        path: {
-          orderNumber: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["TimelineResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/hub/intake": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Record hub intake */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["HubIntakeRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/hub/orders/{id}/stage": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Move order to processing stage */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["HubStageRequest"];
-        };
-      };
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/hub/queue": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get hub queue */
-    get: {
-      parameters: {
-        query?: {
-          stage?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/driver/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get current driver profile */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/driver/trips": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List current driver trips */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/driver/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List current driver tasks */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/driver/stops/{stopId}/arrive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Mark stop arrived */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          stopId: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/driver/stops/{stopId}/complete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Complete stop with proof payload */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          stopId: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["DriverStopCompleteRequest"];
-        };
-      };
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/affiliate/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get current affiliate context */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/affiliate/orders": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List affiliate orders */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    /** Create affiliate order */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["AffiliateCreateOrderRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["OrderResponse"];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/affiliate/orders/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get affiliate order by id */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": components["schemas"]["OrderResponse"];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/zones": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List zones */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    /** Create zone */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["ZoneRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/hubs": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List hubs */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>[];
-          };
-        };
-      };
-    };
-    put?: never;
-    /** Create hub */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["HubRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/admin/drivers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create driver profile */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["DriverRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/admin/trips": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create trip */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["TripRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v1/admin/trips/{id}/stops": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /** Create trip stop */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: string;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          "application/json": components["schemas"]["TripStopRequest"];
-        };
-      };
-      responses: {
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": Record<string, never>;
           };
         };
       };
@@ -1195,205 +330,54 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    StandardError: {
-      /** @example VALIDATION_FAILED */
-      errorCode: string;
-      /** @example Request validation failed. */
-      message: string;
-      details?: Record<string, never> | unknown[] | null;
-      /** @example trace_1741440300000_ab12cd34 */
-      traceId?: string;
-      /** Format: date-time */
-      timestamp: string;
-    };
     LoginRequest: {
-      /** @example affiliate.staff.shopa@mimo.local */
-      email: string;
-      /** @example dev-password */
+      /** @example +255712345678 */
+      phone: string;
+      /** @example secret123 */
       password: string;
     };
     RegisterRequest: {
-      /** @example Asha */
-      firstName: string;
-      /** @example Moshi */
-      lastName: string;
-      /** @example +255712000001 */
+      /** @example +255712345678 */
       phone: string;
-      /** @example asha.customer@example.com */
-      email: string;
-      /** @example dev-password */
+      /** @example Walking Skeleton Customer */
+      fullName: string;
+      /**
+       * Format: email
+       * @example customer@mimo.local
+       */
+      email?: string | null;
+      /** @example secret123 */
       password: string;
     };
     RefreshRequest: {
-      /** @example refresh_demo_customer_123 */
+      /** @example refresh-token */
       refreshToken: string;
+    };
+    AuthUser: {
+      id: string;
+      phone: string;
+      email?: string | null;
+      fullName: string;
+      role: string;
+      status: string;
     };
     AuthTokens: {
-      /** @example access_demo_customer_123 */
       accessToken: string;
-      /** @example refresh_demo_customer_123 */
       refreshToken: string;
-      /** @example Bearer */
-      tokenType: string;
-      /** @example 3600 */
-      expiresIn: number;
+      accessTokenExpiresInSeconds: number;
+      refreshTokenExpiresInSeconds: number;
     };
     AuthResponse: {
-      user: {
-        id?: string;
-        email?: string;
-        /** @example customer */
-        role?: string;
+      data: {
+        user: components["schemas"]["AuthUser"];
+        tokens: components["schemas"]["AuthTokens"];
       };
-      tokens: components["schemas"]["AuthTokens"];
     };
-    CreateOrderRequest: {
-      /**
-       * @example SHOP
-       * @enum {string}
-       */
-      channel: "DOOR" | "SHOP" | "HYBRID";
-      /**
-       * @example STANDARD
-       * @enum {string}
-       */
-      tier: "STANDARD" | "EXPRESS" | "SAME_DAY";
-      /** @example Asha Moshi */
-      customerName: string;
-      /** @example +255712000001 */
-      customerPhone: string;
-      /** @example Zone A */
-      zoneName: string;
-      /** @example Wash and fold */
-      notes?: string;
-    };
-    OrderResponse: {
-      id?: string;
-      /** @example AFF-SHOP-A-API-001 */
-      orderNumber?: string;
-      /** @enum {string} */
-      channel?: "DOOR" | "SHOP" | "HYBRID";
-      /** @enum {string} */
-      tier?: "STANDARD" | "EXPRESS" | "SAME_DAY";
-      /** @example CREATED */
-      status?: string;
-      /** @example Zone A */
-      zoneName?: string;
-      /** @example Sinza Hub */
-      hubName?: string | null;
-      /** @example SHOP-A */
-      affiliateShopCode?: string | null;
-      /** @example 1 */
-      bagCount?: number;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    TimelineEvent: {
-      id?: string;
-      /** @example ORDER_CREATED */
-      eventType?: string;
-      /** @example Order created from API contract endpoint */
-      notes?: string;
-      /** Format: date-time */
-      createdAt?: string;
-      payloadJson?: Record<string, never> | null;
-    };
-    TimelineResponse: {
-      orderId?: string;
-      orderNumber?: string;
-      events?: components["schemas"]["TimelineEvent"][];
-    };
-    CreateOrderEventRequest: {
-      /** @example HUB_RECEIVED */
-      eventType: string;
-      /** @example Bag scanned at intake */
-      notes?: string;
-      payloadJson?: Record<string, never>;
-    };
-    CreateIssueRequest: {
-      /** @example DELAY */
-      issueType: string;
-      /** @example Pickup delayed due to weather */
-      notes?: string;
-    };
-    UpdateIssueRequest: {
-      /** @example RESOLVED */
-      status?: string;
-      /** @example Customer notified and accepted revised ETA */
-      resolutionNotes?: string;
-    };
-    HubIntakeRequest: {
-      orderId: string;
-      /** @example BAG-AFF-SHOP-A-API-001 */
-      bagTag: string;
-      /** @example 4.5 */
-      weightKg: number;
-      /** @example Intake complete, no visible damage */
-      notes?: string;
-    };
-    HubStageRequest: {
-      /**
-       * @example WASHING
-       * @enum {string}
-       */
-      stage: "WASHING" | "DRYING" | "IRONING" | "PACKED";
-      /** @example Moved to washing queue */
-      notes?: string;
-    };
-    DriverStopCompleteRequest: {
-      /**
-       * @example OTP
-       * @enum {string}
-       */
-      proofType: "OTP" | "PHOTO" | "SIGNATURE" | "NOTES";
-      /** @example 123456 */
-      otp?: string;
-      /** @example photo://pickup-proof-001 */
-      photoRef?: string;
-      /** @example signature://delivery-proof-001 */
-      signatureRef?: string;
-      /** @example Customer handed over one bag */
-      notes?: string;
-    };
-    AffiliateCreateOrderRequest: components["schemas"]["CreateOrderRequest"];
-    ZoneRequest: {
-      /** @example Zone C */
-      name: string;
-      /**
-       * @example {
-       *       "city": "Dar es Salaam"
-       *     }
-       */
-      payloadJson?: Record<string, never>;
-    };
-    HubRequest: {
-      /** @example Kigamboni Hub */
-      name: string;
-      zoneId: string;
-      /** @example Kigamboni, Dar es Salaam */
-      location?: string;
-    };
-    DriverRequest: {
-      /** @example driver.c@mimo.local */
-      email: string;
-      /** @example Driver C */
-      fullName: string;
-      homeZoneId: string;
-      /** @example Motorbike */
-      vehicleMeta?: string;
-    };
-    TripRequest: {
-      driverProfileId: string;
-      /** @example PICKUP_BATCH */
-      tripType: string;
-    };
-    TripStopRequest: {
-      tripId: string;
-      orderId: string;
-      /** @example PICKUP */
-      stopType: string;
-      /** @example Collect from affiliate shop */
-      notes?: string;
+    StandardError: {
+      error: {
+        code: string;
+        message: string;
+      };
     };
   };
   responses: never;

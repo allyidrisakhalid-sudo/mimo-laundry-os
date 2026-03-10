@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.17.0",
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "dev": "node ./scripts/dev.mjs",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

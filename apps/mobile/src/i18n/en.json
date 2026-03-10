@@ -2,19 +2,34 @@
   "common": {
     "language": "Language",
     "english": "English",
-    "swahili": "Swahili"
+    "swahili": "Swahili",
+    "loading": "Loading..."
   },
   "auth": {
     "welcome": "Welcome to Mimo",
     "login": {
       "title": "Sign in",
       "subtitle": "Access Laundry OS",
-      "submit": "Login"
+      "phone": "Phone number",
+      "phonePlaceholder": "+255712345678",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Login",
+      "success": "Login successful",
+      "error": "Login failed. Check your phone and password."
     }
   },
   "home": {
     "title": "Customer Home",
-    "subtitle": "Track orders, pickups, and deliveries."
+    "subtitle": "Track orders, pickups, and deliveries.",
+    "dashboardTitle": "Walking skeleton home",
+    "loggedInAs": "Logged in as",
+    "apiStatusLabel": "API status",
+    "apiConnected": "Connected",
+    "apiDisconnected": "Disconnected",
+    "tokenStored": "Access token stored",
+    "logout": "Logout",
+    "apiBaseUrl": "API base URL"
   },
   "settings": {
     "title": "Settings",

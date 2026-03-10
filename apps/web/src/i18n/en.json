@@ -6,7 +6,8 @@
     "ok": "OK",
     "cancel": "Cancel",
     "save": "Save",
-    "close": "Close"
+    "close": "Close",
+    "loading": "Loading..."
   },
   "nav": {
     "home": "Home",
@@ -19,13 +20,25 @@
       "title": "Sign in",
       "subtitle": "Access Laundry OS",
       "phone": "Phone number",
+      "phonePlaceholder": "+255712345678",
       "password": "Password",
-      "submit": "Login"
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Login",
+      "success": "Login successful",
+      "error": "Login failed. Check your phone and password."
     }
   },
   "home": {
     "title": "Customer Home",
-    "subtitle": "Track orders, pickups, and deliveries."
+    "subtitle": "Track orders, pickups, and deliveries.",
+    "dashboardTitle": "Walking skeleton home",
+    "loggedInAs": "Logged in as",
+    "apiStatusLabel": "API status",
+    "apiConnected": "Connected",
+    "apiDisconnected": "Disconnected",
+    "tokenStored": "Access token stored",
+    "logout": "Logout",
+    "apiBaseUrl": "API base URL"
   },
   "componentsPage": {
     "title": "Mimo UI Kit",

@@ -276,3 +276,22 @@
 - Added shared locale formatting helpers for TZS, date/time, and +255 phone display
 - Added documentation at docs/ui/i18n.md
 - Gate target for verification: toggle language; screens update; formats correct
+
+## Chapter 8.1 PASS
+
+- Re-ran prior chapter verification successfully before implementation.
+- Added API health endpoint at GET /v1/health.
+- Added DB connectivity proof endpoint at GET /v1/health/db.
+- Updated API contract snapshot and regenerated SDK to match auth request/response shapes.
+- Added root one-command dev startup script in scripts/dev.mjs and wired root pnpm dev.
+- Added web login shell with EN/SW toggle, token storage, and API connected indicator.
+- Added mobile login shell with EN/SW toggle, token storage, and API connected indicator.
+- Verified pnpm -r build passed.
+- Verified pnpm -r lint passed.
+- Verified pnpm -r typecheck passed.
+- Verified GET /v1/health returned ok.
+- Verified GET /v1/health/db returned ok.
+- Verified web login succeeded and showed API connected state.
+- Verified mobile login succeeded in Expo web and showed API connected state.
+- Noted local environment limitation: physical-device Expo Go / Android SDK setup was not fully validated in this chapter.
+- Gate satisfied: One command starts the local system spine, and all core app surfaces reach backend for the walking skeleton proof.

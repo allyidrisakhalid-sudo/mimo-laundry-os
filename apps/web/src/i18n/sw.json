@@ -6,7 +6,8 @@
     "ok": "Sawa",
     "cancel": "Ghairi",
     "save": "Hifadhi",
-    "close": "Funga"
+    "close": "Funga",
+    "loading": "Inapakia..."
   },
   "nav": {
     "home": "Nyumbani",
@@ -19,13 +20,25 @@
       "title": "Ingia",
       "subtitle": "Fikia Laundry OS",
       "phone": "Namba ya simu",
+      "phonePlaceholder": "+255712345678",
       "password": "Nenosiri",
-      "submit": "Ingia"
+      "passwordPlaceholder": "Weka nenosiri lako",
+      "submit": "Ingia",
+      "success": "Umeingia kwa mafanikio",
+      "error": "Kuingia kumeshindikana. Kagua simu na nenosiri."
     }
   },
   "home": {
     "title": "Nyumbani kwa Mteja",
-    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji."
+    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji.",
+    "dashboardTitle": "Nyumbani kwa walking skeleton",
+    "loggedInAs": "Umeingia kama",
+    "apiStatusLabel": "Hali ya API",
+    "apiConnected": "Imeunganishwa",
+    "apiDisconnected": "Haijaunganishwa",
+    "tokenStored": "Access token imehifadhiwa",
+    "logout": "Toka",
+    "apiBaseUrl": "API base URL"
   },
   "componentsPage": {
     "title": "Mimo UI Kit",

@@ -1,282 +1,64 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Laundry OS API",
-    "version": "1.0.0",
-    "notes": "Executable v1 contract for Laundry OS. Base path is /v1. Breaking changes must go to /v2."
-  },
-  "servers": [{ "url": "http://localhost:3001", "notes": "Local development server" }],
-  "tags": [
-    { "name": "Health" },
-    { "name": "Auth" },
-    { "name": "Orders" },
-    { "name": "Tracking" },
-    { "name": "Hub" },
-    { "name": "Driver" },
-    { "name": "Affiliate" },
-    { "name": "Admin" }
-  ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "notes": "Access token in Authorization header as Bearer <token>"
-      },
-      "roleHeader": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-role",
-        "notes": "Development-only role scoping header for current chapter verification. Allowed values include admin, hub_staff, affiliate_staff, driver."
-      }
-    },
-    "schemas": {
-      "StandardError": {
-        "type": "object",
-        "required": ["errorCode", "message", "timestamp"],
-        "properties": {
-          "errorCode": { "type": "string", "example": "VALIDATION_FAILED" },
-          "message": { "type": "string", "example": "Request validation failed." },
-          "details": {
-            "oneOf": [{ "type": "object" }, { "type": "array", "items": {} }, { "type": "null" }]
-          },
-          "traceId": { "type": "string", "example": "trace_1741440300000_ab12cd34" },
-          "timestamp": { "type": "string", "format": "date-time" }
-        }
-      },
-      "LoginRequest": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "example": "affiliate.staff.shopa@mimo.local" },
-          "password": { "type": "string", "example": "dev-password" }
-        }
-      },
-      "RegisterRequest": {
-        "type": "object",
-        "required": ["firstName", "lastName", "phone", "email", "password"],
-        "properties": {
-          "firstName": { "type": "string", "example": "Asha" },
-          "lastName": { "type": "string", "example": "Moshi" },
-          "phone": { "type": "string", "example": "+255712000001" },
-          "email": { "type": "string", "example": "asha.customer@example.com" },
-          "password": { "type": "string", "example": "dev-password" }
-        }
-      },
-      "RefreshRequest": {
-        "type": "object",
-        "required": ["refreshToken"],
-        "properties": {
-          "refreshToken": { "type": "string", "example": "refresh_demo_customer_123" }
-        }
-      },
-      "AuthTokens": {
-        "type": "object",
-        "required": ["accessToken", "refreshToken", "tokenType", "expiresIn"],
-        "properties": {
-          "accessToken": { "type": "string", "example": "access_demo_customer_123" },
-          "refreshToken": { "type": "string", "example": "refresh_demo_customer_123" },
-          "tokenType": { "type": "string", "example": "Bearer" },
-          "expiresIn": { "type": "integer", "example": 3600 }
-        }
-      },
-      "AuthResponse": {
-        "type": "object",
-        "required": ["user", "tokens"],
-        "properties": {
-          "user": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "email": { "type": "string" },
-              "role": { "type": "string", "example": "customer" }
-            }
-          },
-          "tokens": { "$ref": "#/components/schemas/AuthTokens" }
-        }
-      },
-      "CreateOrderRequest": {
-        "type": "object",
-        "required": ["channel", "tier", "customerName", "customerPhone", "zoneName"],
-        "properties": {
-          "channel": { "type": "string", "enum": ["DOOR", "SHOP", "HYBRID"], "example": "SHOP" },
-          "tier": {
-            "type": "string",
-            "enum": ["STANDARD", "EXPRESS", "SAME_DAY"],
-            "example": "STANDARD"
-          },
-          "customerName": { "type": "string", "example": "Asha Moshi" },
-          "customerPhone": { "type": "string", "example": "+255712000001" },
-          "zoneName": { "type": "string", "example": "Zone A" },
-          "notes": { "type": "string", "example": "Wash and fold" }
-        },
-        "notes": "Zone selection drives routing. Hub assignment is derived from the zone by server-side logic. Bag tags are created and linked within order operations."
-      },
-      "OrderResponse": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "orderNumber": { "type": "string", "example": "AFF-SHOP-A-API-001" },
-          "channel": { "type": "string", "enum": ["DOOR", "SHOP", "HYBRID"] },
-          "tier": { "type": "string", "enum": ["STANDARD", "EXPRESS", "SAME_DAY"] },
-          "status": { "type": "string", "example": "CREATED" },
-          "zoneName": { "type": "string", "example": "Zone A" },
-          "hubName": { "type": "string", "nullable": true, "example": "Sinza Hub" },
-          "affiliateShopCode": { "type": "string", "nullable": true, "example": "SHOP-A" },
-          "bagCount": { "type": "integer", "example": 1 },
-          "createdAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "TimelineEvent": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "eventType": { "type": "string", "example": "ORDER_CREATED" },
-          "notes": { "type": "string", "example": "Order created from API contract endpoint" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "payloadJson": { "type": "object", "nullable": true }
-        }
-      },
-      "TimelineResponse": {
-        "type": "object",
-        "properties": {
-          "orderId": { "type": "string" },
-          "orderNumber": { "type": "string" },
-          "events": { "type": "array", "items": { "$ref": "#/components/schemas/TimelineEvent" } }
-        }
-      },
-      "CreateOrderEventRequest": {
-        "type": "object",
-        "required": ["eventType", "description"],
-        "properties": {
-          "eventType": { "type": "string", "example": "HUB_RECEIVED" },
-          "notes": { "type": "string", "example": "Bag scanned at intake" },
-          "payloadJson": { "type": "object" }
-        }
-      },
-      "CreateIssueRequest": {
-        "type": "object",
-        "required": ["issueType", "description"],
-        "properties": {
-          "issueType": { "type": "string", "example": "DELAY" },
-          "notes": { "type": "string", "example": "Pickup delayed due to weather" }
-        }
-      },
-      "UpdateIssueRequest": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string", "example": "RESOLVED" },
-          "resolutionNotes": {
-            "type": "string",
-            "example": "Customer notified and accepted revised ETA"
-          }
-        }
-      },
-      "HubIntakeRequest": {
-        "type": "object",
-        "required": ["orderId", "bagTag", "weightKg"],
-        "properties": {
-          "orderId": { "type": "string" },
-          "bagTag": { "type": "string", "example": "BAG-AFF-SHOP-A-API-001" },
-          "weightKg": { "type": "number", "example": 4.5 },
-          "notes": { "type": "string", "example": "Intake complete, no visible damage" }
-        },
-        "notes": "Appends intake-related OrderEvents such as HUB_INTAKE_RECORDED and BAG_SCANNED."
-      },
-      "HubStageRequest": {
-        "type": "object",
-        "required": ["stage"],
-        "properties": {
-          "stage": {
-            "type": "string",
-            "enum": ["WASHING", "DRYING", "IRONING", "PACKED"],
-            "example": "WASHING"
-          },
-          "notes": { "type": "string", "example": "Moved to washing queue" }
-        },
-        "notes": "Appends stage transition events in immutable order timeline."
-      },
-      "DriverStopCompleteRequest": {
-        "type": "object",
-        "required": ["proofType"],
-        "properties": {
-          "proofType": {
-            "type": "string",
-            "enum": ["OTP", "PHOTO", "SIGNATURE", "NOTES"],
-            "example": "OTP"
-          },
-          "otp": { "type": "string", "example": "123456" },
-          "photoRef": { "type": "string", "example": "photo://pickup-proof-001" },
-          "signatureRef": { "type": "string", "example": "signature://delivery-proof-001" },
-          "notes": { "type": "string", "example": "Customer handed over one bag" }
-        },
-        "notes": "Used for pickup/delivery proof. Driver visibility is scoped to assigned tasks only."
-      },
-      "AffiliateCreateOrderRequest": {
-        "allOf": [{ "$ref": "#/components/schemas/CreateOrderRequest" }],
-        "notes": "Affiliate attribution is derived by the server from authenticated affiliate context; client must not send affiliateShopId directly."
-      },
-      "ZoneRequest": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "name": { "type": "string", "example": "Zone C" },
-          "payloadJson": { "type": "object", "example": { "city": "Dar es Salaam" } }
-        }
-      },
-      "HubRequest": {
-        "type": "object",
-        "required": ["name", "zoneId"],
-        "properties": {
-          "name": { "type": "string", "example": "Kigamboni Hub" },
-          "zoneId": { "type": "string" },
-          "location": { "type": "string", "example": "Kigamboni, Dar es Salaam" }
-        }
-      },
-      "DriverRequest": {
-        "type": "object",
-        "required": ["email", "fullName", "homeZoneId"],
-        "properties": {
-          "email": { "type": "string", "example": "driver.c@mimo.local" },
-          "fullName": { "type": "string", "example": "Driver C" },
-          "homeZoneId": { "type": "string" },
-          "vehicleMeta": { "type": "string", "example": "Motorbike" }
-        }
-      },
-      "TripRequest": {
-        "type": "object",
-        "required": ["driverProfileId", "tripType"],
-        "properties": {
-          "driverProfileId": { "type": "string" },
-          "tripType": { "type": "string", "example": "PICKUP_BATCH" }
-        }
-      },
-      "TripStopRequest": {
-        "type": "object",
-        "required": ["tripId", "orderId", "stopType"],
-        "properties": {
-          "tripId": { "type": "string" },
-          "orderId": { "type": "string" },
-          "stopType": { "type": "string", "example": "PICKUP" },
-          "notes": { "type": "string", "example": "Collect from affiliate shop" }
-        }
-      }
-    }
-  },
+  "openapi": "3.1.0",
+  "info": { "title": "Mimo API", "version": "v1" },
   "paths": {
     "/health": {
       "get": {
-        "tags": ["Health"],
         "summary": "Health check",
         "responses": {
           "200": {
-            "notes": "API is healthy",
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "summary": "App health",
+        "responses": {
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": { "ok": { "type": "boolean", "example": true } }
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "version": { "type": "string", "example": "0.0.1" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "environment": { "type": "string", "example": "local" },
+                    "db": { "type": "string", "enum": ["ok", "down"] }
+                  },
+                  "required": ["status", "version", "timestamp", "environment", "db"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health/db": {
+      "get": {
+        "summary": "Database health",
+        "responses": {
+          "200": {
+            "description": "DB OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "ok" },
+                    "db": { "type": "string", "example": "ok" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "check": { "type": "string", "example": "SELECT 1" }
+                  },
+                  "required": ["status", "db", "timestamp", "check"]
                 }
               }
             }
@@ -286,7 +68,6 @@
     },
     "/v1/auth/register": {
       "post": {
-        "tags": ["Auth"],
         "summary": "Register customer",
         "requestBody": {
           "required": true,
@@ -296,13 +77,19 @@
         },
         "responses": {
           "201": {
-            "notes": "Customer registered",
+            "description": "Created",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } }
             }
           },
           "400": {
-            "notes": "Validation error",
+            "description": "Validation error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/StandardError" } }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/StandardError" } }
             }
@@ -312,7 +99,6 @@
     },
     "/v1/auth/login": {
       "post": {
-        "tags": ["Auth"],
         "summary": "Login",
         "requestBody": {
           "required": true,
@@ -322,13 +108,13 @@
         },
         "responses": {
           "200": {
-            "notes": "Authenticated",
+            "description": "Authenticated",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } }
             }
           },
           "401": {
-            "notes": "Invalid credentials",
+            "description": "Invalid credentials",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/StandardError" } }
             }
@@ -338,7 +124,6 @@
     },
     "/v1/auth/refresh": {
       "post": {
-        "tags": ["Auth"],
         "summary": "Refresh token",
         "requestBody": {
           "required": true,
@@ -348,9 +133,9 @@
         },
         "responses": {
           "200": {
-            "notes": "Tokens refreshed",
+            "description": "Refreshed",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/AuthTokens" } }
+              "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } }
             }
           }
         }
@@ -358,530 +143,115 @@
     },
     "/v1/auth/logout": {
       "post": {
-        "tags": ["Auth"],
         "summary": "Logout",
-        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/RefreshRequest" } }
+          }
+        },
         "responses": {
           "200": {
-            "notes": "Logged out",
+            "description": "Logged out",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": { "ok": { "type": "boolean", "example": true } }
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": { "loggedOut": { "type": "boolean", "example": true } }
+                    }
+                  }
                 }
               }
             }
           }
         }
       }
-    },
-    "/v1/orders": {
-      "post": {
-        "tags": ["Orders"],
-        "summary": "Create order",
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CreateOrderRequest" } }
-          }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "phone": { "type": "string", "example": "+255712345678" },
+          "password": { "type": "string", "example": "secret123" }
         },
-        "responses": {
-          "201": {
-            "notes": "Order created",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } }
-            }
+        "required": ["phone", "password"]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "phone": { "type": "string", "example": "+255712345678" },
+          "fullName": { "type": "string", "example": "Walking Skeleton Customer" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true,
+            "example": "customer@mimo.local"
           },
-          "400": {
-            "notes": "Validation error",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/StandardError" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/orders/{id}": {
-      "get": {
-        "tags": ["Orders"],
-        "summary": "Get order by id",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Order found",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } }
-            }
-          },
-          "404": {
-            "notes": "Order not found",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/StandardError" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/orders/{id}/timeline": {
-      "get": {
-        "tags": ["Orders", "Tracking"],
-        "summary": "Get order timeline",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Timeline returned",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineResponse" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/orders/{id}/events": {
-      "post": {
-        "tags": ["Orders"],
-        "summary": "Append order event",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateOrderEventRequest" }
-            }
-          }
+          "password": { "type": "string", "example": "secret123" }
         },
-        "responses": {
-          "201": {
-            "notes": "Order event appended",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineEvent" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/orders/{id}/issues": {
-      "get": {
-        "tags": ["Orders"],
-        "summary": "List issues for order",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Issues returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
+        "required": ["phone", "fullName", "password"]
       },
-      "post": {
-        "tags": ["Orders"],
-        "summary": "Create issue for order",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CreateIssueRequest" } }
-          }
-        },
-        "responses": {
-          "201": {
-            "notes": "Issue created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/orders/{id}/issues/{issueId}": {
-      "patch": {
-        "tags": ["Orders"],
-        "summary": "Update issue",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "issueId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateIssueRequest" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "notes": "Issue updated",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/tracking/orders/{orderNumber}": {
-      "get": {
-        "tags": ["Tracking"],
-        "summary": "Public tracking by order number + phone",
-        "notes": "Tracking is locked for v1 as public lookup with orderNumber + phone query parameters.",
-        "parameters": [
-          { "name": "orderNumber", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "phone", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Tracking timeline returned",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/TimelineResponse" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/hub/intake": {
-      "post": {
-        "tags": ["Hub"],
-        "summary": "Record hub intake",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/HubIntakeRequest" } }
-          }
-        },
-        "responses": {
-          "201": {
-            "notes": "Intake recorded and events appended",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/hub/orders/{id}/stage": {
-      "post": {
-        "tags": ["Hub"],
-        "summary": "Move order to processing stage",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/HubStageRequest" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "notes": "Stage updated and event appended",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/hub/queue": {
-      "get": {
-        "tags": ["Hub"],
-        "summary": "Get hub queue",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "stage", "in": "query", "required": false, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Queue returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/driver/me": {
-      "get": {
-        "tags": ["Driver"],
-        "summary": "Get current driver profile",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Driver profile returned",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/driver/trips": {
-      "get": {
-        "tags": ["Driver"],
-        "summary": "List current driver trips",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Trips returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/driver/tasks": {
-      "get": {
-        "tags": ["Driver"],
-        "summary": "List current driver tasks",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Tasks returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/driver/stops/{stopId}/arrive": {
-      "post": {
-        "tags": ["Driver"],
-        "summary": "Mark stop arrived",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "stopId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Arrival recorded",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/driver/stops/{stopId}/complete": {
-      "post": {
-        "tags": ["Driver"],
-        "summary": "Complete stop with proof payload",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "stopId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/DriverStopCompleteRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "notes": "Completion recorded",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/affiliate/me": {
-      "get": {
-        "tags": ["Affiliate"],
-        "summary": "Get current affiliate context",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Affiliate profile returned",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/affiliate/orders": {
-      "get": {
-        "tags": ["Affiliate"],
-        "summary": "List affiliate orders",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Affiliate-scoped orders returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
+      "RefreshRequest": {
+        "type": "object",
+        "properties": { "refreshToken": { "type": "string", "example": "refresh-token" } },
+        "required": ["refreshToken"]
       },
-      "post": {
-        "tags": ["Affiliate"],
-        "summary": "Create affiliate order",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/AffiliateCreateOrderRequest" }
-            }
-          }
+      "AuthUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "nullable": true },
+          "fullName": { "type": "string" },
+          "role": { "type": "string" },
+          "status": { "type": "string" }
         },
-        "responses": {
-          "201": {
-            "notes": "Affiliate order created and attributed by server",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/affiliate/orders/{id}": {
-      "get": {
-        "tags": ["Affiliate"],
-        "summary": "Get affiliate order by id",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "notes": "Affiliate-scoped order returned",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } }
-            }
-          }
-        }
-      }
-    },
-    "/v1/zones": {
-      "get": {
-        "tags": ["Admin"],
-        "summary": "List zones",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Zones returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
+        "required": ["id", "phone", "fullName", "role", "status"]
       },
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Create zone",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/ZoneRequest" } }
-          }
+      "AuthTokens": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "accessTokenExpiresInSeconds": { "type": "number" },
+          "refreshTokenExpiresInSeconds": { "type": "number" }
         },
-        "responses": {
-          "201": {
-            "notes": "Zone created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/hubs": {
-      "get": {
-        "tags": ["Admin"],
-        "summary": "List hubs",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "responses": {
-          "200": {
-            "notes": "Hubs returned",
-            "content": {
-              "application/json": { "schema": { "type": "array", "items": { "type": "object" } } }
-            }
-          }
-        }
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "accessTokenExpiresInSeconds",
+          "refreshTokenExpiresInSeconds"
+        ]
       },
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Create hub",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/HubRequest" } }
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": { "$ref": "#/components/schemas/AuthUser" },
+              "tokens": { "$ref": "#/components/schemas/AuthTokens" }
+            },
+            "required": ["user", "tokens"]
           }
         },
-        "responses": {
-          "201": {
-            "notes": "Hub created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/admin/drivers": {
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Create driver profile",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/DriverRequest" } }
+        "required": ["data"]
+      },
+      "StandardError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" } },
+            "required": ["code", "message"]
           }
         },
-        "responses": {
-          "201": {
-            "notes": "Driver created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/admin/trips": {
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Create trip",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/TripRequest" } }
-          }
-        },
-        "responses": {
-          "201": {
-            "notes": "Trip created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/v1/admin/trips/{id}/stops": {
-      "post": {
-        "tags": ["Admin"],
-        "summary": "Create trip stop",
-        "security": [{ "bearerAuth": [] }, { "roleHeader": [] }],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/TripStopRequest" } }
-          }
-        },
-        "responses": {
-          "201": {
-            "notes": "Trip stop created",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
+        "required": ["error"]
       }
     }
   }
