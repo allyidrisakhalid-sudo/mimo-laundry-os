@@ -1604,6 +1604,576 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (method === "POST" && url.pathname === "/v1/affiliate/orders") {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(res, 403, "FORBIDDEN", "Only affiliate staff can create affiliate orders");
+      }
+
+      const body = await readJsonBody(req);
+
+      const customerPhoneRaw = String(body.customerPhone ?? "").trim();
+      const returnMethodRaw = String(body.returnMethod ?? "").trim();
+      const customerNameRaw =
+        body.customerName === null || body.customerName === undefined
+          ? "Walk-in Customer"
+          : String(body.customerName).trim() || "Walk-in Customer";
+      const notesRaw =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      let tier: "STANDARD_48H" | "EXPRESS_24H" | "SAME_DAY";
+      try {
+        tier = assertOrderTier(String(body.tier ?? "").trim());
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          error instanceof Error ? error.message : "Invalid affiliate order tier"
+        );
+      }
+
+      if (!customerPhoneRaw) {
+        return sendError(res, 400, "VALIDATION_ERROR", "customerPhone is required");
+      }
+
+      let customerPhone: string;
+      try {
+        customerPhone = normalizePhone(customerPhoneRaw);
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          error instanceof Error ? error.message : "Invalid customer phone"
+        );
+      }
+
+      if (!["PICKUP_AT_SHOP", "DELIVER_TO_DOOR"].includes(returnMethodRaw)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "returnMethod must be one of PICKUP_AT_SHOP, DELIVER_TO_DOOR"
+        );
+      }
+
+      const returnMethod = returnMethodRaw as "PICKUP_AT_SHOP" | "DELIVER_TO_DOOR";
+      const channel: "SHOP_DROP" | "HYBRID" =
+        returnMethod === "PICKUP_AT_SHOP" ? "SHOP_DROP" : "HYBRID";
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId", s."zoneId", s."isActive"
+        FROM "AffiliateStaffProfile" asp
+        INNER JOIN "AffiliateShop" s ON s."id" = asp."affiliateShopId"
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      if (affiliateScopeResult.rows.length === 0) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate staff profile was not found or inactive"
+        );
+      }
+
+      const affiliateScope = affiliateScopeResult.rows[0];
+      const affiliateShopId = getString(affiliateScope, "affiliateShopId", "affiliateshopid");
+      const zoneId = getString(affiliateScope, "zoneId", "zoneid");
+      const shopIsActive =
+        affiliateScope["isActive"] === true || affiliateScope["isactive"] === true;
+
+      if (!affiliateShopId || !zoneId || !shopIsActive) {
+        return sendError(
+          res,
+          409,
+          "AFFILIATE_SHOP_NOT_ACTIVE",
+          "Affiliate shop is not active or not properly configured"
+        );
+      }
+
+      let dropoffAddressId: string | null = null;
+      if (returnMethod === "DELIVER_TO_DOOR") {
+        const line1 = String(body.dropoffAddressLine1 ?? "").trim();
+        const area = String(body.dropoffAddressArea ?? "").trim();
+        const city = String(body.dropoffAddressCity ?? "").trim();
+        const notes =
+          body.dropoffAddressNotes === null || body.dropoffAddressNotes === undefined
+            ? null
+            : String(body.dropoffAddressNotes).trim() || null;
+
+        if (!line1 || !area || !city) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "dropoffAddressLine1, dropoffAddressArea, and dropoffAddressCity are required for DELIVER_TO_DOOR"
+          );
+        }
+
+        dropoffAddressId = crypto.randomUUID();
+
+        await pool.query(
+          `
+          INSERT INTO "CustomerAddress" (
+            "id", "userId", "label", "contactName", "phone", "addressLine1",
+            "zoneId", "locationLat", "locationLng", "notes", "createdAt", "updatedAt"
+          )
+          VALUES (
+            $1, NULL, 'Affiliate Return Address', $2, $3, $4,
+            $5, NULL, NULL, $6, NOW(), NOW()
+          )
+          `,
+          [
+            dropoffAddressId,
+            customerNameRaw,
+            customerPhone,
+            line1,
+            zoneId,
+            [notes, `Area: ${area}`, `City: ${city}`].filter(Boolean).join(" | "),
+          ]
+        );
+      }
+
+      const hubResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "Hub"
+        WHERE "zoneId" = $1
+          AND "isActive" = TRUE
+        ORDER BY "createdAt" ASC
+        LIMIT 1
+        `,
+        [zoneId]
+      );
+
+      if (hubResult.rows.length === 0) {
+        return sendError(
+          res,
+          409,
+          "HUB_NOT_AVAILABLE_IN_ZONE",
+          "No active hub is available for the affiliate shop zone"
+        );
+      }
+
+      const hubId = getString(hubResult.rows[0], "id");
+      const orderId = crypto.randomUUID();
+      const orderNumber = nextOrderNumber();
+      const bagId = crypto.randomUUID();
+      const tagCode = nextBagTagCode();
+
+      await pool.query("BEGIN");
+
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Order" (
+            "id", "orderNumber", "sourceType", "affiliateShopId", "channel", "customerName", "customerPhone",
+            "notes", "createdAt", "updatedAt", "customerUserId", "tier", "zoneId", "hubId",
+            "pickupAddressId", "dropoffAddressId", "statusCurrent"
+          )
+          VALUES (
+            $1, $2, 'AFFILIATE', $3, $4, $5, $6,
+            $7, NOW(), NOW(), NULL, $8, $9, $10,
+            NULL, $11, 'CREATED'
+          )
+          `,
+          [
+            orderId,
+            orderNumber,
+            affiliateShopId,
+            channel,
+            customerNameRaw,
+            customerPhone,
+            notesRaw,
+            tier,
+            zoneId,
+            hubId,
+            dropoffAddressId,
+          ]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "Bag" ("id", "orderId", "tagCode", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, NOW(), NOW())
+          `,
+          [bagId, orderId, tagCode]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES
+            ($1, $2, 'ORDER_CREATED', NOW(), $3, 'AFFILIATE_STAFF', $4, $5::jsonb, NOW()),
+            ($6, $2, 'HUB_ASSIGNED', NOW(), $3, 'AFFILIATE_STAFF', $7, $8::jsonb, NOW())
+          `,
+          [
+            crypto.randomUUID(),
+            orderId,
+            authUser.id,
+            "Affiliate walk-in order created",
+            JSON.stringify({
+              tier,
+              hubId,
+              zoneId,
+              channel,
+              tagCode,
+              affiliateShopId,
+              returnMethod,
+              dropoffAddressId,
+            }),
+            crypto.randomUUID(),
+            "Hub assigned automatically from affiliate shop zone",
+            JSON.stringify({
+              rule: "FIRST_ACTIVE_HUB_IN_ZONE_BY_CREATED_AT_ASC",
+              hubId,
+              zoneId,
+              receivedAtShop: true,
+              affiliateShopId,
+              customerPhone,
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 201, {
+        data: {
+          order: {
+            id: orderId,
+            orderNumber,
+            sourceType: "AFFILIATE",
+            affiliateShopId,
+            channel,
+            customerName: customerNameRaw,
+            customerPhone,
+            tier,
+            zoneId,
+            hubId,
+            statusCurrent: "CREATED",
+            bagTagCode: tagCode,
+            returnMethod,
+            dropoffAddressId,
+          },
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/affiliate/orders") {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(res, 403, "FORBIDDEN", "Only affiliate staff can list affiliate orders");
+      }
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId"
+        FROM "AffiliateStaffProfile" asp
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      if (affiliateScopeResult.rows.length === 0) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate staff profile was not found"
+        );
+      }
+
+      const affiliateShopId = getString(
+        affiliateScopeResult.rows[0],
+        "affiliateShopId",
+        "affiliateshopid"
+      );
+      if (!affiliateShopId) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate shop scope was not found"
+        );
+      }
+
+      const statusFilter = String(url.searchParams.get("status") ?? "").trim();
+
+      const values: unknown[] = [affiliateShopId];
+      let whereSql = `WHERE o."affiliateShopId" = $1`;
+
+      if (statusFilter) {
+        values.push(statusFilter);
+        whereSql += ` AND o."statusCurrent" = $2`;
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          o."id",
+          o."orderNumber",
+          o."sourceType",
+          o."affiliateShopId",
+          o."channel",
+          o."customerName",
+          o."customerPhone",
+          o."tier",
+          o."zoneId",
+          o."hubId",
+          o."statusCurrent",
+          o."createdAt",
+          o."updatedAt"
+        FROM "Order" o
+        ${whereSql}
+        ORDER BY o."createdAt" DESC
+        `,
+        values
+      );
+
+      return json(res, 200, {
+        data: {
+          orders: result.rows,
+        },
+      });
+    }
+
+    const affiliateOrderReadyId = pathParam(
+      url.pathname,
+      /^\/v1\/affiliate\/orders\/([^/]+)\/mark-ready-for-pickup$/
+    );
+    if (method === "POST" && affiliateOrderReadyId) {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(
+          res,
+          403,
+          "FORBIDDEN",
+          "Only affiliate staff can mark affiliate orders ready"
+        );
+      }
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId"
+        FROM "AffiliateStaffProfile" asp
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      if (affiliateScopeResult.rows.length === 0) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate staff profile was not found"
+        );
+      }
+
+      const affiliateShopId = getString(
+        affiliateScopeResult.rows[0],
+        "affiliateShopId",
+        "affiliateshopid"
+      );
+
+      const orderResult = await pool.query(
+        `
+        SELECT "id", "affiliateShopId", "statusCurrent", "channel"
+        FROM "Order"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [affiliateOrderReadyId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const order = orderResult.rows[0];
+      const orderAffiliateShopId = getString(order, "affiliateShopId", "affiliateshopid");
+
+      if (!affiliateShopId || orderAffiliateShopId !== affiliateShopId) {
+        return sendError(res, 403, "FORBIDDEN", "Order does not belong to affiliate shop");
+      }
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = 'PACKED', "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [affiliateOrderReadyId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES ($1, $2, 'PACKED', NOW(), $3, 'AFFILIATE_STAFF', $4, $5::jsonb, NOW())
+          `,
+          [
+            crypto.randomUUID(),
+            affiliateOrderReadyId,
+            authUser.id,
+            "Ready for pickup at affiliate shop",
+            JSON.stringify({
+              affiliateShopId,
+              state: "READY_FOR_PICKUP_AT_SHOP",
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 200, {
+        data: {
+          orderId: affiliateOrderReadyId,
+          readyForPickup: true,
+          statusCurrent: "PACKED",
+        },
+      });
+    }
+
+    const affiliateOrderPickedUpId = pathParam(
+      url.pathname,
+      /^\/v1\/affiliate\/orders\/([^/]+)\/customer-picked-up$/
+    );
+    if (method === "POST" && affiliateOrderPickedUpId) {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(
+          res,
+          403,
+          "FORBIDDEN",
+          "Only affiliate staff can complete affiliate pickups"
+        );
+      }
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId"
+        FROM "AffiliateStaffProfile" asp
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      if (affiliateScopeResult.rows.length === 0) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate staff profile was not found"
+        );
+      }
+
+      const affiliateShopId = getString(
+        affiliateScopeResult.rows[0],
+        "affiliateShopId",
+        "affiliateshopid"
+      );
+
+      const orderResult = await pool.query(
+        `
+        SELECT "id", "affiliateShopId", "statusCurrent"
+        FROM "Order"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [affiliateOrderPickedUpId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const order = orderResult.rows[0];
+      const orderAffiliateShopId = getString(order, "affiliateShopId", "affiliateshopid");
+
+      if (!affiliateShopId || orderAffiliateShopId !== affiliateShopId) {
+        return sendError(res, 403, "FORBIDDEN", "Order does not belong to affiliate shop");
+      }
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = 'DELIVERED', "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [affiliateOrderPickedUpId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES ($1, $2, 'DELIVERED', NOW(), $3, 'AFFILIATE_STAFF', $4, $5::jsonb, NOW())
+          `,
+          [
+            crypto.randomUUID(),
+            affiliateOrderPickedUpId,
+            authUser.id,
+            "Customer picked up order from affiliate shop",
+            JSON.stringify({
+              affiliateShopId,
+              state: "SHOP_PICKUP_COMPLETED",
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 200, {
+        data: {
+          orderId: affiliateOrderPickedUpId,
+          pickedUpByCustomer: true,
+          statusCurrent: "DELIVERED",
+        },
+      });
+    }
+
     if (method === "GET" && url.pathname === "/v1/auth/me") {
       const user = await requireAuth(req, res);
       if (!user) return;

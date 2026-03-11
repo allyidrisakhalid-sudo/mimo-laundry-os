@@ -350,3 +350,36 @@
 - Verified customer timeline shows PICKED_UP and DELIVERED after proof actions.
 - Verified repeat delivery on completed stop is blocked with STOP_ALREADY_COMPLETED.
 - Gate satisfied: Proof updates timeline; customer sees updates.
+
+## Chapter 8.6 PASS
+
+- Re-ran Chapter 8.5 pre-flight verification successfully against the live contract:
+  - customer-created order flow still worked
+  - admin delivery trip creation and stop assignment worked
+  - driver pickup proof worked
+  - driver delivery OTP proof worked
+  - timeline showed ORDER_CREATED, HUB_ASSIGNED, PICKED_UP, and DELIVERED
+- Added affiliate walk-in order creation endpoint at POST /v1/affiliate/orders.
+- Verified affiliate shop-return order creation sets:
+  - sourceType = AFFILIATE
+  - affiliateShopId from auth scope
+  - channel = SHOP_DROP
+  - zoneId from affiliate shop
+  - hubId from zone hub assignment
+- Verified affiliate hybrid return order creation sets:
+  - sourceType = AFFILIATE
+  - channel = HYBRID
+  - scoped affiliateShopId
+  - derived dropoffAddressId for return-to-door flow
+- Added affiliate scoped order list endpoint at GET /v1/affiliate/orders.
+- Verified affiliate list returns only shop-scoped orders for shop_mikocheni.
+- Added affiliate workflow endpoints:
+  - POST /v1/affiliate/orders/:id/mark-ready-for-pickup
+  - POST /v1/affiliate/orders/:id/customer-picked-up
+- Verified mark-ready-for-pickup succeeds and returns statusCurrent = PACKED under current status enum contract.
+- Verified customer-picked-up succeeds and returns statusCurrent = DELIVERED.
+- Verified hybrid affiliate return can be dispatched through existing delivery trip flow and completed with driver OTP proof.
+- Verified affiliate list reflects delivered hybrid order status after OTP-confirmed delivery.
+- Verified cross-shop affiliate action against seeded shop B order returns 403 FORBIDDEN with message: Order does not belong to affiliate shop.
+- Added docs/product/affiliate_ops_workflow.md.
+- Gate satisfied: Affiliate can operate independently without seeing other shops.

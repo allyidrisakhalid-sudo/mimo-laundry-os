@@ -240,3 +240,12 @@ Add-Content docs\acceptance.md @"
 - Added delivery OTP generation endpoint for controlled verification
 - Added delivery confirmation with OTP validation, expiry, invalidation, and DELIVERED event append
 - Added docs/product/proof_workflows.md
+
+## Chapter 8.6 completed
+
+- Added affiliate walk-in order creation endpoint with scoped shop, zone, and hub derivation
+- Added affiliate hybrid return-to-door order creation flow
+- Added affiliate scoped order list endpoint
+- Added affiliate shop pickup workflow endpoints for ready-for-pickup and customer pickup completion
+- Reused existing dispatch and OTP delivery proof flow for affiliate hybrid returns
+- Added affiliate operations workflow documentation at docs/product/affiliate_ops_workflow.md
