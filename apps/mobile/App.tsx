@@ -48,6 +48,12 @@ type CreatedOrder = {
   bagTagCode?: string | null;
 };
 
+type AffiliateShopOption = {
+  id?: string | null;
+  name?: string | null;
+  zoneId?: string | null;
+};
+
 type TimelineEvent = {
   id?: string | null;
   orderId?: string | null;
@@ -95,6 +101,8 @@ export default function App() {
   const [pickupAddressId, setPickupAddressId] = useState("addr_customer_home_a");
   const [dropoffAddressId, setDropoffAddressId] = useState("addr_customer_home_a");
   const [affiliateShopId, setAffiliateShopId] = useState("shop_mikocheni");
+  const [selectedZoneId, setSelectedZoneId] = useState("zone_a");
+  const [availableShops, setAvailableShops] = useState<AffiliateShopOption[]>([]);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [latestOrder, setLatestOrder] = useState<CreatedOrder | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
@@ -127,6 +135,33 @@ export default function App() {
       setLoggedInUser(payload.data?.user ?? null);
     } catch {
       return;
+    }
+  }
+
+  async function loadAffiliateShops(zoneId: string) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/v1/affiliate-shops?zoneId=${encodeURIComponent(zoneId)}`
+      );
+
+      if (!response.ok) {
+        setAvailableShops([]);
+        setAffiliateShopId("");
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        data?: {
+          affiliateShops?: AffiliateShopOption[];
+        };
+      };
+
+      const shops = payload.data?.affiliateShops ?? [];
+      setAvailableShops(shops);
+      setAffiliateShopId(shops[0]?.id ?? "");
+    } catch {
+      setAvailableShops([]);
+      setAffiliateShopId("");
     }
   }
 
@@ -205,6 +240,24 @@ export default function App() {
     return () => clearInterval(timer);
   }, [accessToken, latestOrder?.id, latestOrder?.statusCurrent]);
 
+  useEffect(() => {
+    const restore = async () => {
+      const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+      if (storedToken) {
+        setAccessToken(storedToken);
+        setMessage(t("home.tokenStored"));
+        await loadCurrentUser(storedToken);
+      }
+      await loadHealth();
+      await loadAffiliateShops(selectedZoneId);
+    };
+
+    void restore();
+  }, [t]);
+
+  useEffect(() => {
+    void loadAffiliateShops(selectedZoneId);
+  }, [selectedZoneId]);
   async function handleLogin() {
     try {
       setSubmitting(true);
@@ -256,10 +309,12 @@ export default function App() {
       }
 
       if (orderChannel === "SHOP_DROP") {
+        body.zoneId = selectedZoneId;
         body.affiliateShopId = affiliateShopId;
       }
 
       if (orderChannel === "HYBRID") {
+        body.zoneId = selectedZoneId;
         body.affiliateShopId = affiliateShopId;
         body.dropoffAddressId = dropoffAddressId;
       }
@@ -446,6 +501,19 @@ export default function App() {
 
               {orderChannel === "SHOP_DROP" || orderChannel === "HYBRID" ? (
                 <>
+                  <Text>{t("orders.zoneId")}</Text>
+                  <TextInput
+                    value={selectedZoneId}
+                    onChangeText={setSelectedZoneId}
+                    style={{
+                      borderWidth: 1,
+                      borderRadius: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      backgroundColor: "white",
+                    }}
+                  />
+
                   <Text>{t("orders.affiliateShop")}</Text>
                   <TextInput
                     value={affiliateShopId}
@@ -457,6 +525,11 @@ export default function App() {
                       paddingVertical: 10,
                       backgroundColor: "white",
                     }}
+                    placeholder={availableShops
+                      .map((shop) => shop.id)
+                      .filter(Boolean)
+                      .join(", ")}
+                    placeholderTextColor="#64748b"
                   />
                 </>
               ) : null}

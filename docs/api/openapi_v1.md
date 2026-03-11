@@ -93,3 +93,49 @@ All endpoints standardize on this structure:
   "timestamp": "2026-03-08T15:30:00.000Z"
 }
 ```
+
+## Chapter 8.3.2 additions
+
+### GET /v1/affiliate-shops?zoneId=...
+
+Returns active affiliate shops for the supplied zone.
+
+### Order creation enforcement
+
+For `SHOP_DROP` and `HYBRID` orders:
+
+- selected `affiliateShopId` must belong to selected `zoneId`
+- mismatch returns error code `AFFILIATE_SHOP_ZONE_MISMATCH`
+
+## Chapter 8.3.3 additions
+
+### POST /v1/admin/trips
+
+Creates a zone-scoped trip for a driver.
+
+Required body:
+
+- `driverId`
+- `type` = `PICKUP` or `DELIVERY`
+- `zoneId`
+
+Rule:
+
+- driver `homeZoneId` must equal trip `zoneId`
+- mismatch returns `ZONE_ASSIGNMENT_MISMATCH`
+
+### POST /v1/admin/trips/:id/stops
+
+Adds an order stop to a trip.
+
+Required body:
+
+- `orderId`
+- `stopType` = `PICKUP` or `DROPOFF`
+- `sequence`
+
+Rule:
+
+- `trip.zoneId == order.zoneId`
+- `driver.homeZoneId == order.zoneId`
+- mismatch returns `ZONE_ASSIGNMENT_MISMATCH`

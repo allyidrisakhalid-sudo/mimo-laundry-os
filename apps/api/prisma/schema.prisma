@@ -45,6 +45,7 @@ enum OrderChannel {
 
 enum OrderEventType {
   ORDER_CREATED
+  HUB_ASSIGNED
   PICKUP_SCHEDULED
   PICKED_UP
   RECEIVED_AT_HUB

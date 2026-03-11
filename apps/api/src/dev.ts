@@ -106,6 +106,22 @@ function assertOrderChannel(value: string) {
   return value as "DOOR" | "SHOP_DROP" | "HYBRID";
 }
 
+function assertTripType(value: string) {
+  const allowed = ["PICKUP", "DELIVERY"];
+  if (!allowed.includes(value)) {
+    throw new Error("type must be one of PICKUP, DELIVERY");
+  }
+  return value as "PICKUP" | "DELIVERY";
+}
+
+function assertTripStopType(value: string) {
+  const allowed = ["PICKUP", "DROPOFF"];
+  if (!allowed.includes(value)) {
+    throw new Error("stopType must be one of PICKUP, DROPOFF");
+  }
+  return value as "PICKUP" | "DROPOFF";
+}
+
 function assertOrderTier(value: string) {
   const allowed = ["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"];
   if (!allowed.includes(value)) {
@@ -1265,9 +1281,14 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (channel === "SHOP_DROP" || channel === "HYBRID") {
+        const selectedZoneId =
+          body.zoneId === null || body.zoneId === undefined
+            ? null
+            : String(body.zoneId).trim() || null;
+
         const shopResult = await pool.query(
           `
-          SELECT "id", "zoneId"
+          SELECT "id", "zoneId", "isActive"
           FROM "AffiliateShop"
           WHERE "id" = $1
           LIMIT 1
@@ -1280,7 +1301,18 @@ const server = http.createServer(async (req, res) => {
         }
 
         const shop = shopResult.rows[0];
-        zoneId = getString(shop, "zoneId", "zoneid");
+        const shopZoneId = getString(shop, "zoneId", "zoneid");
+
+        if (selectedZoneId && shopZoneId !== selectedZoneId) {
+          return sendError(
+            res,
+            409,
+            "AFFILIATE_SHOP_ZONE_MISMATCH",
+            "Affiliate shop does not belong to the selected zone"
+          );
+        }
+
+        zoneId = shopZoneId;
         sourceType = "AFFILIATE";
 
         if (channel === "SHOP_DROP") {
@@ -1337,6 +1369,7 @@ const server = http.createServer(async (req, res) => {
         SELECT "id"
         FROM "Hub"
         WHERE "zoneId" = $1
+          AND "isActive" = true
         ORDER BY "createdAt" ASC
         LIMIT 1
         `,
@@ -1344,13 +1377,19 @@ const server = http.createServer(async (req, res) => {
       );
 
       if (hubResult.rows.length === 0) {
-        return sendError(res, 400, "HUB_ASSIGNMENT_FAILED", "No hub found for derived zone");
+        return sendError(
+          res,
+          409,
+          "HUB_NOT_AVAILABLE_IN_ZONE",
+          "No active hub is available in the derived zone"
+        );
       }
 
       const hubId = getString(hubResult.rows[0], "id");
       const orderId = crypto.randomUUID();
       const bagId = crypto.randomUUID();
-      const eventId = crypto.randomUUID();
+      const orderCreatedEventId = crypto.randomUUID();
+      const hubAssignedEventId = crypto.randomUUID();
       const orderNumber = nextOrderNumber();
       const tagCode = nextBagTagCode();
 
@@ -1409,7 +1448,7 @@ const server = http.createServer(async (req, res) => {
           )
           `,
           [
-            eventId,
+            orderCreatedEventId,
             orderId,
             authUser.id,
             authUser.role,
@@ -1423,6 +1462,31 @@ const server = http.createServer(async (req, res) => {
               pickupAddressId: resolvedPickupAddressId,
               dropoffAddressId: resolvedDropoffAddressId,
               tagCode,
+            }),
+          ]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'HUB_ASSIGNED', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            hubAssignedEventId,
+            orderId,
+            authUser.id,
+            authUser.role,
+            "Hub assigned automatically from order zone",
+            JSON.stringify({
+              zoneId,
+              hubId,
+              rule: "FIRST_ACTIVE_HUB_IN_ZONE_BY_CREATED_AT_ASC",
             }),
           ]
         );
@@ -1495,12 +1559,239 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { data: { loggedOut: true } });
     }
 
+    if (method === "GET" && url.pathname === "/v1/affiliate-shops") {
+      const zoneId = String(url.searchParams.get("zoneId") ?? "").trim();
+
+      if (!zoneId) {
+        return sendError(res, 400, "VALIDATION_ERROR", "zoneId query parameter is required");
+      }
+
+      const result = await pool.query(
+        `
+        SELECT "id", "name", "zoneId"
+        FROM "AffiliateShop"
+        WHERE "zoneId" = $1
+          AND "isActive" = TRUE
+        ORDER BY "createdAt" ASC
+        `,
+        [zoneId]
+      );
+
+      return json(res, 200, {
+        data: {
+          affiliateShops: result.rows,
+        },
+      });
+    }
+
     if (method === "GET" && url.pathname === "/v1/auth/me") {
       const user = await requireAuth(req, res);
       if (!user) return;
       console.log("[login] tokens issued");
 
       return json(res, 200, { data: { user } });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/admin/trips") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "create admin trips")) return;
+
+      const body = await readJsonBody(req);
+
+      let tripType: "PICKUP" | "DELIVERY";
+      try {
+        tripType = assertTripType(String(body.type ?? "").trim());
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          error instanceof Error ? error.message : "Invalid trip type"
+        );
+      }
+
+      const driverId = String(body.driverId ?? "").trim();
+      const zoneId = String(body.zoneId ?? "").trim();
+
+      if (!driverId || !zoneId) {
+        return sendError(res, 400, "VALIDATION_ERROR", "driverId and zoneId are required");
+      }
+
+      const driverResult = await pool.query(
+        `
+        SELECT "id", "homeZoneId", "isActive"
+        FROM "DriverProfile"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [driverId]
+      );
+
+      if (driverResult.rows.length === 0) {
+        return sendError(res, 404, "DRIVER_NOT_FOUND", "Driver was not found");
+      }
+
+      const driver = driverResult.rows[0];
+      const homeZoneId = getString(driver, "homeZoneId", "homezoneid");
+
+      if (homeZoneId !== zoneId) {
+        return sendError(
+          res,
+          409,
+          "ZONE_ASSIGNMENT_MISMATCH",
+          "Driver home zone does not match trip zone"
+        );
+      }
+
+      const zoneResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "Zone"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [zoneId]
+      );
+
+      if (zoneResult.rows.length === 0) {
+        return sendError(res, 404, "ZONE_NOT_FOUND", "Zone was not found");
+      }
+
+      const hubResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "Hub"
+        WHERE "zoneId" = $1
+          AND "isActive" = TRUE
+        ORDER BY "createdAt" ASC
+        LIMIT 1
+        `,
+        [zoneId]
+      );
+
+      const tripId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "Trip" (
+          "id", "type", "zoneId", "hubId", "driverId", "status",
+          "scheduledFor", "startedAt", "completedAt", "createdAt", "updatedAt"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, 'PLANNED',
+          NOW(), NULL, NULL, NOW(), NOW()
+        )
+        `,
+        [tripId, tripType, zoneId, getString(hubResult.rows[0] ?? {}, "id"), driverId]
+      );
+
+      const trip = await fetchTripById(tripId);
+
+      return json(res, 201, {
+        data: {
+          trip,
+        },
+      });
+    }
+
+    const adminTripIdForStop = pathParam(url.pathname, /^\/v1\/admin\/trips\/([^/]+)\/stops$/);
+    if (method === "POST" && adminTripIdForStop) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "add admin trip stops")) return;
+
+      const body = await readJsonBody(req);
+
+      let stopType: "PICKUP" | "DROPOFF";
+      try {
+        stopType = assertTripStopType(String(body.stopType ?? "").trim());
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          error instanceof Error ? error.message : "Invalid stop type"
+        );
+      }
+
+      const orderId = String(body.orderId ?? "").trim();
+      const sequence = Number(body.sequence);
+
+      if (!orderId || !Number.isInteger(sequence) || sequence < 1) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "orderId and positive integer sequence are required"
+        );
+      }
+
+      const trip = await fetchTripById(adminTripIdForStop);
+      if (!trip) {
+        return sendError(res, 404, "TRIP_NOT_FOUND", "Trip was not found");
+      }
+
+      const order = await fetchOrderById(orderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const tripZoneId = getString(trip, "zoneId", "zoneid");
+      const orderZoneId = getString(order, "zoneId", "zoneid");
+      const tripDriverId = getString(trip, "driverId", "driverid");
+
+      const driverResult = await pool.query(
+        `
+        SELECT "id", "homeZoneId"
+        FROM "DriverProfile"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [tripDriverId]
+      );
+
+      if (driverResult.rows.length === 0) {
+        return sendError(res, 404, "DRIVER_NOT_FOUND", "Trip driver was not found");
+      }
+
+      const driverHomeZoneId = getString(driverResult.rows[0], "homeZoneId", "homezoneid");
+
+      if (tripZoneId !== orderZoneId || driverHomeZoneId !== orderZoneId) {
+        return sendError(
+          res,
+          409,
+          "ZONE_ASSIGNMENT_MISMATCH",
+          "Trip zone, driver home zone, and order zone must match"
+        );
+      }
+
+      const tripStopId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "TripStop" (
+          "id", "tripId", "orderId", "stopType", "sequence", "status", "notes", "createdAt", "updatedAt"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, 'PENDING', NULL, NOW(), NOW()
+        )
+        `,
+        [tripStopId, adminTripIdForStop, orderId, stopType, sequence]
+      );
+
+      return json(res, 201, {
+        data: {
+          tripStop: {
+            id: tripStopId,
+            tripId: adminTripIdForStop,
+            orderId,
+            stopType,
+            sequence,
+            status: "PENDING",
+          },
+        },
+      });
     }
 
     if (method === "GET" && url.pathname === "/v1/admin/users") {
@@ -1860,6 +2151,7 @@ const server = http.createServer(async (req, res) => {
 
       const validEventTypes = new Set([
         "ORDER_CREATED",
+        "HUB_ASSIGNED",
         "PICKUP_SCHEDULED",
         "PICKED_UP",
         "RECEIVED_AT_HUB",

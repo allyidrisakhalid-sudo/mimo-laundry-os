@@ -41,6 +41,12 @@ type MeResult = {
   };
 };
 
+type AffiliateShopOption = {
+  id?: string | null;
+  name?: string | null;
+  zoneId?: string | null;
+};
+
 type TimelineEvent = {
   id?: string | null;
   orderId?: string | null;
@@ -67,6 +73,8 @@ export default function HomePage() {
   const [pickupAddressId, setPickupAddressId] = useState("addr_customer_home_a");
   const [dropoffAddressId, setDropoffAddressId] = useState("addr_customer_home_a");
   const [affiliateShopId, setAffiliateShopId] = useState("shop_mikocheni");
+  const [selectedZoneId, setSelectedZoneId] = useState("zone_a");
+  const [availableShops, setAvailableShops] = useState<AffiliateShopOption[]>([]);
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [latestOrder, setLatestOrder] = useState<CreatedOrder | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
@@ -99,6 +107,33 @@ export default function HomePage() {
       setLoggedInUser(payload.data?.user ?? null);
     } catch {
       return;
+    }
+  }
+
+  async function loadAffiliateShops(zoneId: string) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/v1/affiliate-shops?zoneId=${encodeURIComponent(zoneId)}`
+      );
+
+      if (!response.ok) {
+        setAvailableShops([]);
+        setAffiliateShopId("");
+        return;
+      }
+
+      const payload = (await response.json()) as {
+        data?: {
+          affiliateShops?: AffiliateShopOption[];
+        };
+      };
+
+      const shops = payload.data?.affiliateShops ?? [];
+      setAvailableShops(shops);
+      setAffiliateShopId(shops[0]?.id ?? "");
+    } catch {
+      setAvailableShops([]);
+      setAffiliateShopId("");
     }
   }
 
@@ -144,7 +179,12 @@ export default function HomePage() {
       void loadCurrentUser(storedToken);
     }
     void loadHealth();
+    void loadAffiliateShops(selectedZoneId);
   }, [t]);
+
+  useEffect(() => {
+    void loadAffiliateShops(selectedZoneId);
+  }, [selectedZoneId]);
 
   useEffect(() => {
     if (!accessToken || !latestOrder?.id) return;
@@ -226,10 +266,12 @@ export default function HomePage() {
       }
 
       if (orderChannel === "SHOP_DROP") {
+        body.zoneId = selectedZoneId;
         body.affiliateShopId = affiliateShopId;
       }
 
       if (orderChannel === "HYBRID") {
+        body.zoneId = selectedZoneId;
         body.affiliateShopId = affiliateShopId;
         body.dropoffAddressId = dropoffAddressId;
       }
@@ -387,17 +429,34 @@ export default function HomePage() {
               ) : null}
 
               {orderChannel === "SHOP_DROP" || orderChannel === "HYBRID" ? (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium">{t("orders.affiliateShop")}</label>
-                  <select
-                    className="w-full rounded-xl border px-4 py-3"
-                    value={affiliateShopId}
-                    onChange={(event) => setAffiliateShopId(event.target.value)}
-                  >
-                    <option value="shop_mikocheni">shop_mikocheni</option>
-                    <option value="shop_mbagala">shop_mbagala</option>
-                  </select>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">{t("orders.zoneId")}</label>
+                    <select
+                      className="w-full rounded-xl border px-4 py-3"
+                      value={selectedZoneId}
+                      onChange={(event) => setSelectedZoneId(event.target.value)}
+                    >
+                      <option value="zone_a">Zone A</option>
+                      <option value="zone_b">Zone B</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium">{t("orders.affiliateShop")}</label>
+                    <select
+                      className="w-full rounded-xl border px-4 py-3"
+                      value={affiliateShopId}
+                      onChange={(event) => setAffiliateShopId(event.target.value)}
+                    >
+                      {availableShops.map((shop) => (
+                        <option key={shop.id ?? ""} value={shop.id ?? ""}>
+                          {shop.name ?? shop.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
               ) : null}
 
               {orderChannel === "HYBRID" ? (

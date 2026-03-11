@@ -309,3 +309,24 @@
 - Verified mobile customer can create an order and view latest order details plus timeline.
 - Verified timeline endpoint returned appended events including PICKUP_SCHEDULED for the exact order under test.
 - Gate satisfied: customer can place an order and see initial order status/timeline on web and mobile.
+
+## Chapter 8.3 PASS
+
+- Re-ran previous chapter verification successfully before implementation.
+- Added deterministic hub assignment by zone at order creation using first active hub in zone ordered by createdAt ascending.
+- Added rejection for missing active hub in zone with stable error code HUB_NOT_AVAILABLE_IN_ZONE.
+- Added HUB_ASSIGNED order event and applied Prisma migration for enum update.
+- Added affiliate shop lookup endpoint GET /v1/affiliate-shops?zoneId=....
+- Added server-side shop-zone enforcement for SHOP_DROP and HYBRID with stable error code AFFILIATE_SHOP_ZONE_MISMATCH.
+- Updated web and mobile order creation flows to use zone-driven affiliate shop selection inputs.
+- Added admin trip creation endpoint POST /v1/admin/trips.
+- Added admin trip stop assignment endpoint POST /v1/admin/trips/:id/stops.
+- Enforced strict zone consistency for trip creation and stop assignment with stable error code ZONE_ASSIGNMENT_MISMATCH.
+- Verified Zone A order auto-assigned to Hub A and Zone B order auto-assigned to Hub B.
+- Verified timelines include both ORDER_CREATED and HUB_ASSIGNED.
+- Verified zone-filtered affiliate shop lookup returns only matching shops.
+- Verified cross-zone shop assignment is rejected with AFFILIATE_SHOP_ZONE_MISMATCH.
+- Verified Admin can assign Zone A order to Driver A and Zone B order to Driver B.
+- Verified cross-zone driver trip/stop assignment is rejected with ZONE_ASSIGNMENT_MISMATCH.
+- Verified Driver A sees only Zone A assigned trip/order and Driver B sees only Zone B assigned trip/order.
+- Gate satisfied: Orders correctly attach to zone + hub; tasks show for correct driver.

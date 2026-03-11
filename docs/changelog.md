@@ -199,3 +199,35 @@
 - Added order timeline endpoint and initial event creation on order placement
 - Added web latest-order and timeline customer view
 - Added mobile latest-order and timeline customer view
+
+## Chapter 8.3 completed
+
+- Added deterministic zone-based hub assignment during order creation
+- Added HUB_ASSIGNED order event
+- Added affiliate shop listing filtered by zone
+- Enforced affiliate shop and order zone consistency on server
+- Enforced zone consistency for trip and stop assignment
+- Documented v1 zone assignment rules in docs/architecture/zone_assignment_v1.md
+  "@
+
+Add-Content docs\acceptance.md @"
+
+## Chapter 8.3 PASS
+
+- Re-ran Chapter 8.2 pre-flight and confirmed customer order creation plus timeline/status visibility still worked.
+- Implemented server-side deterministic hub assignment rule: first active hub in same zone sorted by createdAt.
+- Confirmed orders now persist correct zoneId and hubId.
+- Added HUB_ASSIGNED order event when hub assignment occurs.
+- Added GET /v1/affiliate-shops?zoneId=... and confirmed shop choices are filtered by zone.
+- Confirmed server rejects cross-zone shop selection with AFFILIATE_SHOP_ZONE_MISMATCH.
+- Confirmed admin trip/stop assignment enforces zone consistency and rejects mismatches with ZONE_ASSIGNMENT_MISMATCH.
+- Confirmed each driver only sees assigned tasks for the correct zone-aligned trip.
+- Gate satisfied: Orders correctly attach to zone + hub; tasks show for correct driver.
+
+## Chapter 8.3 completed
+
+- Added deterministic zone-based hub assignment with HUB_ASSIGNED order event
+- Added affiliate shop lookup by zone and shop-zone mismatch enforcement
+- Added manual admin trip creation and stop assignment with strict zone checks
+- Updated web and mobile order flows for zone-driven affiliate shop selection
+- Documented zone assignment v1 rules and error codes
