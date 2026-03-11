@@ -7,7 +7,7 @@ const { Client } = pg;
 async function main() {
   const connectionString =
     process.env.DATABASE_URL ??
-    "postgresql://postgres:postgres@localhost:5432/vintage_laundry?schema=public";
+    "postgresql://postgres:postgres@localhost:5432/mimo_laundry_os?schema=public";
 
   const client = new Client({ connectionString });
   await client.connect();

@@ -20,8 +20,6 @@
     }
   },
   "home": {
-    "title": "Nyumbani kwa Mteja",
-    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji.",
     "dashboardTitle": "Nyumbani kwa walking skeleton",
     "loggedInAs": "Umeingia kama",
     "apiStatusLabel": "Hali ya API",
@@ -31,14 +29,24 @@
     "logout": "Toka",
     "apiBaseUrl": "API base URL"
   },
-  "settings": {
-    "title": "Mipangilio",
-    "language": "Mapendeleo ya lugha"
-  },
-  "formatting": {
-    "title": "Muundo wa eneo",
-    "money": "Mfano wa fedha",
-    "date": "Mfano wa tarehe na muda",
-    "phone": "Mfano wa simu"
+  "orders": {
+    "sectionTitle": "Oda mpya",
+    "channel": "Njia",
+    "tier": "Kiwango",
+    "pickupAddress": "Anwani ya kuchukua",
+    "dropoffAddress": "Anwani ya kupeleka",
+    "affiliateShop": "Duka la mshirika",
+    "submit": "Tengeneza oda",
+    "success": "Oda imetengenezwa kwa mafanikio",
+    "error": "Utengenezaji wa oda umeshindikana",
+    "detailsTitle": "Oda ya mwisho iliyotengenezwa",
+    "orderNumber": "Namba ya oda",
+    "statusCurrent": "Hali ya sasa",
+    "zoneId": "Zone",
+    "hubId": "Hub",
+    "bagTagCode": "Tegi ya begi",
+    "timelineTitle": "Mfuatano wa matukio",
+    "refreshing": "Inasasisha taarifa za oda...",
+    "emptyTimeline": "Hakuna matukio ya timeline bado"
   }
 }

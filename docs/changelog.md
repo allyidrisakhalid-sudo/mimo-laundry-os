@@ -192,3 +192,10 @@
 - Added mobile login shell with API status indicator.
 - Added docs/setup/walking_skeleton.md.
 - Verified end-to-end walking skeleton across API, web, and mobile web.
+
+## Chapter 8.2 completed
+
+- Added customer order creation flow for DOOR, SHOP_DROP, and HYBRID channels
+- Added order timeline endpoint and initial event creation on order placement
+- Added web latest-order and timeline customer view
+- Added mobile latest-order and timeline customer view

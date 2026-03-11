@@ -21,15 +21,57 @@ type LoginResult = {
   };
 };
 
+type CreatedOrder = {
+  id?: string | null;
+  orderNumber?: string | null;
+  statusCurrent?: string | null;
+  createdAt?: string | null;
+  zoneId?: string | null;
+  hubId?: string | null;
+  bagTagCode?: string | null;
+};
+
+type MeResult = {
+  user?: {
+    id?: string | null;
+    fullName?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    status?: string | null;
+  };
+};
+
+type TimelineEvent = {
+  id?: string | null;
+  orderId?: string | null;
+  eventType?: string | null;
+  occurredAt?: string | null;
+  actorUserId?: string | null;
+  actorRole?: string | null;
+  notes?: string | null;
+  createdAt?: string | null;
+};
+
 export default function HomePage() {
   const { t } = useTranslation();
-  const [phone, setPhone] = useState("+255712345678");
-  const [password, setPassword] = useState("secret123");
+  const [phone, setPhone] = useState("+255700000005");
+  const [password, setPassword] = useState("Pass123!");
   const [submitting, setSubmitting] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
   const [message, setMessage] = useState("");
   const [loggedInUser, setLoggedInUser] = useState<LoginResult["user"] | null>(null);
+
+  const [orderChannel, setOrderChannel] = useState("DOOR");
+  const [orderTier, setOrderTier] = useState("STANDARD_48H");
+  const [pickupAddressId, setPickupAddressId] = useState("addr_customer_home_a");
+  const [dropoffAddressId, setDropoffAddressId] = useState("addr_customer_home_a");
+  const [affiliateShopId, setAffiliateShopId] = useState("shop_mikocheni");
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const [latestOrder, setLatestOrder] = useState<CreatedOrder | null>(null);
+  const [orderMessage, setOrderMessage] = useState("");
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [timelineRefreshing, setTimelineRefreshing] = useState(false);
 
   const isLoggedIn = useMemo(() => !!accessToken, [accessToken]);
 
@@ -43,14 +85,95 @@ export default function HomePage() {
     }
   }
 
+  async function loadCurrentUser(token: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/v1/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as { data?: MeResult };
+      setLoggedInUser(payload.data?.user ?? null);
+    } catch {
+      return;
+    }
+  }
+
+  async function loadTimeline(orderId: string, token: string, silent = false) {
+    try {
+      if (!silent) setTimelineRefreshing(true);
+
+      const response = await fetch(`${API_BASE_URL}/v1/orders/${orderId}/timeline`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as {
+        data?: {
+          order?: CreatedOrder;
+          timeline?: TimelineEvent[];
+        };
+      };
+
+      if (payload.data?.order) {
+        setLatestOrder((current) => ({
+          ...(current ?? {}),
+          ...(payload.data?.order ?? {}),
+        }));
+      }
+
+      setTimeline(payload.data?.timeline ?? []);
+    } catch {
+      return;
+    } finally {
+      if (!silent) setTimelineRefreshing(false);
+    }
+  }
+
   useEffect(() => {
     const storedToken = window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
     if (storedToken) {
       setAccessToken(storedToken);
       setMessage(t("home.tokenStored"));
+      void loadCurrentUser(storedToken);
     }
     void loadHealth();
   }, [t]);
+
+  useEffect(() => {
+    if (!accessToken || !latestOrder?.id) return;
+
+    void loadTimeline(latestOrder.id, accessToken);
+
+    const activeStatuses = new Set([
+      "CREATED",
+      "PICKUP_SCHEDULED",
+      "PICKED_UP",
+      "RECEIVED_AT_HUB",
+      "WASHING_STARTED",
+      "DRYING_STARTED",
+      "IRONING_STARTED",
+      "PACKED",
+      "OUT_FOR_DELIVERY",
+      "PAYMENT_DUE",
+    ]);
+
+    if (!latestOrder.statusCurrent || !activeStatuses.has(latestOrder.statusCurrent)) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      void loadTimeline(latestOrder.id as string, accessToken, true);
+    }, 10000);
+
+    return () => window.clearInterval(timer);
+  }, [accessToken, latestOrder?.id, latestOrder?.statusCurrent]);
 
   async function handleLogin() {
     try {
@@ -86,11 +209,71 @@ export default function HomePage() {
     }
   }
 
+  async function handleCreateOrder() {
+    if (!accessToken) return;
+
+    try {
+      setOrderSubmitting(true);
+      setOrderMessage("");
+
+      const body: Record<string, string> = {
+        channel: orderChannel,
+        tier: orderTier,
+      };
+
+      if (orderChannel === "DOOR") {
+        body.pickupAddressId = pickupAddressId;
+      }
+
+      if (orderChannel === "SHOP_DROP") {
+        body.affiliateShopId = affiliateShopId;
+      }
+
+      if (orderChannel === "HYBRID") {
+        body.affiliateShopId = affiliateShopId;
+        body.dropoffAddressId = dropoffAddressId;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/v1/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const payload = (await response.json()) as {
+        data?: { order?: CreatedOrder };
+      };
+
+      const order = payload.data?.order ?? null;
+
+      if (!response.ok || !order) {
+        setOrderMessage(t("orders.error"));
+        return;
+      }
+
+      setLatestOrder(order);
+      setOrderMessage(t("orders.success"));
+      if (order.id) {
+        await loadTimeline(order.id, accessToken);
+      }
+    } catch {
+      setOrderMessage(t("orders.error"));
+    } finally {
+      setOrderSubmitting(false);
+    }
+  }
+
   function handleLogout() {
     window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
     setAccessToken(null);
     setLoggedInUser(null);
     setMessage("");
+    setOrderMessage("");
+    setLatestOrder(null);
+    setTimeline([]);
   }
 
   return (
@@ -140,24 +323,152 @@ export default function HomePage() {
             {message ? <p className="text-sm text-neutral-700">{message}</p> : null}
           </section>
         ) : (
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-2xl font-semibold">{t("home.dashboardTitle")}</h2>
-            <p>
-              {t("home.loggedInAs")}: {loggedInUser?.fullName ?? "-"} ({loggedInUser?.role ?? "-"})
-            </p>
-            <p>
-              {t("home.apiStatusLabel")}:{" "}
-              {apiConnected ? t("home.apiConnected") : t("home.apiDisconnected")}
-            </p>
-            <p>{t("home.tokenStored")}</p>
-            <p>
-              {t("home.apiBaseUrl")}: {API_BASE_URL}
-            </p>
+          <div className="space-y-6">
+            <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+              <h2 className="text-2xl font-semibold">{t("home.dashboardTitle")}</h2>
+              <p>
+                {t("home.loggedInAs")}: {loggedInUser?.fullName ?? "-"} ({loggedInUser?.role ?? "-"}
+                )
+              </p>
+              <p>
+                {t("home.apiStatusLabel")}:{" "}
+                {apiConnected ? t("home.apiConnected") : t("home.apiDisconnected")}
+              </p>
+              <p>{t("home.tokenStored")}</p>
+              <p>
+                {t("home.apiBaseUrl")}: {API_BASE_URL}
+              </p>
 
-            <button className="rounded-xl border px-4 py-3 font-medium" onClick={handleLogout}>
-              {t("home.logout")}
-            </button>
-          </section>
+              <button className="rounded-xl border px-4 py-3 font-medium" onClick={handleLogout}>
+                {t("home.logout")}
+              </button>
+            </section>
+
+            <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+              <h2 className="text-2xl font-semibold">{t("orders.sectionTitle")}</h2>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">{t("orders.channel")}</label>
+                <select
+                  className="w-full rounded-xl border px-4 py-3"
+                  value={orderChannel}
+                  onChange={(event) => setOrderChannel(event.target.value)}
+                >
+                  <option value="DOOR">{t("orders.door")}</option>
+                  <option value="SHOP_DROP">{t("orders.shopDrop")}</option>
+                  <option value="HYBRID">{t("orders.hybrid")}</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">{t("orders.tier")}</label>
+                <select
+                  className="w-full rounded-xl border px-4 py-3"
+                  value={orderTier}
+                  onChange={(event) => setOrderTier(event.target.value)}
+                >
+                  <option value="STANDARD_48H">{t("orders.standard48h")}</option>
+                  <option value="EXPRESS_24H">{t("orders.express24h")}</option>
+                  <option value="SAME_DAY">{t("orders.sameDay")}</option>
+                </select>
+              </div>
+
+              {orderChannel === "DOOR" ? (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">{t("orders.pickupAddress")}</label>
+                  <select
+                    className="w-full rounded-xl border px-4 py-3"
+                    value={pickupAddressId}
+                    onChange={(event) => setPickupAddressId(event.target.value)}
+                  >
+                    <option value="addr_customer_home_a">addr_customer_home_a</option>
+                  </select>
+                </div>
+              ) : null}
+
+              {orderChannel === "SHOP_DROP" || orderChannel === "HYBRID" ? (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">{t("orders.affiliateShop")}</label>
+                  <select
+                    className="w-full rounded-xl border px-4 py-3"
+                    value={affiliateShopId}
+                    onChange={(event) => setAffiliateShopId(event.target.value)}
+                  >
+                    <option value="shop_mikocheni">shop_mikocheni</option>
+                    <option value="shop_mbagala">shop_mbagala</option>
+                  </select>
+                </div>
+              ) : null}
+
+              {orderChannel === "HYBRID" ? (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">{t("orders.dropoffAddress")}</label>
+                  <select
+                    className="w-full rounded-xl border px-4 py-3"
+                    value={dropoffAddressId}
+                    onChange={(event) => setDropoffAddressId(event.target.value)}
+                  >
+                    <option value="addr_customer_home_a">addr_customer_home_a</option>
+                  </select>
+                </div>
+              ) : null}
+
+              <button
+                className="rounded-xl border px-4 py-3 font-medium"
+                onClick={() => void handleCreateOrder()}
+                disabled={orderSubmitting}
+              >
+                {orderSubmitting ? t("common.loading") : t("orders.submit")}
+              </button>
+
+              {orderMessage ? <p className="text-sm text-neutral-700">{orderMessage}</p> : null}
+            </section>
+
+            {latestOrder ? (
+              <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+                <h2 className="text-2xl font-semibold">{t("orders.detailsTitle")}</h2>
+                <p>
+                  {t("orders.orderNumber")}: {latestOrder.orderNumber ?? "-"}
+                </p>
+                <p>
+                  {t("orders.statusCurrent")}: {latestOrder.statusCurrent ?? "-"}
+                </p>
+                <p>
+                  {t("orders.zoneId")}: {latestOrder.zoneId ?? "-"}
+                </p>
+                <p>
+                  {t("orders.hubId")}: {latestOrder.hubId ?? "-"}
+                </p>
+                <p>
+                  {t("orders.bagTagCode")}: {latestOrder.bagTagCode ?? "-"}
+                </p>
+
+                <div className="pt-4">
+                  <h3 className="text-lg font-semibold">{t("orders.timelineTitle")}</h3>
+                  {timelineRefreshing ? (
+                    <p className="text-sm text-neutral-600">{t("orders.refreshing")}</p>
+                  ) : null}
+
+                  {timeline.length === 0 ? (
+                    <p className="text-sm text-neutral-600">{t("orders.emptyTimeline")}</p>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      {timeline.map((event) => (
+                        <div
+                          key={event.id ?? `${event.eventType}-${event.occurredAt}`}
+                          className="rounded-xl border p-3"
+                        >
+                          <p className="font-medium">{event.eventType ?? "-"}</p>
+                          <p className="text-sm text-neutral-600">{event.occurredAt ?? "-"}</p>
+                          {event.notes ? <p className="text-sm">{event.notes}</p> : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : null}
+          </div>
         )}
       </div>
     </main>

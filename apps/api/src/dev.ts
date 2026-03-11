@@ -1,5 +1,20 @@
-import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
+import dotenv from "dotenv";
 import http from "node:http";
+
+const repoRootEnvPath = path.resolve(process.cwd(), ".env");
+const serviceEnvPath = path.resolve(process.cwd(), "apps/api/.env");
+const localServiceEnvPath = path.resolve(process.cwd(), ".env");
+
+if (fs.existsSync(serviceEnvPath)) {
+  dotenv.config({ path: serviceEnvPath, override: true });
+} else if (fs.existsSync(localServiceEnvPath)) {
+  dotenv.config({ path: localServiceEnvPath, override: true });
+} else if (fs.existsSync(repoRootEnvPath)) {
+  dotenv.config({ path: repoRootEnvPath, override: true });
+}
+
 import crypto from "node:crypto";
 import { URL } from "node:url";
 import bcrypt from "bcryptjs";
@@ -10,11 +25,14 @@ const { Pool } = pg;
 
 const DATABASE_URL =
   process.env.DATABASE_URL ??
-  "postgresql://postgres:postgres@localhost:5432/vintage_laundry?schema=public";
+  "postgresql://postgres:postgres@localhost:5432/mimo_laundry_os?schema=public";
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
 });
+
+const DATABASE_URL_SAFE = DATABASE_URL.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
+console.log("[mimo-api] DATABASE_URL =", DATABASE_URL_SAFE);
 
 const PORT = Number(process.env.PORT ?? 3001);
 const APP_VERSION = process.env.npm_package_version ?? "0.0.1";
@@ -80,6 +98,29 @@ function normalizePhone(phone: string) {
   return trimmed;
 }
 
+function assertOrderChannel(value: string) {
+  const allowed = ["DOOR", "SHOP_DROP", "HYBRID"];
+  if (!allowed.includes(value)) {
+    throw new Error("channel must be one of DOOR, SHOP_DROP, HYBRID");
+  }
+  return value as "DOOR" | "SHOP_DROP" | "HYBRID";
+}
+
+function assertOrderTier(value: string) {
+  const allowed = ["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"];
+  if (!allowed.includes(value)) {
+    throw new Error("tier must be one of STANDARD_48H, EXPRESS_24H, SAME_DAY");
+  }
+  return value as "STANDARD_48H" | "EXPRESS_24H" | "SAME_DAY";
+}
+
+function nextOrderNumber() {
+  return `ORD-${Date.now()}`;
+}
+
+function nextBagTagCode() {
+  return `BAG-${Date.now()}`;
+}
 function parseAuthHeader(req: http.IncomingMessage) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
@@ -506,12 +547,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "GET" && url.pathname === "/health") {
+      console.log("[login] tokens issued");
+
       return json(res, 200, { ok: true });
     }
 
     if (method === "GET" && url.pathname === "/v1/health") {
       try {
         await pool.query("SELECT 1");
+        console.log("[login] tokens issued");
+
         return json(res, 200, {
           status: "ok",
           version: APP_VERSION,
@@ -520,6 +565,8 @@ const server = http.createServer(async (req, res) => {
           db: "ok",
         });
       } catch {
+        console.log("[login] tokens issued");
+
         return json(res, 200, {
           status: "ok",
           version: APP_VERSION,
@@ -533,6 +580,8 @@ const server = http.createServer(async (req, res) => {
     if (method === "GET" && url.pathname === "/v1/health/db") {
       try {
         await pool.query("SELECT 1 AS result");
+        console.log("[login] tokens issued");
+
         return json(res, 200, {
           status: "ok",
           db: "ok",
@@ -556,6 +605,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "GET" && url.pathname === "/api/openapi.json") {
+      console.log("[login] tokens issued");
+
       return json(res, 200, {
         openapi: "3.1.0",
         info: { title: "Mimo API", version: "v1" },
@@ -899,62 +950,91 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && url.pathname === "/v1/auth/login") {
-      const body = await readJsonBody(req);
-      const phone = normalizePhone(String(body.phone ?? ""));
-      const password = String(body.password ?? "");
+      try {
+        const body = await readJsonBody(req);
+        const phone = normalizePhone(String(body.phone ?? ""));
+        const password = String(body.password ?? "");
 
-      const result = await pool.query(
-        `
-        SELECT *
-        FROM public."User"
-        WHERE "phone" = $1
-        LIMIT 1
-        `,
-        [phone]
-      );
+        let result;
+        try {
+          result = await pool.query(
+            `
+            SELECT "id", "phone", "email", "fullName", "passwordHash", "role", "status"
+            FROM public."User"
+            ORDER BY "createdAt" ASC
+            `
+          );
+        } catch (error) {
+          return sendError(res, 500, "LOGIN_STAGE_FAILED", "LOGIN_USER_QUERY_FAILED", {
+            stage: "user_query",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
 
-      if (result.rows.length === 0) {
-        return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid phone or password");
-      }
+        const user = result.rows.find((row) => getString(row, "phone") === phone) ?? null;
 
-      const user = result.rows[0];
+        if (!user) {
+          return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid phone or password");
+        }
 
-      if (getString(user, "status") !== "ACTIVE") {
-        return sendError(res, 403, "ACCOUNT_DISABLED", "User account is disabled");
-      }
+        if (getString(user, "status") !== "ACTIVE") {
+          return sendError(res, 403, "ACCOUNT_DISABLED", "User account is disabled");
+        }
 
-      const ok = await bcrypt.compare(
-        password,
-        getString(user, "passwordhash", "passwordHash") ?? ""
-      );
-      if (!ok) {
-        return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid phone or password");
-      }
+        let ok = false;
+        try {
+          ok = await bcrypt.compare(
+            password,
+            getString(user, "passwordhash", "passwordHash") ?? ""
+          );
+        } catch (error) {
+          return sendError(res, 500, "LOGIN_STAGE_FAILED", "LOGIN_PASSWORD_COMPARE_FAILED", {
+            stage: "password_compare",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
 
-      const tokens = await issueTokens(
-        {
-          id: getString(user, "id") ?? "",
-          phone: getString(user, "phone") ?? "",
-          role: (getString(user, "role") ?? "CUSTOMER") as Role,
-        },
-        req
-      );
+        if (!ok) {
+          return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid phone or password");
+        }
 
-      return json(res, 200, {
-        data: {
-          user: {
-            id: getString(user, "id"),
-            phone: getString(user, "phone"),
-            email: getString(user, "email"),
-            fullName: getString(user, "fullName", "fullname"),
-            role: getString(user, "role"),
-            status: getString(user, "status"),
+        let tokens;
+        try {
+          tokens = await issueTokens(
+            {
+              id: getString(user, "id") ?? "",
+              phone: getString(user, "phone") ?? "",
+              role: (getString(user, "role") ?? "CUSTOMER") as Role,
+            },
+            req
+          );
+        } catch (error) {
+          return sendError(res, 500, "LOGIN_STAGE_FAILED", "LOGIN_ISSUE_TOKENS_FAILED", {
+            stage: "issue_tokens",
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+
+        return json(res, 200, {
+          data: {
+            user: {
+              id: getString(user, "id"),
+              phone: getString(user, "phone"),
+              email: getString(user, "email"),
+              fullName: getString(user, "fullName", "fullname"),
+              role: getString(user, "role"),
+              status: getString(user, "status"),
+            },
+            tokens,
           },
-          tokens,
-        },
-      });
+        });
+      } catch (error) {
+        return sendError(res, 500, "LOGIN_STAGE_FAILED", "LOGIN_TOP_LEVEL_FAILED", {
+          stage: "top_level",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     }
-
     if (method === "POST" && url.pathname === "/v1/auth/refresh") {
       const body = await readJsonBody(req);
       const refreshToken = String(body.refreshToken ?? "");
@@ -1048,6 +1128,8 @@ const server = http.createServer(async (req, res) => {
         role: (getString(user, "role") ?? "CUSTOMER") as Role,
       });
 
+      console.log("[login] tokens issued");
+
       return json(res, 200, {
         data: {
           user: {
@@ -1068,6 +1150,308 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (method === "POST" && url.pathname === "/v1/orders") {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "CUSTOMER") {
+        return sendError(res, 403, "FORBIDDEN", "Only customers can create customer orders");
+      }
+
+      const body = await readJsonBody(req);
+
+      let channel: "DOOR" | "SHOP_DROP" | "HYBRID";
+      let tier: "STANDARD_48H" | "EXPRESS_24H" | "SAME_DAY";
+
+      try {
+        channel = assertOrderChannel(String(body.channel ?? "").trim());
+        tier = assertOrderTier(String(body.tier ?? "").trim());
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          error instanceof Error ? error.message : "Invalid order input"
+        );
+      }
+
+      const affiliateShopId =
+        body.affiliateShopId === null || body.affiliateShopId === undefined
+          ? null
+          : String(body.affiliateShopId).trim() || null;
+
+      const pickupAddressId =
+        body.pickupAddressId === null || body.pickupAddressId === undefined
+          ? null
+          : String(body.pickupAddressId).trim() || null;
+
+      const dropoffAddressId =
+        body.dropoffAddressId === null || body.dropoffAddressId === undefined
+          ? null
+          : String(body.dropoffAddressId).trim() || null;
+
+      if (channel === "DOOR") {
+        if (!pickupAddressId) {
+          return sendError(res, 400, "VALIDATION_ERROR", "pickupAddressId is required for DOOR");
+        }
+        if (affiliateShopId) {
+          return sendError(res, 400, "VALIDATION_ERROR", "affiliateShopId must be null for DOOR");
+        }
+      }
+
+      if (channel === "SHOP_DROP") {
+        if (!affiliateShopId) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "affiliateShopId is required for SHOP_DROP"
+          );
+        }
+      }
+
+      if (channel === "HYBRID") {
+        if (!affiliateShopId) {
+          return sendError(res, 400, "VALIDATION_ERROR", "affiliateShopId is required for HYBRID");
+        }
+        if (!dropoffAddressId) {
+          return sendError(res, 400, "VALIDATION_ERROR", "dropoffAddressId is required for HYBRID");
+        }
+      }
+
+      const userResult = await pool.query(
+        `
+        SELECT "id", "phone", "fullName", "status"
+        FROM public."User"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      if (userResult.rows.length === 0) {
+        return sendError(res, 404, "USER_NOT_FOUND", "Customer user was not found");
+      }
+
+      const customerUser = userResult.rows[0];
+
+      let zoneId: string | null = null;
+      let resolvedPickupAddressId: string | null = pickupAddressId;
+      let resolvedDropoffAddressId: string | null = dropoffAddressId;
+      let sourceType: "DIRECT" | "AFFILIATE" = "DIRECT";
+
+      if (channel === "DOOR") {
+        const addressResult = await pool.query(
+          `
+          SELECT "id", "zoneId", "userId"
+          FROM "CustomerAddress"
+          WHERE "id" = $1
+          LIMIT 1
+          `,
+          [pickupAddressId]
+        );
+
+        if (addressResult.rows.length === 0) {
+          return sendError(res, 404, "ADDRESS_NOT_FOUND", "Pickup address was not found");
+        }
+
+        const address = addressResult.rows[0];
+        if (getString(address, "userId", "userid") !== authUser.id) {
+          return sendError(res, 403, "FORBIDDEN", "Pickup address does not belong to customer");
+        }
+
+        zoneId = getString(address, "zoneId", "zoneid");
+        resolvedDropoffAddressId = pickupAddressId;
+      }
+
+      if (channel === "SHOP_DROP" || channel === "HYBRID") {
+        const shopResult = await pool.query(
+          `
+          SELECT "id", "zoneId"
+          FROM "AffiliateShop"
+          WHERE "id" = $1
+          LIMIT 1
+          `,
+          [affiliateShopId]
+        );
+
+        if (shopResult.rows.length === 0) {
+          return sendError(res, 404, "AFFILIATE_SHOP_NOT_FOUND", "Affiliate shop was not found");
+        }
+
+        const shop = shopResult.rows[0];
+        zoneId = getString(shop, "zoneId", "zoneid");
+        sourceType = "AFFILIATE";
+
+        if (channel === "SHOP_DROP") {
+          const defaultAddressResult = await pool.query(
+            `
+            SELECT "id"
+            FROM "CustomerAddress"
+            WHERE "userId" = $1
+            ORDER BY "createdAt" ASC
+            LIMIT 1
+            `,
+            [authUser.id]
+          );
+
+          if (defaultAddressResult.rows.length > 0) {
+            resolvedPickupAddressId = getString(defaultAddressResult.rows[0], "id");
+            resolvedDropoffAddressId = getString(defaultAddressResult.rows[0], "id");
+          } else {
+            resolvedPickupAddressId = null;
+            resolvedDropoffAddressId = null;
+          }
+        }
+      }
+
+      if (channel === "HYBRID") {
+        const addressResult = await pool.query(
+          `
+          SELECT "id", "userId"
+          FROM "CustomerAddress"
+          WHERE "id" = $1
+          LIMIT 1
+          `,
+          [dropoffAddressId]
+        );
+
+        if (addressResult.rows.length === 0) {
+          return sendError(res, 404, "ADDRESS_NOT_FOUND", "Dropoff address was not found");
+        }
+
+        const address = addressResult.rows[0];
+        if (getString(address, "userId", "userid") !== authUser.id) {
+          return sendError(res, 403, "FORBIDDEN", "Dropoff address does not belong to customer");
+        }
+
+        resolvedDropoffAddressId = getString(address, "id");
+      }
+
+      if (!zoneId) {
+        return sendError(res, 400, "ZONE_DERIVATION_FAILED", "Could not derive zone for order");
+      }
+
+      const hubResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "Hub"
+        WHERE "zoneId" = $1
+        ORDER BY "createdAt" ASC
+        LIMIT 1
+        `,
+        [zoneId]
+      );
+
+      if (hubResult.rows.length === 0) {
+        return sendError(res, 400, "HUB_ASSIGNMENT_FAILED", "No hub found for derived zone");
+      }
+
+      const hubId = getString(hubResult.rows[0], "id");
+      const orderId = crypto.randomUUID();
+      const bagId = crypto.randomUUID();
+      const eventId = crypto.randomUUID();
+      const orderNumber = nextOrderNumber();
+      const tagCode = nextBagTagCode();
+
+      await pool.query("BEGIN");
+
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Order" (
+            "id", "orderNumber", "sourceType", "affiliateShopId", "channel",
+            "customerName", "customerPhone", "notes", "createdAt", "updatedAt",
+            "customerUserId", "tier", "zoneId", "hubId", "pickupAddressId",
+            "dropoffAddressId", "statusCurrent"
+          )
+          VALUES (
+            $1, $2, $3, $4, $5,
+            $6, $7, NULL, NOW(), NOW(),
+            $8, $9, $10, $11, $12,
+            $13, 'CREATED'
+          )
+          `,
+          [
+            orderId,
+            orderNumber,
+            sourceType,
+            affiliateShopId,
+            channel,
+            getString(customerUser, "fullName", "fullname"),
+            getString(customerUser, "phone"),
+            authUser.id,
+            tier,
+            zoneId,
+            hubId,
+            resolvedPickupAddressId,
+            resolvedDropoffAddressId,
+          ]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "Bag" ("id", "orderId", "tagCode", "bagStatus", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, 'CREATED', NOW(), NOW())
+          `,
+          [bagId, orderId, tagCode]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'ORDER_CREATED', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            eventId,
+            orderId,
+            authUser.id,
+            authUser.role,
+            "Customer order created",
+            JSON.stringify({
+              channel,
+              tier,
+              zoneId,
+              hubId,
+              affiliateShopId,
+              pickupAddressId: resolvedPickupAddressId,
+              dropoffAddressId: resolvedDropoffAddressId,
+              tagCode,
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        return sendError(
+          res,
+          500,
+          "ORDER_CREATE_FAILED",
+          error instanceof Error ? error.message : "Order creation failed"
+        );
+      }
+
+      return json(res, 201, {
+        data: {
+          order: {
+            id: orderId,
+            orderNumber,
+            statusCurrent: "CREATED",
+            createdAt: new Date().toISOString(),
+            zoneId,
+            hubId,
+            bagTagCode: tagCode,
+          },
+        },
+      });
+    }
     if (method === "POST" && url.pathname === "/v1/auth/logout") {
       const body = await readJsonBody(req);
       const refreshToken = String(body.refreshToken ?? "");
@@ -1106,12 +1490,16 @@ const server = http.createServer(async (req, res) => {
         [existingResult.rows[0].id]
       );
 
+      console.log("[login] tokens issued");
+
       return json(res, 200, { data: { loggedOut: true } });
     }
 
     if (method === "GET" && url.pathname === "/v1/auth/me") {
       const user = await requireAuth(req, res);
       if (!user) return;
+      console.log("[login] tokens issued");
+
       return json(res, 200, { data: { user } });
     }
 
@@ -1128,6 +1516,8 @@ const server = http.createServer(async (req, res) => {
         `
       );
 
+      console.log("[login] tokens issued");
+
       return json(res, 200, {
         data: {
           users: result.rows.map((row) => toUserDto(row)),
@@ -1135,6 +1525,53 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    const orderTimelineId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/timeline$/);
+    if (method === "GET" && orderTimelineId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      const scope = await resolveScope(user);
+      const decision = await canReadOrder(user, scope, orderTimelineId);
+
+      if (!decision.order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      if (!decision.allowed) {
+        return sendError(res, 403, "FORBIDDEN", "You are not allowed to access this order");
+      }
+
+      const eventsResult = await pool.query(
+        `
+        SELECT
+          "id",
+          "orderId",
+          "eventType",
+          "occurredAt",
+          "actorUserId",
+          "actorRole",
+          "notes",
+          "payloadJson",
+          "createdAt"
+        FROM "OrderEvent"
+        WHERE "orderId" = $1
+        ORDER BY "occurredAt" ASC, "createdAt" ASC
+        `,
+        [orderTimelineId]
+      );
+
+      return json(res, 200, {
+        data: {
+          order: {
+            id: getString(decision.order, "id"),
+            orderNumber: getString(decision.order, "orderNumber", "ordernumber"),
+            statusCurrent: getString(decision.order, "statusCurrent", "statuscurrent"),
+            zoneId: getString(decision.order, "zoneId", "zoneid"),
+            hubId: getString(decision.order, "hubId", "hubid"),
+          },
+          timeline: eventsResult.rows,
+        },
+      });
+    }
     const orderId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)$/);
     if (method === "GET" && orderId) {
       const user = await requireAuth(req, res);
@@ -1149,6 +1586,8 @@ const server = http.createServer(async (req, res) => {
       if (!decision.allowed) {
         return sendError(res, 403, "FORBIDDEN", "You are not allowed to access this order");
       }
+
+      console.log("[login] tokens issued");
 
       return json(res, 200, {
         data: {
@@ -1177,6 +1616,8 @@ const server = http.createServer(async (req, res) => {
       if (!decision.allowed) {
         return sendError(res, 403, "FORBIDDEN", "You are not allowed to access this trip");
       }
+
+      console.log("[login] tokens issued");
 
       return json(res, 200, {
         data: {
@@ -1224,6 +1665,8 @@ const server = http.createServer(async (req, res) => {
       query += ` ORDER BY "occurredAt" DESC`;
 
       const result = await pool.query(query, params);
+      console.log("[login] tokens issued");
+
       return json(res, 200, { data: { auditLogs: result.rows } });
     }
 
@@ -1290,6 +1733,8 @@ const server = http.createServer(async (req, res) => {
       query += ` ORDER BY "occurredAt" DESC`;
 
       const result = await pool.query(query, params);
+      console.log("[login] tokens issued");
+
       return json(res, 200, { data: { auditLogs: result.rows } });
     }
 
@@ -1324,6 +1769,8 @@ const server = http.createServer(async (req, res) => {
       if (result.rows.length === 0) {
         return sendError(res, 404, "AUDIT_LOG_NOT_FOUND", "Audit log was not found");
       }
+
+      console.log("[login] tokens issued");
 
       return json(res, 200, { data: { auditLog: result.rows[0] } });
     }
@@ -1379,6 +1826,8 @@ const server = http.createServer(async (req, res) => {
       });
 
       const updatedOrder = await fetchOrderById(assignHubOrderId);
+
+      console.log("[login] tokens issued");
 
       return json(res, 200, {
         data: {
@@ -1467,6 +1916,8 @@ const server = http.createServer(async (req, res) => {
         after: { appendedEvent: { id: eventId, eventType, notes: notes || null } },
         requestMeta: getRequestMeta(req),
       });
+
+      console.log("[login] tokens issued");
 
       return json(res, 200, {
         data: {

@@ -295,3 +295,17 @@
 - Verified mobile login succeeded in Expo web and showed API connected state.
 - Noted local environment limitation: physical-device Expo Go / Android SDK setup was not fully validated in this chapter.
 - Gate satisfied: One command starts the local system spine, and all core app surfaces reach backend for the walking skeleton proof.
+
+## Chapter 8.2 PASS
+
+- Added customer order creation endpoint at POST /v1/orders.
+- Added order timeline endpoint at GET /v1/orders/:id/timeline.
+- Verified customer can create DOOR, SHOP_DROP, and HYBRID orders.
+- Verified derived zone and hub assignment on order creation.
+- Verified automatic bag creation and initial ORDER_CREATED timeline event.
+- Added web customer order form and timeline view.
+- Verified web customer can create an order and view latest order details plus timeline.
+- Added mobile customer order form and timeline view.
+- Verified mobile customer can create an order and view latest order details plus timeline.
+- Verified timeline endpoint returned appended events including PICKUP_SCHEDULED for the exact order under test.
+- Gate satisfied: customer can place an order and see initial order status/timeline on web and mobile.

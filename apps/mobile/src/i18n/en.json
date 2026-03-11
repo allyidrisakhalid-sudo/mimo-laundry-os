@@ -20,8 +20,6 @@
     }
   },
   "home": {
-    "title": "Customer Home",
-    "subtitle": "Track orders, pickups, and deliveries.",
     "dashboardTitle": "Walking skeleton home",
     "loggedInAs": "Logged in as",
     "apiStatusLabel": "API status",
@@ -31,14 +29,24 @@
     "logout": "Logout",
     "apiBaseUrl": "API base URL"
   },
-  "settings": {
-    "title": "Settings",
-    "language": "Language preference"
-  },
-  "formatting": {
-    "title": "Locale formatting",
-    "money": "Money example",
-    "date": "Date and time example",
-    "phone": "Phone example"
+  "orders": {
+    "sectionTitle": "New order",
+    "channel": "Channel",
+    "tier": "Tier",
+    "pickupAddress": "Pickup address",
+    "dropoffAddress": "Dropoff address",
+    "affiliateShop": "Affiliate shop",
+    "submit": "Create order",
+    "success": "Order created successfully",
+    "error": "Order creation failed",
+    "detailsTitle": "Latest created order",
+    "orderNumber": "Order number",
+    "statusCurrent": "Current status",
+    "zoneId": "Zone",
+    "hubId": "Hub",
+    "bagTagCode": "Bag tag",
+    "timelineTitle": "Timeline",
+    "refreshing": "Refreshing order updates...",
+    "emptyTimeline": "No timeline events yet"
   }
 }
