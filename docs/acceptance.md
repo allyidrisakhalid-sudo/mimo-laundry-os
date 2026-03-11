@@ -330,3 +330,23 @@
 - Verified cross-zone driver trip/stop assignment is rejected with ZONE_ASSIGNMENT_MISMATCH.
 - Verified Driver A sees only Zone A assigned trip/order and Driver B sees only Zone B assigned trip/order.
 - Gate satisfied: Orders correctly attach to zone + hub; tasks show for correct driver.
+
+## Chapter 8.4 PASS
+
+- Re-ran Chapter 8.3 pre-flight verification successfully using PowerShell/API proof.
+- Added driver task list endpoint: GET /v1/driver/tasks.
+- Added driver stop detail endpoint: GET /v1/driver/stops/:stopId.
+- Verified driver task list returns assigned active stops only.
+- Verified stop detail returns privacy-safe customer contact, location label, masked bag tag, and action label.
+- Added pickup confirmation endpoint: POST /v1/driver/stops/:stopId/pickup.
+- Verified wrong pickup tag fails with BAG_TAG_MISMATCH.
+- Verified correct pickup tag succeeds, marks stop done, appends PICKED_UP, and updates Order.statusCurrent.
+- Added OrderDeliveryOtp persistence model and migration.
+- Added delivery OTP generator endpoint for controlled verification: POST /v1/dev/orders/:orderId/delivery-otp.
+- Added delivery confirmation endpoint: POST /v1/driver/stops/:stopId/deliver.
+- Verified wrong OTP fails with OTP_INVALID.
+- Verified expired OTP fails with OTP_EXPIRED.
+- Verified correct OTP succeeds, marks stop done, appends DELIVERED, updates Order.statusCurrent, and invalidates OTP.
+- Verified customer timeline shows PICKED_UP and DELIVERED after proof actions.
+- Verified repeat delivery on completed stop is blocked with STOP_ALREADY_COMPLETED.
+- Gate satisfied: Proof updates timeline; customer sees updates.

@@ -231,3 +231,12 @@ Add-Content docs\acceptance.md @"
 - Added manual admin trip creation and stop assignment with strict zone checks
 - Updated web and mobile order flows for zone-driven affiliate shop selection
 - Documented zone assignment v1 rules and error codes
+
+## Chapter 8.4 completed
+
+- Added driver task list and stop detail endpoints for driver proof workflows
+- Added pickup confirmation with bag tag validation and PICKED_UP event append
+- Added OrderDeliveryOtp schema + migration for hashed delivery OTP storage
+- Added delivery OTP generation endpoint for controlled verification
+- Added delivery confirmation with OTP validation, expiry, invalidation, and DELIVERED event append
+- Added docs/product/proof_workflows.md

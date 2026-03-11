@@ -74,6 +74,26 @@ function json(res: http.ServerResponse, statusCode: number, payload: unknown) {
   res.end(JSON.stringify(payload));
 }
 
+function maskPhone(phone: string | null | undefined) {
+  if (!phone) return null;
+  if (phone.length <= 4) return phone;
+  return `${phone.slice(0, 4)}***${phone.slice(-3)}`;
+}
+
+function maskBagTagCode(tagCode: string | null | undefined) {
+  if (!tagCode) return null;
+  if (tagCode.length <= 4) return tagCode;
+  return `${tagCode.slice(0, 4)}***${tagCode.slice(-2)}`;
+}
+
+function hashDeliveryOtp(otp: string) {
+  return crypto.createHash("sha256").update(`delivery-otp:${otp}`).digest("hex");
+}
+
+function generateDeliveryOtpCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 function sendError(
   res: http.ServerResponse,
   statusCode: number,
@@ -1917,6 +1937,569 @@ const server = http.createServer(async (req, res) => {
             role: scope.role,
             driverId: scope.driverId,
           },
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/driver/tasks") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DRIVER"], "access driver tasks")) return;
+
+      const scope = await resolveScope(user);
+      if (!scope.driverId) {
+        return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          ts."id",
+          ts."tripId",
+          ts."orderId",
+          ts."stopType",
+          ts."sequence",
+          ts."status",
+          ts."notes",
+          ts."createdAt",
+          ts."updatedAt",
+          t."type" AS "tripType",
+          t."zoneId",
+          t."hubId",
+          t."driverId",
+          o."orderNumber",
+          o."channel",
+          o."statusCurrent",
+          o."customerName",
+          o."customerPhone",
+          z."name" AS "zoneName"
+        FROM "TripStop" ts
+        INNER JOIN "Trip" t ON t."id" = ts."tripId"
+        INNER JOIN "Order" o ON o."id" = ts."orderId"
+        LEFT JOIN "Zone" z ON z."id" = t."zoneId"
+        WHERE t."driverId" = $1
+          AND ts."status" <> 'DONE'
+        ORDER BY
+          CASE WHEN ts."stopType" = 'PICKUP' THEN 0 ELSE 1 END ASC,
+          t."scheduledFor" ASC,
+          ts."sequence" ASC,
+          ts."createdAt" ASC
+        `,
+        [scope.driverId]
+      );
+
+      const tasks = result.rows.map((row) => ({
+        id: getString(row, "id"),
+        tripId: getString(row, "tripId", "tripid"),
+        orderId: getString(row, "orderId", "orderid"),
+        tripType: getString(row, "tripType", "triptype"),
+        stopType: getString(row, "stopType", "stoptype"),
+        sequence: Number(row.sequence ?? 0),
+        status: getString(row, "status"),
+        notes: row.notes ?? null,
+        zoneId: getString(row, "zoneId", "zoneid"),
+        zoneLabel: getString(row, "zoneName", "zonename"),
+        hubId: getString(row, "hubId", "hubid"),
+        orderNumber: getString(row, "orderNumber", "ordernumber"),
+        channel: getString(row, "channel"),
+        orderStatus: getString(row, "statusCurrent", "statuscurrent"),
+        customerName: getString(row, "customerName", "customername"),
+        customerPhoneMasked: maskPhone(getString(row, "customerPhone", "customerphone")),
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      }));
+
+      return json(res, 200, {
+        data: {
+          tasks,
+        },
+      });
+    }
+
+    const driverStopId = pathParam(url.pathname, /^\/v1\/driver\/stops\/([^/]+)$/);
+    if (method === "GET" && driverStopId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DRIVER"], "access driver stop detail")) return;
+
+      const scope = await resolveScope(user);
+      if (!scope.driverId) {
+        return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          ts."id",
+          ts."tripId",
+          ts."orderId",
+          ts."stopType",
+          ts."sequence",
+          ts."status",
+          ts."notes" AS "stopNotes",
+          t."type" AS "tripType",
+          t."zoneId",
+          t."hubId",
+          t."driverId",
+          o."orderNumber",
+          o."channel",
+          o."statusCurrent",
+          o."customerName",
+          o."customerPhone",
+          o."pickupAddressId",
+          o."dropoffAddressId",
+          o."affiliateShopId",
+          z."name" AS "zoneName",
+          b."tagCode",
+          ca_pick."label" AS "pickupAddressLabel",
+          ca_pick."addressLine1" AS "pickupAddressLine1",
+          ca_drop."label" AS "dropoffAddressLabel",
+          ca_drop."addressLine1" AS "dropoffAddressLine1",
+          shop."name" AS "affiliateShopName",
+          shop."addressLabel" AS "affiliateShopAddressLabel",
+          shop."contactPhone" AS "affiliateShopPhone"
+        FROM "TripStop" ts
+        INNER JOIN "Trip" t ON t."id" = ts."tripId"
+        INNER JOIN "Order" o ON o."id" = ts."orderId"
+        LEFT JOIN "Zone" z ON z."id" = t."zoneId"
+        LEFT JOIN "Bag" b ON b."orderId" = o."id"
+        LEFT JOIN "CustomerAddress" ca_pick ON ca_pick."id" = o."pickupAddressId"
+        LEFT JOIN "CustomerAddress" ca_drop ON ca_drop."id" = o."dropoffAddressId"
+        LEFT JOIN "AffiliateShop" shop ON shop."id" = o."affiliateShopId"
+        WHERE ts."id" = $1
+          AND t."driverId" = $2
+        LIMIT 1
+        `,
+        [driverStopId, scope.driverId]
+      );
+
+      if (result.rows.length === 0) {
+        return sendError(res, 404, "STOP_NOT_FOUND", "Stop was not found");
+      }
+
+      const row = result.rows[0];
+      const stopType = getString(row, "stopType", "stoptype");
+      const channel = getString(row, "channel");
+      const rawTagCode = getString(row, "tagCode", "tagcode");
+
+      let locationLabel: string | null = null;
+      if (stopType === "PICKUP") {
+        if (channel === "DOOR") {
+          locationLabel =
+            getString(row, "pickupAddressLabel", "pickupaddresslabel") ??
+            getString(row, "pickupAddressLine1", "pickupaddressline1");
+        } else {
+          locationLabel =
+            getString(row, "affiliateShopName", "affiliateshopname") ??
+            getString(row, "affiliateShopAddressLabel", "affiliateshopaddresslabel");
+        }
+      } else {
+        if (channel === "HYBRID" || channel === "DOOR") {
+          locationLabel =
+            getString(row, "dropoffAddressLabel", "dropoffaddresslabel") ??
+            getString(row, "dropoffAddressLine1", "dropoffaddressline1");
+        } else {
+          locationLabel =
+            getString(row, "affiliateShopName", "affiliateshopname") ??
+            getString(row, "affiliateShopAddressLabel", "affiliateshopaddresslabel");
+        }
+      }
+
+      const actionLabel = stopType === "PICKUP" ? "Confirm Pickup" : "Confirm Delivery";
+
+      return json(res, 200, {
+        data: {
+          stop: {
+            id: getString(row, "id"),
+            tripId: getString(row, "tripId", "tripid"),
+            orderId: getString(row, "orderId", "orderid"),
+            tripType: getString(row, "tripType", "triptype"),
+            stopType,
+            sequence: Number(row.sequence ?? 0),
+            status: getString(row, "status"),
+            zoneId: getString(row, "zoneId", "zoneid"),
+            zoneLabel: getString(row, "zoneName", "zonename"),
+            hubId: getString(row, "hubId", "hubid"),
+            orderNumber: getString(row, "orderNumber", "ordernumber"),
+            channel,
+            orderStatus: getString(row, "statusCurrent", "statuscurrent"),
+            customer: {
+              name: getString(row, "customerName", "customername"),
+              phoneMasked: maskPhone(getString(row, "customerPhone", "customerphone")),
+            },
+            location: {
+              label: locationLabel,
+              affiliateShopPhoneMasked: maskPhone(
+                getString(row, "affiliateShopPhone", "affiliateshopphone")
+              ),
+            },
+            bag: {
+              tagCodeMasked: rawTagCode ? maskBagTagCode(rawTagCode) : null,
+              tagCode: rawTagCode,
+            },
+            notes: row.stopNotes ?? null,
+            actionLabel,
+          },
+        },
+      });
+    }
+
+    const driverPickupStopId = pathParam(url.pathname, /^\/v1\/driver\/stops\/([^/]+)\/pickup$/);
+    if (method === "POST" && driverPickupStopId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DRIVER"], "confirm pickup")) return;
+
+      const scope = await resolveScope(user);
+      if (!scope.driverId) {
+        return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
+      }
+
+      const body = await readJsonBody(req);
+      const tagCode = String(body.tagCode ?? "").trim();
+      const photoRef =
+        body.photoRef === null || body.photoRef === undefined
+          ? null
+          : String(body.photoRef).trim() || null;
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (!tagCode) {
+        return sendError(res, 400, "VALIDATION_ERROR", "tagCode is required");
+      }
+
+      const stopResult = await pool.query(
+        `
+        SELECT
+          ts."id",
+          ts."tripId",
+          ts."orderId",
+          ts."stopType",
+          ts."status",
+          t."driverId",
+          o."orderNumber",
+          b."tagCode"
+        FROM "TripStop" ts
+        INNER JOIN "Trip" t ON t."id" = ts."tripId"
+        INNER JOIN "Order" o ON o."id" = ts."orderId"
+        LEFT JOIN "Bag" b ON b."orderId" = o."id"
+        WHERE ts."id" = $1
+          AND t."driverId" = $2
+        LIMIT 1
+        `,
+        [driverPickupStopId, scope.driverId]
+      );
+
+      if (stopResult.rows.length === 0) {
+        return sendError(res, 404, "STOP_NOT_FOUND", "Stop was not found");
+      }
+
+      const stop = stopResult.rows[0];
+      const stopType = getString(stop, "stopType", "stoptype");
+      const stopStatus = getString(stop, "status");
+      const orderId = getString(stop, "orderId", "orderid");
+      const expectedTagCode = getString(stop, "tagCode", "tagcode");
+      const eventId = crypto.randomUUID();
+
+      if (stopType !== "PICKUP") {
+        return sendError(res, 409, "STOP_TYPE_INVALID", "Stop is not a pickup stop");
+      }
+
+      if (stopStatus === "DONE") {
+        return sendError(res, 409, "STOP_ALREADY_COMPLETED", "Stop has already been completed");
+      }
+
+      if (!expectedTagCode || expectedTagCode !== tagCode) {
+        return sendError(res, 409, "BAG_TAG_MISMATCH", "Bag tag code does not match the order bag");
+      }
+
+      await pool.query("BEGIN");
+
+      try {
+        await pool.query(
+          `
+          UPDATE "TripStop"
+          SET "status" = 'DONE', "notes" = COALESCE($2, "notes"), "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [driverPickupStopId, notes]
+        );
+
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = 'PICKED_UP', "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [orderId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'PICKED_UP', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            eventId,
+            orderId,
+            user.id,
+            user.role,
+            notes ?? "Pickup confirmed by driver",
+            JSON.stringify({
+              stopId: driverPickupStopId,
+              driverId: scope.driverId,
+              tagCode,
+              photoRef,
+              notes,
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 200, {
+        data: {
+          pickupConfirmed: true,
+          stopId: driverPickupStopId,
+          orderId,
+          statusCurrent: "PICKED_UP",
+        },
+      });
+    }
+
+    const devGenerateOtpOrderId = pathParam(
+      url.pathname,
+      /^\/v1\/dev\/orders\/([^/]+)\/delivery-otp$/
+    );
+    if (method === "POST" && devGenerateOtpOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "generate delivery otp")) return;
+
+      const body = await readJsonBody(req);
+      const expiresInHoursRaw = Number(body.expiresInHours ?? 6);
+      const expiresInHours = Number.isFinite(expiresInHoursRaw) ? expiresInHoursRaw : 6;
+
+      const orderResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "Order"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [devGenerateOtpOrderId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const otp = generateDeliveryOtpCode();
+      const otpHash = hashDeliveryOtp(otp);
+
+      await pool.query(
+        `
+        INSERT INTO "OrderDeliveryOtp" ("id", "orderId", "otpHash", "expiresAt", "usedAt", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, NOW() + ($4 * INTERVAL '1 hour'), NULL, NOW(), NOW())
+        ON CONFLICT ("orderId")
+        DO UPDATE SET
+          "otpHash" = EXCLUDED."otpHash",
+          "expiresAt" = EXCLUDED."expiresAt",
+          "usedAt" = NULL,
+          "updatedAt" = NOW()
+        `,
+        [crypto.randomUUID(), devGenerateOtpOrderId, otpHash, expiresInHours]
+      );
+
+      return json(res, 200, {
+        data: {
+          orderId: devGenerateOtpOrderId,
+          otp,
+          expiresInHours,
+        },
+      });
+    }
+
+    const driverDeliverStopId = pathParam(url.pathname, /^\/v1\/driver\/stops\/([^/]+)\/deliver$/);
+    if (method === "POST" && driverDeliverStopId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DRIVER"], "confirm delivery")) return;
+
+      const scope = await resolveScope(user);
+      if (!scope.driverId) {
+        return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
+      }
+
+      const body = await readJsonBody(req);
+      const otp = String(body.otp ?? "").trim();
+      const photoRef =
+        body.photoRef === null || body.photoRef === undefined
+          ? null
+          : String(body.photoRef).trim() || null;
+      const signatureName =
+        body.signatureName === null || body.signatureName === undefined
+          ? null
+          : String(body.signatureName).trim() || null;
+      const signatureRef =
+        body.signatureRef === null || body.signatureRef === undefined
+          ? null
+          : String(body.signatureRef).trim() || null;
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (!otp) {
+        return sendError(res, 400, "VALIDATION_ERROR", "otp is required");
+      }
+
+      const stopResult = await pool.query(
+        `
+        SELECT
+          ts."id",
+          ts."tripId",
+          ts."orderId",
+          ts."stopType",
+          ts."status",
+          t."driverId"
+        FROM "TripStop" ts
+        INNER JOIN "Trip" t ON t."id" = ts."tripId"
+        WHERE ts."id" = $1
+          AND t."driverId" = $2
+        LIMIT 1
+        `,
+        [driverDeliverStopId, scope.driverId]
+      );
+
+      if (stopResult.rows.length === 0) {
+        return sendError(res, 404, "STOP_NOT_FOUND", "Stop was not found");
+      }
+
+      const stop = stopResult.rows[0];
+      const stopType = getString(stop, "stopType", "stoptype");
+      const stopStatus = getString(stop, "status");
+      const orderId = getString(stop, "orderId", "orderid");
+
+      if (stopType !== "DROPOFF") {
+        return sendError(res, 409, "STOP_TYPE_INVALID", "Stop is not a delivery stop");
+      }
+
+      if (stopStatus === "DONE") {
+        return sendError(res, 409, "STOP_ALREADY_COMPLETED", "Stop has already been completed");
+      }
+
+      const otpResult = await pool.query(
+        `
+        SELECT "id", "otpHash", "expiresAt", "usedAt"
+        FROM "OrderDeliveryOtp"
+        WHERE "orderId" = $1
+        LIMIT 1
+        `,
+        [orderId]
+      );
+
+      if (otpResult.rows.length === 0) {
+        return sendError(res, 409, "OTP_INVALID", "Delivery OTP is invalid");
+      }
+
+      const otpRow = otpResult.rows[0];
+      const now = Date.now();
+      const expiresAtMs = new Date(otpRow.expiresAt).getTime();
+
+      if (otpRow.usedAt) {
+        return sendError(res, 409, "OTP_INVALID", "Delivery OTP is invalid");
+      }
+
+      if (expiresAtMs <= now) {
+        return sendError(res, 409, "OTP_EXPIRED", "Delivery OTP has expired");
+      }
+
+      if (getString(otpRow, "otpHash", "otphash") !== hashDeliveryOtp(otp)) {
+        return sendError(res, 409, "OTP_INVALID", "Delivery OTP is invalid");
+      }
+
+      const eventId = crypto.randomUUID();
+
+      await pool.query("BEGIN");
+
+      try {
+        await pool.query(
+          `
+          UPDATE "TripStop"
+          SET "status" = 'DONE', "notes" = COALESCE($2, "notes"), "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [driverDeliverStopId, notes]
+        );
+
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = 'DELIVERED', "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [orderId]
+        );
+
+        await pool.query(
+          `
+          UPDATE "OrderDeliveryOtp"
+          SET "usedAt" = NOW(), "updatedAt" = NOW()
+          WHERE "orderId" = $1
+          `,
+          [orderId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'DELIVERED', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            eventId,
+            orderId,
+            user.id,
+            user.role,
+            notes ?? "Delivery confirmed by driver",
+            JSON.stringify({
+              stopId: driverDeliverStopId,
+              driverId: scope.driverId,
+              otpVerified: true,
+              photoRef,
+              signatureName,
+              signatureRef,
+              notes,
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 200, {
+        data: {
+          deliveryConfirmed: true,
+          stopId: driverDeliverStopId,
+          orderId,
+          statusCurrent: "DELIVERED",
         },
       });
     }
