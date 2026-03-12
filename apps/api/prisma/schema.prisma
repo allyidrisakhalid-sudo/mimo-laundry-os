@@ -133,18 +133,19 @@ enum VehicleType {
 }
 
 model Zone {
-  id         String            @id @default(cuid())
-  name       String            @unique
-  boundaries Json
-  metadata   Json?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  affiliates AffiliateShop[]
-  addresses  CustomerAddress[]
-  drivers    DriverProfile[]
-  hubs       Hub[]
-  Order      Order[]
-  Trip       Trip[]
+  id               String            @id @default(cuid())
+  name             String            @unique
+  boundaries       Json
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  affiliates       AffiliateShop[]
+  addresses        CustomerAddress[]
+  drivers          DriverProfile[]
+  hubs             Hub[]
+  Order            Order[]
+  Trip             Trip[]
+  deliveryZoneFees DeliveryZoneFee[]
 }
 
 model Hub {
@@ -255,16 +256,16 @@ model CustomerAddress {
 }
 
 model Order {
-  id                                                      String             @id @default(cuid())
-  orderNumber                                             String             @unique
+  id                                                      String                @id @default(cuid())
+  orderNumber                                             String                @unique
   sourceType                                              OrderSourceType
   affiliateShopId                                         String?
   channel                                                 OrderChannel
   customerName                                            String
   customerPhone                                           String?
   notes                                                   String?
-  createdAt                                               DateTime           @default(now())
-  updatedAt                                               DateTime           @updatedAt
+  createdAt                                               DateTime              @default(now())
+  updatedAt                                               DateTime              @updatedAt
   customerUserId                                          String?
   tier                                                    OrderTier
   zoneId                                                  String
@@ -273,16 +274,21 @@ model Order {
   dropoffAddressId                                        String?
   statusCurrent                                           OrderStatusCurrent
   bags                                                    Bag[]
-  affiliateShop                                           AffiliateShop?     @relation(fields: [affiliateShopId], references: [id])
-  User                                                    User?              @relation(fields: [customerUserId], references: [id])
-  CustomerAddress_Order_dropoffAddressIdToCustomerAddress CustomerAddress?   @relation("Order_dropoffAddressIdToCustomerAddress", fields: [dropoffAddressId], references: [id])
-  Hub                                                     Hub                @relation(fields: [hubId], references: [id])
-  CustomerAddress_Order_pickupAddressIdToCustomerAddress  CustomerAddress?   @relation("Order_pickupAddressIdToCustomerAddress", fields: [pickupAddressId], references: [id])
-  Zone                                                    Zone               @relation(fields: [zoneId], references: [id])
+  affiliateShop                                           AffiliateShop?        @relation(fields: [affiliateShopId], references: [id])
+  User                                                    User?                 @relation(fields: [customerUserId], references: [id])
+  CustomerAddress_Order_dropoffAddressIdToCustomerAddress CustomerAddress?      @relation("Order_dropoffAddressIdToCustomerAddress", fields: [dropoffAddressId], references: [id])
+  Hub                                                     Hub                   @relation(fields: [hubId], references: [id])
+  CustomerAddress_Order_pickupAddressIdToCustomerAddress  CustomerAddress?      @relation("Order_pickupAddressIdToCustomerAddress", fields: [pickupAddressId], references: [id])
+  Zone                                                    Zone                  @relation(fields: [zoneId], references: [id])
   events                                                  OrderEvent[]
   issues                                                  OrderIssue[]
   deliveryOtp                                             OrderDeliveryOtp?
   TripStop                                                TripStop[]
+  pricingSnapshot                                         OrderPricingSnapshot?
+
+  lineItems OrderLineItem[]
+
+  totals OrderTotals?
 }
 
 model Bag {
@@ -382,33 +388,34 @@ model TripStop {
 }
 
 model OrderDeliveryOtp {
-  id         String   @id @default(cuid())
-  orderId    String   @unique
-  otpHash    String
-  expiresAt  DateTime
-  usedAt     DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  orderId   String    @unique
+  otpHash   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
 }
 
 model RefreshToken {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   userId            String
-  tokenHash         String   @unique
-  createdAt         DateTime @default(now())
+  tokenHash         String    @unique
+  createdAt         DateTime  @default(now())
   expiresAt         DateTime
   revokedAt         DateTime?
   replacedByTokenId String?
   userAgent         String?
   ipAddress         String?
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
+
 model AuditLog {
   id          String   @id @default(cuid())
   actorUserId String?
@@ -429,6 +436,173 @@ model AuditLog {
   @@index([occurredAt])
 }
 
+enum PricingPlanStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
 
+enum PricingServiceType {
+  WASH_DRY_FOLD
+  IRONING
+  ADDON_SCENT
+}
 
+enum PricingItemCode {
+  DUVET
+  SUIT
+  CURTAIN_HEAVY
+}
 
+enum OrderPricingQuoteStatus {
+  ESTIMATED
+  FINALIZED
+}
+
+enum OrderLineItemType {
+  CHARGE
+  DISCOUNT
+}
+
+model PricingPlan {
+  id            String            @id
+  name          String
+  status        PricingPlanStatus @default(DRAFT)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  channels           PricingPlanChannel[]
+  kgRates            KgRate[]
+  itemRates          ItemRate[]
+  deliveryZoneFees   DeliveryZoneFee[]
+  minimumChargeRules MinimumChargeRule[]
+  pricingSnapshots   OrderPricingSnapshot[]
+
+  @@index([status, effectiveFrom])
+}
+
+model PricingPlanChannel {
+  id        String       @id
+  planId    String
+  channel   OrderChannel
+  createdAt DateTime     @default(now())
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, channel])
+  @@index([planId])
+  @@index([channel])
+}
+
+model KgRate {
+  id            String             @id
+  planId        String
+  tier          OrderTier
+  serviceType   PricingServiceType
+  pricePerKgTzs Int
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, tier, serviceType])
+  @@index([planId, tier])
+}
+
+model ItemRate {
+  id        String          @id
+  planId    String
+  tier      OrderTier
+  itemCode  PricingItemCode
+  priceTzs  Int
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, tier, itemCode])
+  @@index([planId, tier])
+}
+
+model DeliveryZoneFee {
+  id               String   @id
+  planId           String
+  zoneId           String
+  doorFeeTzs       Int
+  freeThresholdTzs Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  zone Zone        @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+
+  @@unique([planId, zoneId])
+  @@index([planId])
+  @@index([zoneId])
+}
+
+model MinimumChargeRule {
+  id         String        @id
+  planId     String
+  tier       OrderTier
+  channel    OrderChannel?
+  minimumTzs Int
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  plan PricingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, tier, channel])
+  @@index([planId, tier])
+}
+
+model OrderPricingSnapshot {
+  id                       String                  @id
+  orderId                  String                  @unique
+  pricingPlanId            String
+  pricingPlanEffectiveFrom DateTime?
+  quoteStatus              OrderPricingQuoteStatus
+  quotedAt                 DateTime?
+  finalizedAt              DateTime?
+  inputsJson               Json?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pricingPlan PricingPlan @relation(fields: [pricingPlanId], references: [id], onDelete: Restrict)
+
+  @@index([pricingPlanId, quoteStatus])
+}
+
+model OrderLineItem {
+  id          String            @id
+  orderId     String
+  type        OrderLineItemType
+  description String
+  quantity    Decimal           @db.Decimal(10, 2)
+  unitPrice   Int
+  amount      Int
+  metaJson    Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model OrderTotals {
+  id            String   @id
+  orderId       String   @unique
+  subtotal      Int
+  deliveryTotal Int
+  discountTotal Int
+  grandTotal    Int
+  balanceDue    Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
