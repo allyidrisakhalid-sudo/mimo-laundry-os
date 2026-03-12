@@ -441,3 +441,34 @@
 - Verified required documentation file exists:
   - docs/finance/pricing_engine_v1.md
 - Gate satisfied: same order recalculates correctly after intake; old orders remain on old plan.
+
+## Chapter 9.2 PASS
+
+Proof:
+
+- Verified finalized invoice for order ca8be79e-d541-4d15-87c1-0f5d54c1f0c0.
+- Verified stored line items summed to invoice grand total exactly:
+  - Door delivery fee = 3000
+  - Wash + Dry + Fold = 13600
+  - Sum = 16600
+  - Grand total = 16600
+- Recorded payment using POST /v1/payments with:
+  - method = MOBILE_MONEY
+  - amountTzs = 16600
+  - reference = MM-CH92-001
+- Verified payment record persisted and was returned by GET /v1/orders/:id/payments.
+- Verified receipt persisted and was returned by GET /v1/orders/:id/receipt.
+- Verified receipt consistency:
+  - receipt amount = 16600
+  - payment amount = 16600
+  - receipt reference = MM-CH92-001
+  - payment reference = MM-CH92-001
+- Verified invoice remained immutable after payment:
+  - grand total stayed 16600
+  - balance due moved from 16600 to 0
+- Verified audit log recorded PAYMENT_RECORD with paymentId, receiptId, receiptNumber, method, amountTzs, and reference.
+- Verified web lint passed.
+- Verified API lint passed.
+- Verified API build passed.
+
+Gate satisfied: Invoice totals match line items; receipt is consistent.

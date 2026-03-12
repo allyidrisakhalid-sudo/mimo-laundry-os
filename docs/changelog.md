@@ -267,3 +267,16 @@ Add-Content docs\acceptance.md @"
 - Added invoice read endpoint with stored pricing snapshot, line items, and totals
 - Verified Plan A -> Plan B rollover while older orders remained locked to earlier plan
 - Verified pricing admin actions through audit log evidence
+
+## Chapter 9.2 completed
+
+- Added payment recording flow with permanent Payment and Receipt records
+- Added receipt number generation using RCP-YYYYMMDD-#### format
+- Added order payment listing endpoint at GET /v1/orders/:id/payments
+- Added order receipt endpoint at GET /v1/orders/:id/receipt
+- Added payment recording endpoint at POST /v1/payments
+- Added customer web invoice and receipt display on order details
+- Enforced invoice consistency with stored line items and persistent totals
+- Added payment audit logging with PAYMENT_RECORD entries
+- Added docs/finance/invoicing_receipts.md
+- Fixed payment amount parsing bug in API verification cycle

@@ -47,6 +47,48 @@ type AffiliateShopOption = {
   zoneId?: string | null;
 };
 
+type InvoiceLineItem = {
+  id: string;
+  type: string;
+  description: string;
+  quantity: string;
+  unitPrice: number;
+  amount: number;
+};
+
+type InvoiceData = {
+  order?: {
+    id: string;
+    orderNumber: string;
+    channel: string;
+    tier: string;
+    statusCurrent: string;
+  };
+  pricingSnapshot?: {
+    quoteStatus?: string | null;
+    pricingPlanId?: string | null;
+  };
+  lineItems?: InvoiceLineItem[];
+  totals?: {
+    subtotal: number;
+    deliveryTotal: number;
+    discountTotal: number;
+    grandTotal: number;
+    balanceDue: number;
+  };
+};
+
+type ReceiptData = {
+  receipt?: {
+    receiptNumber: string;
+    amountTzs: number;
+    amountFormatted?: string;
+    reference: string;
+    paymentMethod?: string;
+    issuedAt: string;
+  };
+};
+
 type TimelineEvent = {
   id?: string | null;
   orderId?: string | null;
@@ -79,6 +121,8 @@ export default function HomePage() {
   const [latestOrder, setLatestOrder] = useState<CreatedOrder | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [invoice, setInvoice] = useState<InvoiceData | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [timelineRefreshing, setTimelineRefreshing] = useState(false);
 
   const isLoggedIn = useMemo(() => !!accessToken, [accessToken]);
@@ -137,6 +181,30 @@ export default function HomePage() {
     }
   }
 
+  async function loadInvoice(orderId: string, token: string) {
+    const response = await fetch(`${API_BASE_URL}/v1/orders/${orderId}/invoice`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const payload = await response.json();
+    if (response.ok) {
+      setInvoice(payload.data ?? null);
+    }
+  }
+
+  async function loadReceipt(orderId: string, token: string) {
+    const response = await fetch(`${API_BASE_URL}/v1/orders/${orderId}/receipt`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 404) {
+      setReceipt(null);
+      return;
+    }
+    const payload = await response.json();
+    if (response.ok) {
+      setReceipt(payload.data ?? null);
+    }
+  }
+
   async function loadTimeline(orderId: string, token: string, silent = false) {
     try {
       if (!silent) setTimelineRefreshing(true);
@@ -179,7 +247,6 @@ export default function HomePage() {
       void loadCurrentUser(storedToken);
     }
     void loadHealth();
-    void loadAffiliateShops(selectedZoneId);
   }, [t]);
 
   useEffect(() => {
@@ -190,6 +257,8 @@ export default function HomePage() {
     if (!accessToken || !latestOrder?.id) return;
 
     void loadTimeline(latestOrder.id, accessToken);
+    void loadInvoice(latestOrder.id, accessToken);
+    void loadReceipt(latestOrder.id, accessToken);
 
     const activeStatuses = new Set([
       "CREATED",
@@ -300,6 +369,8 @@ export default function HomePage() {
       setOrderMessage(t("orders.success"));
       if (order.id) {
         await loadTimeline(order.id, accessToken);
+        await loadInvoice(order.id, accessToken);
+        await loadReceipt(order.id, accessToken);
       }
     } catch {
       setOrderMessage(t("orders.error"));
@@ -316,6 +387,8 @@ export default function HomePage() {
     setOrderMessage("");
     setLatestOrder(null);
     setTimeline([]);
+    setInvoice(null);
+    setReceipt(null);
   }
 
   return (
@@ -503,6 +576,99 @@ export default function HomePage() {
                 </p>
 
                 <div className="pt-4">
+                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <h3 className="text-lg font-semibold">Invoice Breakdown</h3>
+                    {!invoice ? (
+                      <p className="mt-2 text-sm text-neutral-600">No invoice loaded yet.</p>
+                    ) : (
+                      <div className="mt-3 space-y-3">
+                        <div className="text-sm text-neutral-700">
+                          <div>Quote status: {invoice.pricingSnapshot?.quoteStatus ?? "N/A"}</div>
+                          <div>Pricing plan: {invoice.pricingSnapshot?.pricingPlanId ?? "N/A"}</div>
+                        </div>
+                        <div className="space-y-2">
+                          {(invoice.lineItems ?? []).map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-center justify-between text-sm"
+                            >
+                              <div>
+                                <div className="font-medium text-neutral-900">
+                                  {item.description}
+                                </div>
+                                <div className="text-neutral-500">
+                                  Qty {item.quantity} TZS {item.unitPrice.toLocaleString("en-TZ")}
+                                </div>
+                              </div>
+                              <div className="font-semibold text-neutral-900">
+                                TZS {item.amount.toLocaleString("en-TZ")}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="border-t border-neutral-200 pt-3 text-sm text-neutral-700">
+                          <div>
+                            Subtotal: TZS {invoice.totals?.subtotal?.toLocaleString("en-TZ") ?? "0"}
+                          </div>
+                          <div>
+                            Delivery: TZS{" "}
+                            {invoice.totals?.deliveryTotal?.toLocaleString("en-TZ") ?? "0"}
+                          </div>
+                          <div>
+                            Discount: TZS{" "}
+                            {invoice.totals?.discountTotal?.toLocaleString("en-TZ") ?? "0"}
+                          </div>
+                          <div className="font-semibold text-neutral-900">
+                            Grand total: TZS{" "}
+                            {invoice.totals?.grandTotal?.toLocaleString("en-TZ") ?? "0"}
+                          </div>
+                          <div className="font-semibold text-neutral-900">
+                            Balance due: TZS{" "}
+                            {invoice.totals?.balanceDue?.toLocaleString("en-TZ") ?? "0"}
+                          </div>
+                          <div className="mt-1 text-xs uppercase tracking-wide text-neutral-500">
+                            {invoice.totals?.balanceDue === 0 ? "Paid" : "Payment due"}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <h3 className="text-lg font-semibold">Receipt</h3>
+                    {!receipt?.receipt ? (
+                      <p className="mt-2 text-sm text-neutral-600">No receipt issued yet.</p>
+                    ) : (
+                      <div className="mt-3 space-y-2 text-sm text-neutral-700">
+                        <div>
+                          Receipt number:{" "}
+                          <span className="font-semibold text-neutral-900">
+                            {receipt.receipt.receiptNumber}
+                          </span>
+                        </div>
+                        <div>
+                          Amount:{" "}
+                          <span className="font-semibold text-neutral-900">
+                            {receipt.receipt.amountFormatted ??
+                              `TZS ${receipt.receipt.amountTzs.toLocaleString("en-TZ")}`}
+                          </span>
+                        </div>
+                        <div>
+                          Reference:{" "}
+                          <span className="font-semibold text-neutral-900">
+                            {receipt.receipt.reference}
+                          </span>
+                        </div>
+                        <div>
+                          Method:{" "}
+                          <span className="font-semibold text-neutral-900">
+                            {receipt.receipt.paymentMethod ?? "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <h3 className="text-lg font-semibold">{t("orders.timelineTitle")}</h3>
                   {timelineRefreshing ? (
                     <p className="text-sm text-neutral-600">{t("orders.refreshing")}</p>

@@ -216,6 +216,8 @@ model User {
   Order                 Order[]
   refreshTokens         RefreshToken[]
   auditLogs             AuditLog[]
+paymentsRecorded      Payment[] @relation("Payment_receivedByUserId")
+receiptsIssued        Receipt[] @relation("Receipt_issuedByUserId")
 }
 
 model DriverProfile {
@@ -288,7 +290,9 @@ model Order {
 
   lineItems OrderLineItem[]
 
-  totals OrderTotals?
+  totals   OrderTotals?
+payments Payment[]
+receipts Receipt[]
 }
 
 model Bag {
@@ -464,6 +468,17 @@ enum OrderLineItemType {
   DISCOUNT
 }
 
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+}
+
+enum PaymentStatus {
+  RECORDED
+  REVERSED
+}
+
 model PricingPlan {
   id            String            @id
   name          String
@@ -606,3 +621,43 @@ model OrderTotals {
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
+
+model Payment {
+  id               String        @id
+  orderId          String
+  method           PaymentMethod
+  amountTzs        Int
+  reference        String?
+  receivedByUserId String?
+  receivedAt       DateTime      @default(now())
+  status           PaymentStatus @default(RECORDED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  receivedBy User?     @relation("Payment_receivedByUserId", fields: [receivedByUserId], references: [id], onDelete: SetNull)
+  receipts   Receipt[]
+
+  @@index([orderId, receivedAt])
+  @@index([status])
+}
+
+model Receipt {
+  id             String   @id
+  receiptNumber  String   @unique
+  orderId        String
+  paymentId      String   @unique
+  amountTzs      Int
+  reference      String
+  issuedAt       DateTime @default(now())
+  issuedByUserId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment  Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  issuedBy User?    @relation("Receipt_issuedByUserId", fields: [issuedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, issuedAt])
+}
+

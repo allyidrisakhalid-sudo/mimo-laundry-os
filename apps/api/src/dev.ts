@@ -569,6 +569,22 @@ function nextOrderNumber() {
 function nextBagTagCode() {
   return `BAG-${Date.now()}`;
 }
+
+function formatMoneyTzs(amount: number) {
+  return new Intl.NumberFormat("en-TZ", {
+    style: "currency",
+    currency: "TZS",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function nextReceiptNumber(date = new Date()) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const stamp = `${year}${month}${day}`;
+  return `RCP-${stamp}-${String(Date.now()).slice(-4)}`;
+}
 function parseAuthHeader(req: http.IncomingMessage) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
@@ -4934,6 +4950,322 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    const orderPaymentsId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/payments$/);
+    if (method === "GET" && orderPaymentsId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+
+      const order = await fetchOrderById(orderPaymentsId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      if (
+        user.role === "CUSTOMER" &&
+        getString(order, "customerUserId", "customeruserid") !== user.id
+      ) {
+        return sendError(res, 403, "FORBIDDEN", "Order does not belong to customer");
+      }
+
+      const paymentsResult = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."orderId",
+          p."method",
+          p."amountTzs",
+          p."reference",
+          p."receivedByUserId",
+          p."receivedAt",
+          p."status",
+          p."createdAt",
+          p."updatedAt"
+        FROM "Payment" p
+        WHERE p."orderId" = $1
+        ORDER BY p."receivedAt" ASC, p."createdAt" ASC
+        `,
+        [orderPaymentsId]
+      );
+
+      return json(res, 200, {
+        data: {
+          orderId: orderPaymentsId,
+          payments: paymentsResult.rows.map((row) => ({
+            ...row,
+            amountFormatted: formatMoneyTzs(Number(row.amountTzs ?? 0)),
+          })),
+        },
+      });
+    }
+
+    const orderReceiptId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/receipt$/);
+    if (method === "GET" && orderReceiptId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+
+      const order = await fetchOrderById(orderReceiptId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      if (
+        user.role === "CUSTOMER" &&
+        getString(order, "customerUserId", "customeruserid") !== user.id
+      ) {
+        return sendError(res, 403, "FORBIDDEN", "Order does not belong to customer");
+      }
+
+      const receiptResult = await pool.query(
+        `
+        SELECT
+          r."id",
+          r."receiptNumber",
+          r."orderId",
+          r."paymentId",
+          r."amountTzs",
+          r."reference",
+          r."issuedAt",
+          r."issuedByUserId",
+          p."method" AS "paymentMethod",
+          p."status" AS "paymentStatus"
+        FROM "Receipt" r
+        INNER JOIN "Payment" p ON p."id" = r."paymentId"
+        WHERE r."orderId" = $1
+        ORDER BY r."issuedAt" DESC
+        LIMIT 1
+        `,
+        [orderReceiptId]
+      );
+
+      if (receiptResult.rows.length === 0) {
+        return sendError(res, 404, "RECEIPT_NOT_FOUND", "Receipt was not found");
+      }
+
+      const receipt = receiptResult.rows[0];
+      return json(res, 200, {
+        data: {
+          receipt: {
+            ...receipt,
+            amountFormatted: formatMoneyTzs(Number(receipt.amountTzs ?? 0)),
+          },
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/payments") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"], "record payment"))
+        return;
+
+      const body = await readJsonBody(req);
+      const orderId = String(body.orderId ?? "").trim();
+      const methodValue = String(body.method ?? "").trim();
+      const referenceRaw =
+        body.reference === null || body.reference === undefined
+          ? null
+          : String(body.reference).trim() || null;
+      const amountTzsRaw = Number(body.amountTzs);
+      const amountTzs = Number.isInteger(amountTzsRaw) ? amountTzsRaw : null;
+
+      if (!orderId) {
+        return sendError(res, 400, "VALIDATION_ERROR", "orderId is required");
+      }
+
+      const validMethods = new Set(["CASH", "MOBILE_MONEY", "CARD"]);
+      if (!validMethods.has(methodValue)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "method must be CASH, MOBILE_MONEY, or CARD"
+        );
+      }
+
+      if (amountTzs === null || amountTzs <= 0) {
+        return sendError(res, 400, "VALIDATION_ERROR", "amountTzs must be a positive integer");
+      }
+
+      if (methodValue === "MOBILE_MONEY" && !referenceRaw) {
+        return sendError(res, 400, "VALIDATION_ERROR", "reference is required for MOBILE_MONEY");
+      }
+
+      const orderResult = await pool.query(
+        `
+        SELECT
+          o."id",
+          o."orderNumber",
+          o."customerUserId",
+          ot."grandTotal",
+          ot."balanceDue"
+        FROM "Order" o
+        LEFT JOIN "OrderTotals" ot ON ot."orderId" = o."id"
+        WHERE o."id" = $1
+        LIMIT 1
+        `,
+        [orderId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const order = orderResult.rows[0];
+      const grandTotal = Number(order.grandTotal ?? 0);
+      const balanceDue = Number(order.balanceDue ?? 0);
+
+      if (grandTotal <= 0) {
+        return sendError(res, 409, "INVOICE_NOT_READY", "Invoice totals are not ready for payment");
+      }
+
+      if (amountTzs !== balanceDue) {
+        return sendError(
+          res,
+          409,
+          "PAYMENT_AMOUNT_MISMATCH",
+          `amountTzs must equal current balanceDue (${balanceDue}) in v1`
+        );
+      }
+
+      const paymentId = crypto.randomUUID();
+      const receiptId = crypto.randomUUID();
+      const receiptNumber = nextReceiptNumber();
+      const paymentReference = referenceRaw ?? `CASH-${String(Date.now()).slice(-6)}`;
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Payment" (
+            "id", "orderId", "method", "amountTzs", "reference",
+            "receivedByUserId", "receivedAt", "status", "createdAt", "updatedAt"
+          )
+          VALUES (
+            $1, $2, $3::"PaymentMethod", $4, $5,
+            $6, NOW(), 'RECORDED', NOW(), NOW()
+          )
+          `,
+          [paymentId, orderId, methodValue, amountTzs, paymentReference, user.id]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "Receipt" (
+            "id", "receiptNumber", "orderId", "paymentId", "amountTzs",
+            "reference", "issuedAt", "issuedByUserId", "createdAt", "updatedAt"
+          )
+          VALUES (
+            $1, $2, $3, $4, $5,
+            $6, NOW(), $7, NOW(), NOW()
+          )
+          `,
+          [receiptId, receiptNumber, orderId, paymentId, amountTzs, paymentReference, user.id]
+        );
+
+        await pool.query(
+          `
+          UPDATE "OrderTotals"
+          SET "balanceDue" = GREATEST("balanceDue" - $2, 0),
+              "updatedAt" = NOW()
+          WHERE "orderId" = $1
+          `,
+          [orderId, amountTzs]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'PAID', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            crypto.randomUUID(),
+            orderId,
+            user.id,
+            user.role,
+            "Payment recorded and receipt issued",
+            JSON.stringify({
+              actionCode: "ORDER_PAYMENT_RECORDED",
+              paymentId,
+              receiptId,
+              receiptNumber,
+              method: methodValue,
+              amountTzs,
+              reference: paymentReference,
+            }),
+          ]
+        );
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PAYMENT_RECORD",
+          targetType: "ORDER",
+          targetId: orderId,
+          after: {
+            paymentId,
+            receiptId,
+            receiptNumber,
+            method: methodValue,
+            amountTzs,
+            reference: paymentReference,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        return sendError(
+          res,
+          500,
+          "PAYMENT_RECORD_FAILED",
+          error instanceof Error ? error.message : "Payment recording failed"
+        );
+      }
+
+      const receiptResult = await pool.query(
+        `
+        SELECT
+          r."id",
+          r."receiptNumber",
+          r."orderId",
+          r."paymentId",
+          r."amountTzs",
+          r."reference",
+          r."issuedAt",
+          p."method" AS "paymentMethod"
+        FROM "Receipt" r
+        INNER JOIN "Payment" p ON p."id" = r."paymentId"
+        WHERE r."id" = $1
+        LIMIT 1
+        `,
+        [receiptId]
+      );
+
+      return json(res, 201, {
+        data: {
+          payment: {
+            id: paymentId,
+            orderId,
+            method: methodValue,
+            amountTzs,
+            amountFormatted: formatMoneyTzs(amountTzs),
+            reference: paymentReference,
+            status: "RECORDED",
+          },
+          receipt: {
+            ...receiptResult.rows[0],
+            amountFormatted: formatMoneyTzs(Number(receiptResult.rows[0]?.amountTzs ?? 0)),
+          },
+        },
+      });
+    }
     const adminIntakeOrderId = pathParam(url.pathname, /^\/v1\/admin\/orders\/([^/]+)\/intake$/);
     if (method === "POST" && adminIntakeOrderId) {
       const user = await requireAuth(req, res);
