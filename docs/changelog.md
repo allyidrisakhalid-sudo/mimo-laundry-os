@@ -257,3 +257,13 @@ Add-Content docs\acceptance.md @"
 - Added admin intake endpoint for final pricing recalculation using actual weight
 - Added estimated quote generation during customer order creation
 - Verified locked-plan quote-to-final recalculation flow on live API
+
+## Chapter 9.1 completed
+
+- Added versioned pricing plans with activation windows
+- Added KG rates, item rates, delivery zone fees, and minimum charge rules
+- Added estimated quote generation at customer order creation
+- Added final price recalculation at admin intake using locked pricing plan snapshot
+- Added invoice read endpoint with stored pricing snapshot, line items, and totals
+- Verified Plan A -> Plan B rollover while older orders remained locked to earlier plan
+- Verified pricing admin actions through audit log evidence

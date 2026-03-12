@@ -412,3 +412,32 @@
   - Verified pricing plan remained locked across estimate and final
   - Verified estimated grand total changed from 9500 to finalized grand total 15100 after intake with actual weight 4.2
 - Gate satisfied: quote is generated at order creation, final pricing recalculates at intake, and the same pricing plan remains locked across both stages.
+
+## Chapter 9.1 PASS
+
+- Re-ran Chapter 8.6 operational pre-flight successfully:
+  - customer order create + order read
+  - affiliate scoped order create + affiliate order list
+  - dispatch trip creation + driver task visibility
+  - admin intake captured actual weight
+- Verified versioned pricing engine database contract exists and is live.
+- Verified admin pricing endpoints:
+  - POST /v1/admin/pricing/plans
+  - POST /v1/admin/pricing/plans/:id/activate
+  - POST /v1/admin/pricing/plans/:id/rates
+  - POST /v1/admin/pricing/plans/:id/delivery-fees
+  - POST /v1/admin/pricing/plans/:id/minimum-charges
+- Verified customer invoice endpoint:
+  - GET /v1/orders/:id/invoice
+- Verified quote -> final recalculation flow:
+  - Order A quoted under Plan A
+  - Order A finalized after intake using the same locked pricing plan
+  - Grand total changed after actual weight intake
+- Verified plan version lock:
+  - Plan B activated after Order A
+  - New Order B used Plan B
+  - Earlier Order A remained locked to Plan A
+- Verified privileged pricing actions produce audit records for plan changes.
+- Verified required documentation file exists:
+  - docs/finance/pricing_engine_v1.md
+- Gate satisfied: same order recalculates correctly after intake; old orders remain on old plan.
