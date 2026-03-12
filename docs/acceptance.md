@@ -383,3 +383,32 @@
 - Verified cross-shop affiliate action against seeded shop B order returns 403 FORBIDDEN with message: Order does not belong to affiliate shop.
 - Added docs/product/affiliate_ops_workflow.md.
 - Gate satisfied: Affiliate can operate independently without seeing other shops.
+
+## Chapter 9.1.6 PASS
+
+- Fixed broken pricing migration history by removing five no-op pricing migrations and generating a real replacement migration:
+  - 20260312155708_chapter_9_1_pricing_contract_fix
+- Applied migration successfully and re-seeded the live DB.
+- Verified pricing tables now exist in the live database:
+  - PricingPlan
+  - PricingPlanChannel
+  - KgRate
+  - ItemRate
+  - DeliveryZoneFee
+  - MinimumChargeRule
+  - OrderPricingSnapshot
+  - OrderLineItem
+  - OrderTotals
+- Added live invoice route:
+  - GET /v1/orders/:id/invoice
+- Added live intake finalization route:
+  - POST /v1/admin/orders/:id/intake
+- Added estimated quote generation at customer order creation using active plan lock.
+- Verified live quote -> final recalculation flow end-to-end:
+  - Created active pricing plan f778045-b728-4ce2-8860-fd684fcc1b65
+  - Created DOOR order 5b10c140-ddbd-4ee7-ac0f-b440cdb375f1
+  - Verified estimated snapshot status = ESTIMATED
+  - Verified final snapshot status = FINALIZED
+  - Verified pricing plan remained locked across estimate and final
+  - Verified estimated grand total changed from 9500 to finalized grand total 15100 after intake with actual weight 4.2
+- Gate satisfied: quote is generated at order creation, final pricing recalculates at intake, and the same pricing plan remains locked across both stages.

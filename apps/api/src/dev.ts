@@ -34,6 +34,418 @@ const pool = new Pool({
 const DATABASE_URL_SAFE = DATABASE_URL.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
 console.log("[mimo-api] DATABASE_URL =", DATABASE_URL_SAFE);
 
+type PricingBreakdownInput = {
+  orderId: string;
+  channel: "DOOR" | "SHOP_DROP" | "HYBRID";
+  tier: "STANDARD_48H" | "EXPRESS_24H" | "SAME_DAY";
+  zoneId: string;
+  pricingPlanId: string;
+  estimatedWeightKg?: number | null;
+  actualWeightKg?: number | null;
+  itemEntries?: Array<{ itemCode: string; quantity: number }> | null;
+};
+
+type ComputedLineItem = {
+  type: "CHARGE" | "DISCOUNT";
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  metaJson: Record<string, unknown>;
+};
+
+function parseNumeric(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function roundMoney(value: number): number {
+  return Math.round(value);
+}
+
+async function _getActivePricingPlanForChannel(
+  channel: "DOOR" | "SHOP_DROP" | "HYBRID"
+): Promise<{ id: string; effectiveFrom: string | null }> {
+  const result = await pool.query(
+    `
+    SELECT
+      p."id",
+      p."effectiveFrom"
+    FROM "PricingPlan" p
+    INNER JOIN "PricingPlanChannel" pc ON pc."planId" = p."id"
+    WHERE p."status" = 'ACTIVE'
+      AND pc."channel" = $1::"OrderChannel"
+      AND (p."effectiveFrom" IS NULL OR p."effectiveFrom" <= NOW())
+      AND (p."effectiveTo" IS NULL OR p."effectiveTo" > NOW())
+    ORDER BY p."effectiveFrom" DESC NULLS LAST, p."createdAt" DESC
+    LIMIT 1
+    `,
+    [channel]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`No active pricing plan found for channel ${channel}`);
+  }
+
+  return {
+    id: String(result.rows[0].id),
+    effectiveFrom: result.rows[0].effectiveFrom ?? null,
+  };
+}
+
+async function getKgRate(
+  planId: string,
+  tier: string,
+  serviceType: string
+): Promise<number | null> {
+  const result = await pool.query(
+    `
+    SELECT "pricePerKgTzs"
+    FROM "KgRate"
+    WHERE "planId" = $1
+      AND "tier" = $2::"OrderTier"
+      AND "serviceType" = $3::"PricingServiceType"
+    LIMIT 1
+    `,
+    [planId, tier, serviceType]
+  );
+
+  if (result.rows.length === 0) return null;
+  return Number(result.rows[0].pricePerKgTzs ?? 0);
+}
+
+async function getItemRatesMap(planId: string, tier: string): Promise<Map<string, number>> {
+  const result = await pool.query(
+    `
+    SELECT "itemCode", "priceTzs"
+    FROM "ItemRate"
+    WHERE "planId" = $1
+      AND "tier" = $2::"OrderTier"
+    `,
+    [planId, tier]
+  );
+
+  const map = new Map<string, number>();
+  for (const row of result.rows) {
+    const itemCode = getString(row, "itemCode", "itemcode");
+    if (itemCode) {
+      map.set(itemCode, Number(row.priceTzs ?? 0));
+    }
+  }
+  return map;
+}
+
+async function getDeliveryZoneFee(
+  planId: string,
+  zoneId: string
+): Promise<{ doorFeeTzs: number; freeThresholdTzs: number | null } | null> {
+  const result = await pool.query(
+    `
+    SELECT "doorFeeTzs", "freeThresholdTzs"
+    FROM "DeliveryZoneFee"
+    WHERE "planId" = $1
+      AND "zoneId" = $2
+    LIMIT 1
+    `,
+    [planId, zoneId]
+  );
+
+  if (result.rows.length === 0) return null;
+
+  return {
+    doorFeeTzs: Number(result.rows[0].doorFeeTzs ?? 0),
+    freeThresholdTzs:
+      result.rows[0].freeThresholdTzs === null || result.rows[0].freeThresholdTzs === undefined
+        ? null
+        : Number(result.rows[0].freeThresholdTzs),
+  };
+}
+
+async function getMinimumChargeRule(
+  planId: string,
+  tier: string,
+  channel: "DOOR" | "SHOP_DROP" | "HYBRID"
+): Promise<number | null> {
+  const specific = await pool.query(
+    `
+    SELECT "minimumTzs"
+    FROM "MinimumChargeRule"
+    WHERE "planId" = $1
+      AND "tier" = $2::"OrderTier"
+      AND "channel" = $3::"OrderChannel"
+    LIMIT 1
+    `,
+    [planId, tier, channel]
+  );
+
+  if (specific.rows.length > 0) {
+    return Number(specific.rows[0].minimumTzs ?? 0);
+  }
+
+  const generic = await pool.query(
+    `
+    SELECT "minimumTzs"
+    FROM "MinimumChargeRule"
+    WHERE "planId" = $1
+      AND "tier" = $2::"OrderTier"
+      AND "channel" IS NULL
+    LIMIT 1
+    `,
+    [planId, tier]
+  );
+
+  if (generic.rows.length > 0) {
+    return Number(generic.rows[0].minimumTzs ?? 0);
+  }
+
+  return null;
+}
+
+async function computeOrderPricingBreakdown(input: PricingBreakdownInput): Promise<{
+  lineItems: ComputedLineItem[];
+  subtotal: number;
+  deliveryTotal: number;
+  discountTotal: number;
+  grandTotal: number;
+  balanceDue: number;
+  inputsJson: Record<string, unknown>;
+}> {
+  const lineItems: ComputedLineItem[] = [];
+  const itemEntries = Array.isArray(input.itemEntries) ? input.itemEntries : [];
+  const chargeWeightKg =
+    input.actualWeightKg !== null && input.actualWeightKg !== undefined
+      ? Number(input.actualWeightKg)
+      : input.estimatedWeightKg !== null && input.estimatedWeightKg !== undefined
+        ? Number(input.estimatedWeightKg)
+        : 1;
+
+  const normalizedWeightKg = chargeWeightKg > 0 ? chargeWeightKg : 1;
+
+  const washRate = await getKgRate(input.pricingPlanId, input.tier, "WASH_DRY_FOLD");
+  if (washRate !== null) {
+    lineItems.push({
+      type: "CHARGE",
+      description: "Wash + Dry + Fold",
+      quantity: normalizedWeightKg,
+      unitPrice: washRate,
+      amount: roundMoney(normalizedWeightKg * washRate),
+      metaJson: {
+        pricingPlanId: input.pricingPlanId,
+        tier: input.tier,
+        serviceType: "WASH_DRY_FOLD",
+        pricingBasis:
+          input.actualWeightKg !== null && input.actualWeightKg !== undefined
+            ? "ACTUAL_KG"
+            : "ESTIMATED_KG",
+      },
+    });
+  }
+
+  const itemRateMap = await getItemRatesMap(input.pricingPlanId, input.tier);
+  for (const entry of itemEntries) {
+    const itemCode = String(entry.itemCode ?? "").trim();
+    const quantity = Number(entry.quantity ?? 0);
+    const unitPrice = itemRateMap.get(itemCode);
+
+    if (!itemCode || !Number.isFinite(quantity) || quantity <= 0 || unitPrice === undefined) {
+      continue;
+    }
+
+    lineItems.push({
+      type: "CHARGE",
+      description: itemCode.replace(/_/g, " "),
+      quantity,
+      unitPrice,
+      amount: roundMoney(quantity * unitPrice),
+      metaJson: {
+        pricingPlanId: input.pricingPlanId,
+        tier: input.tier,
+        itemCode,
+      },
+    });
+  }
+
+  let subtotal = lineItems
+    .filter((item) => item.type === "CHARGE")
+    .reduce((sum, item) => sum + item.amount, 0);
+
+  const minimumCharge = await getMinimumChargeRule(input.pricingPlanId, input.tier, input.channel);
+  if (minimumCharge !== null && subtotal < minimumCharge) {
+    const adjustment = minimumCharge - subtotal;
+    lineItems.push({
+      type: "CHARGE",
+      description: "Minimum order adjustment",
+      quantity: 1,
+      unitPrice: adjustment,
+      amount: adjustment,
+      metaJson: {
+        pricingPlanId: input.pricingPlanId,
+        tier: input.tier,
+        channel: input.channel,
+        ruleType: "MINIMUM_CHARGE",
+      },
+    });
+    subtotal += adjustment;
+  }
+
+  let deliveryTotal = 0;
+  if (input.channel === "DOOR" || input.channel === "HYBRID") {
+    const deliveryRule = await getDeliveryZoneFee(input.pricingPlanId, input.zoneId);
+    if (deliveryRule) {
+      const threshold = deliveryRule.freeThresholdTzs;
+      const fee = threshold !== null && subtotal >= threshold ? 0 : deliveryRule.doorFeeTzs;
+
+      if (fee > 0) {
+        lineItems.push({
+          type: "CHARGE",
+          description: input.channel === "DOOR" ? "Door delivery fee" : "Return delivery fee",
+          quantity: 1,
+          unitPrice: fee,
+          amount: fee,
+          metaJson: {
+            pricingPlanId: input.pricingPlanId,
+            zoneId: input.zoneId,
+            channel: input.channel,
+            ruleType: "DELIVERY_ZONE_FEE",
+          },
+        });
+      }
+
+      deliveryTotal = fee;
+    }
+  }
+
+  const discountTotal = lineItems
+    .filter((item) => item.type === "DISCOUNT")
+    .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
+  const grandTotal = subtotal + deliveryTotal - discountTotal;
+  const balanceDue = grandTotal;
+
+  return {
+    lineItems,
+    subtotal,
+    deliveryTotal,
+    discountTotal,
+    grandTotal,
+    balanceDue,
+    inputsJson: {
+      estimatedWeightKg: input.estimatedWeightKg ?? null,
+      actualWeightKg: input.actualWeightKg ?? null,
+      itemEntries,
+      channel: input.channel,
+      tier: input.tier,
+      zoneId: input.zoneId,
+      pricingPlanId: input.pricingPlanId,
+    },
+  };
+}
+
+async function replaceOrderPricingState(params: {
+  orderId: string;
+  pricingPlanId: string;
+  pricingPlanEffectiveFrom: string | null;
+  quoteStatus: "ESTIMATED" | "FINALIZED";
+  quotedAt?: boolean;
+  finalizedAt?: boolean;
+  inputsJson: Record<string, unknown>;
+  lineItems: ComputedLineItem[];
+  subtotal: number;
+  deliveryTotal: number;
+  discountTotal: number;
+  grandTotal: number;
+  balanceDue: number;
+}): Promise<void> {
+  await pool.query(`DELETE FROM "OrderLineItem" WHERE "orderId" = $1`, [params.orderId]);
+
+  for (const item of params.lineItems) {
+    await pool.query(
+      `
+      INSERT INTO "OrderLineItem" (
+        "id", "orderId", "type", "description", "quantity", "unitPrice", "amount", "metaJson", "createdAt", "updatedAt"
+      )
+      VALUES ($1, $2, $3::"OrderLineItemType", $4, $5, $6, $7, $8::jsonb, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        params.orderId,
+        item.type,
+        item.description,
+        item.quantity,
+        item.unitPrice,
+        item.amount,
+        JSON.stringify(item.metaJson),
+      ]
+    );
+  }
+
+  await pool.query(
+    `
+    INSERT INTO "OrderPricingSnapshot" (
+      "id", "orderId", "pricingPlanId", "pricingPlanEffectiveFrom", "quoteStatus",
+      "quotedAt", "finalizedAt", "inputsJson", "createdAt", "updatedAt"
+    )
+    VALUES (
+      $1, $2, $3, $4, $5::"OrderPricingQuoteStatus",
+      CASE WHEN $6 THEN NOW() ELSE NULL END,
+      CASE WHEN $7 THEN NOW() ELSE NULL END,
+      $8::jsonb, NOW(), NOW()
+    )
+    ON CONFLICT ("orderId")
+    DO UPDATE SET
+      "pricingPlanId" = EXCLUDED."pricingPlanId",
+      "pricingPlanEffectiveFrom" = EXCLUDED."pricingPlanEffectiveFrom",
+      "quoteStatus" = EXCLUDED."quoteStatus",
+      "quotedAt" = CASE
+        WHEN EXCLUDED."quoteStatus" = 'ESTIMATED' THEN COALESCE("OrderPricingSnapshot"."quotedAt", NOW())
+        ELSE COALESCE("OrderPricingSnapshot"."quotedAt", EXCLUDED."quotedAt", NOW())
+      END,
+      "finalizedAt" = CASE
+        WHEN EXCLUDED."quoteStatus" = 'FINALIZED' THEN NOW()
+        ELSE "OrderPricingSnapshot"."finalizedAt"
+      END,
+      "inputsJson" = EXCLUDED."inputsJson",
+      "updatedAt" = NOW()
+    `,
+    [
+      crypto.randomUUID(),
+      params.orderId,
+      params.pricingPlanId,
+      params.pricingPlanEffectiveFrom,
+      params.quoteStatus,
+      params.quotedAt === true,
+      params.finalizedAt === true,
+      JSON.stringify(params.inputsJson),
+    ]
+  );
+
+  await pool.query(
+    `
+    INSERT INTO "OrderTotals" (
+      "id", "orderId", "subtotal", "deliveryTotal", "discountTotal", "grandTotal", "balanceDue", "createdAt", "updatedAt"
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+    ON CONFLICT ("orderId")
+    DO UPDATE SET
+      "subtotal" = EXCLUDED."subtotal",
+      "deliveryTotal" = EXCLUDED."deliveryTotal",
+      "discountTotal" = EXCLUDED."discountTotal",
+      "grandTotal" = EXCLUDED."grandTotal",
+      "balanceDue" = EXCLUDED."balanceDue",
+      "updatedAt" = NOW()
+    `,
+    [
+      crypto.randomUUID(),
+      params.orderId,
+      params.subtotal,
+      params.deliveryTotal,
+      params.discountTotal,
+      params.grandTotal,
+      params.balanceDue,
+    ]
+  );
+}
 const PORT = Number(process.env.PORT ?? 3001);
 const APP_VERSION = process.env.npm_package_version ?? "0.0.1";
 const RAW_ENVIRONMENT = process.env.APP_ENV ?? process.env.NODE_ENV ?? "local";
@@ -1511,6 +1923,83 @@ const server = http.createServer(async (req, res) => {
           ]
         );
 
+        const activePlanResult = await pool.query(
+          `
+          SELECT
+            p."id",
+            p."effectiveFrom"
+          FROM "PricingPlan" p
+          INNER JOIN "PricingPlanChannel" pc ON pc."planId" = p."id"
+          WHERE p."status" = 'ACTIVE'
+            AND pc."channel" = $1::"OrderChannel"
+            AND (p."effectiveFrom" IS NULL OR p."effectiveFrom" <= NOW())
+            AND (p."effectiveTo" IS NULL OR p."effectiveTo" > NOW())
+          ORDER BY p."effectiveFrom" DESC NULLS LAST, p."createdAt" DESC
+          LIMIT 1
+          `,
+          [channel]
+        );
+
+        if (activePlanResult.rows.length === 0) {
+          throw new Error(`No active pricing plan found for channel ${channel}`);
+        }
+
+        const activePlanId = String(activePlanResult.rows[0].id);
+        const activePlanEffectiveFrom = activePlanResult.rows[0].effectiveFrom ?? null;
+
+        const quoteBreakdown = await computeOrderPricingBreakdown({
+          orderId,
+          channel,
+          tier,
+          zoneId,
+          pricingPlanId: activePlanId,
+          estimatedWeightKg: 1,
+          actualWeightKg: null,
+          itemEntries: [],
+        });
+
+        await replaceOrderPricingState({
+          orderId,
+          pricingPlanId: activePlanId,
+          pricingPlanEffectiveFrom: activePlanEffectiveFrom,
+          quoteStatus: "ESTIMATED",
+          quotedAt: true,
+          finalizedAt: false,
+          inputsJson: quoteBreakdown.inputsJson,
+          lineItems: quoteBreakdown.lineItems,
+          subtotal: quoteBreakdown.subtotal,
+          deliveryTotal: quoteBreakdown.deliveryTotal,
+          discountTotal: quoteBreakdown.discountTotal,
+          grandTotal: quoteBreakdown.grandTotal,
+          balanceDue: quoteBreakdown.balanceDue,
+        });
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'PAYMENT_DUE', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            crypto.randomUUID(),
+            orderId,
+            authUser.id,
+            authUser.role,
+            "Estimated quote generated at order creation",
+            JSON.stringify({
+              actionCode: "ORDER_QUOTE_GENERATED",
+              pricingPlanId: activePlanId,
+              pricingPlanEffectiveFrom: activePlanEffectiveFrom,
+              quoteStatus: "ESTIMATED",
+              grandTotal: quoteBreakdown.grandTotal,
+            }),
+          ]
+        );
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -1845,7 +2334,6 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -2049,7 +2537,6 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -2158,7 +2645,6 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -2830,7 +3316,6 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -3057,7 +3542,6 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
         await pool.query("COMMIT");
       } catch (error) {
         await pool.query("ROLLBACK");
@@ -3380,6 +3864,1256 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    const pricingPlanActivateId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/pricing\/plans\/([^/]+)\/activate$/
+    );
+
+    if (method === "GET" && url.pathname === "/v1/admin/pricing/plans") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "list pricing plans")) return;
+
+      const result = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."name",
+          p."status",
+          p."effectiveFrom",
+          p."effectiveTo",
+          p."createdAt",
+          p."updatedAt"
+        FROM "PricingPlan" p
+        ORDER BY p."createdAt" DESC
+        `
+      );
+
+      const channelResult = await pool.query(
+        `
+        SELECT
+          pc."id",
+          pc."planId",
+          pc."channel",
+          pc."createdAt"
+        FROM "PricingPlanChannel" pc
+        ORDER BY pc."createdAt" ASC
+        `
+      );
+
+      const groupedChannels = new Map<string, Array<Record<string, unknown>>>();
+      for (const row of channelResult.rows) {
+        const existing = groupedChannels.get(row.planId) ?? [];
+        existing.push({
+          id: row.id,
+          planId: row.planId,
+          channel: row.channel,
+          createdAt: row.createdAt,
+        });
+        groupedChannels.set(row.planId, existing);
+      }
+
+      return json(res, 200, {
+        data: {
+          plans: result.rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            status: row.status,
+            effectiveFrom: row.effectiveFrom,
+            effectiveTo: row.effectiveTo,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            channels: groupedChannels.get(row.id) ?? [],
+          })),
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/admin/pricing/plans") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "create pricing plan")) return;
+
+      const body = await readJsonBody(req);
+      const name = String(body.name ?? "").trim();
+      const channels =
+        Array.isArray(body.channels) && body.channels.length > 0
+          ? body.channels.map((value: unknown) => String(value))
+          : ["DOOR", "SHOP_DROP", "HYBRID"];
+
+      if (!name) {
+        return sendError(res, 400, "VALIDATION_ERROR", "name is required");
+      }
+
+      const validChannels = new Set(["DOOR", "SHOP_DROP", "HYBRID"]);
+      for (const channel of channels) {
+        if (!validChannels.has(channel)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "channel is not supported");
+        }
+      }
+
+      const dedupedChannels = [...new Set(channels)];
+      const planId = crypto.randomUUID();
+
+      await pool.query("BEGIN");
+
+      try {
+        await pool.query(
+          `
+          INSERT INTO "PricingPlan" (
+            "id", "name", "status", "effectiveFrom", "effectiveTo", "createdAt", "updatedAt"
+          )
+          VALUES ($1, $2, 'DRAFT', NULL, NULL, NOW(), NOW())
+          `,
+          [planId, name]
+        );
+
+        for (const channel of dedupedChannels) {
+          await pool.query(
+            `
+            INSERT INTO "PricingPlanChannel" (
+              "id", "planId", "channel", "createdAt"
+            )
+            VALUES ($1, $2, $3::"OrderChannel", NOW())
+            `,
+            [crypto.randomUUID(), planId, channel]
+          );
+        }
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PRICING_PLAN_CREATED",
+          targetType: "PRICING_PLAN",
+          targetId: planId,
+          reason: null,
+          before: null,
+          after: {
+            id: planId,
+            name,
+            status: "DRAFT",
+            channels: dedupedChannels,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const createdPlan = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."name",
+          p."status",
+          p."effectiveFrom",
+          p."effectiveTo",
+          p."createdAt",
+          p."updatedAt"
+        FROM "PricingPlan" p
+        WHERE p."id" = $1
+        `,
+        [planId]
+      );
+
+      const createdChannels = await pool.query(
+        `
+        SELECT
+          pc."id",
+          pc."planId",
+          pc."channel",
+          pc."createdAt"
+        FROM "PricingPlanChannel" pc
+        WHERE pc."planId" = $1
+        ORDER BY pc."createdAt" ASC
+        `,
+        [planId]
+      );
+
+      return json(res, 201, {
+        data: {
+          plan: {
+            ...createdPlan.rows[0],
+            channels: createdChannels.rows,
+          },
+        },
+      });
+    }
+
+    if (method === "POST" && pricingPlanActivateId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "activate pricing plan")) return;
+
+      const body = await readJsonBody(req);
+      const effectiveFrom = body.effectiveFrom ? new Date(String(body.effectiveFrom)) : new Date();
+      const effectiveTo = body.effectiveTo ? new Date(String(body.effectiveTo)) : null;
+
+      if (Number.isNaN(effectiveFrom.getTime())) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "effectiveFrom must be a valid ISO datetime"
+        );
+      }
+
+      if (effectiveTo && Number.isNaN(effectiveTo.getTime())) {
+        return sendError(res, 400, "VALIDATION_ERROR", "effectiveTo must be a valid ISO datetime");
+      }
+
+      const existingPlan = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."name",
+          p."status",
+          p."effectiveFrom",
+          p."effectiveTo",
+          p."createdAt",
+          p."updatedAt"
+        FROM "PricingPlan" p
+        WHERE p."id" = $1
+        `,
+        [pricingPlanActivateId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      await pool.query(
+        `
+        UPDATE "PricingPlan"
+        SET
+          "status" = 'ACTIVE',
+          "effectiveFrom" = $2,
+          "effectiveTo" = $3,
+          "updatedAt" = NOW()
+        WHERE "id" = $1
+        `,
+        [
+          pricingPlanActivateId,
+          effectiveFrom.toISOString(),
+          effectiveTo ? effectiveTo.toISOString() : null,
+        ]
+      );
+
+      const updatedPlan = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."name",
+          p."status",
+          p."effectiveFrom",
+          p."effectiveTo",
+          p."createdAt",
+          p."updatedAt"
+        FROM "PricingPlan" p
+        WHERE p."id" = $1
+        `,
+        [pricingPlanActivateId]
+      );
+
+      const updatedChannels = await pool.query(
+        `
+        SELECT
+          pc."id",
+          pc."planId",
+          pc."channel",
+          pc."createdAt"
+        FROM "PricingPlanChannel" pc
+        WHERE pc."planId" = $1
+        ORDER BY pc."createdAt" ASC
+        `,
+        [pricingPlanActivateId]
+      );
+
+      await recordAudit({
+        actorUserId: user.id,
+        actorRole: user.role,
+        actionCode: "PRICING_PLAN_ACTIVATED",
+        targetType: "PRICING_PLAN",
+        targetId: pricingPlanActivateId,
+        reason: null,
+        before: existingPlan.rows[0],
+        after: updatedPlan.rows[0],
+        requestMeta: getRequestMeta(req),
+      });
+
+      return json(res, 200, {
+        data: {
+          plan: {
+            ...updatedPlan.rows[0],
+            channels: updatedChannels.rows,
+          },
+        },
+      });
+    }
+
+    const pricingPlanRatesId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/pricing\/plans\/([^/]+)\/rates$/
+    );
+
+    if (method === "POST" && pricingPlanRatesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "set pricing rates")) return;
+
+      const body = await readJsonBody(req);
+      const kgRates = Array.isArray(body.kgRates) ? body.kgRates : [];
+      const itemRates = Array.isArray(body.itemRates) ? body.itemRates : [];
+
+      const validTiers = new Set(["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"]);
+      const validServiceTypes = new Set(["WASH_DRY_FOLD", "IRONING", "ADDON_SCENT"]);
+      const validItemCodes = new Set(["DUVET", "SUIT", "CURTAIN_HEAVY"]);
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id", "name", "status"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanRatesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      for (const rate of kgRates) {
+        const tier = String(rate.tier ?? "");
+        const serviceType = String(rate.serviceType ?? "");
+        const pricePerKgTzs = Number(rate.pricePerKgTzs);
+
+        if (!validTiers.has(tier)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "kgRates tier is invalid");
+        }
+        if (!validServiceTypes.has(serviceType)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "kgRates serviceType is invalid");
+        }
+        if (!Number.isInteger(pricePerKgTzs) || pricePerKgTzs < 0) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "kgRates pricePerKgTzs must be a non-negative integer"
+          );
+        }
+      }
+
+      for (const rate of itemRates) {
+        const tier = String(rate.tier ?? "");
+        const itemCode = String(rate.itemCode ?? "");
+        const priceTzs = Number(rate.priceTzs);
+
+        if (!validTiers.has(tier)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "itemRates tier is invalid");
+        }
+        if (!validItemCodes.has(itemCode)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "itemRates itemCode is invalid");
+        }
+        if (!Number.isInteger(priceTzs) || priceTzs < 0) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "itemRates priceTzs must be a non-negative integer"
+          );
+        }
+      }
+
+      await pool.query("BEGIN");
+
+      try {
+        for (const rate of kgRates) {
+          await pool.query(
+            `
+            INSERT INTO "KgRate" (
+              "id", "planId", "tier", "serviceType", "pricePerKgTzs", "createdAt", "updatedAt"
+            )
+            VALUES ($1, $2, $3::"OrderTier", $4::"PricingServiceType", $5, NOW(), NOW())
+            ON CONFLICT ("planId", "tier", "serviceType")
+            DO UPDATE SET
+              "pricePerKgTzs" = EXCLUDED."pricePerKgTzs",
+              "updatedAt" = NOW()
+            `,
+            [
+              crypto.randomUUID(),
+              pricingPlanRatesId,
+              String(rate.tier),
+              String(rate.serviceType),
+              Number(rate.pricePerKgTzs),
+            ]
+          );
+        }
+
+        for (const rate of itemRates) {
+          await pool.query(
+            `
+            INSERT INTO "ItemRate" (
+              "id", "planId", "tier", "itemCode", "priceTzs", "createdAt", "updatedAt"
+            )
+            VALUES ($1, $2, $3::"OrderTier", $4::"PricingItemCode", $5, NOW(), NOW())
+            ON CONFLICT ("planId", "tier", "itemCode")
+            DO UPDATE SET
+              "priceTzs" = EXCLUDED."priceTzs",
+              "updatedAt" = NOW()
+            `,
+            [
+              crypto.randomUUID(),
+              pricingPlanRatesId,
+              String(rate.tier),
+              String(rate.itemCode),
+              Number(rate.priceTzs),
+            ]
+          );
+        }
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PRICING_RATES_UPSERTED",
+          targetType: "PRICING_PLAN",
+          targetId: pricingPlanRatesId,
+          reason: null,
+          before: null,
+          after: {
+            kgRatesCount: kgRates.length,
+            itemRatesCount: itemRates.length,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const savedKgRates = await pool.query(
+        `
+        SELECT
+          "id",
+          "planId",
+          "tier",
+          "serviceType",
+          "pricePerKgTzs",
+          "createdAt",
+          "updatedAt"
+        FROM "KgRate"
+        WHERE "planId" = $1
+        ORDER BY "tier" ASC, "serviceType" ASC
+        `,
+        [pricingPlanRatesId]
+      );
+
+      const savedItemRates = await pool.query(
+        `
+        SELECT
+          "id",
+          "planId",
+          "tier",
+          "itemCode",
+          "priceTzs",
+          "createdAt",
+          "updatedAt"
+        FROM "ItemRate"
+        WHERE "planId" = $1
+        ORDER BY "tier" ASC, "itemCode" ASC
+        `,
+        [pricingPlanRatesId]
+      );
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanRatesId,
+          kgRates: savedKgRates.rows,
+          itemRates: savedItemRates.rows,
+        },
+      });
+    }
+
+    if (method === "GET" && pricingPlanRatesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "read pricing rates")) return;
+
+      const tier = String(url.searchParams.get("tier") ?? "").trim();
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanRatesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      const kgQuery =
+        tier.length > 0
+          ? pool.query(
+              `
+              SELECT
+                "id",
+                "planId",
+                "tier",
+                "serviceType",
+                "pricePerKgTzs",
+                "createdAt",
+                "updatedAt"
+              FROM "KgRate"
+              WHERE "planId" = $1 AND "tier" = $2::"OrderTier"
+              ORDER BY "serviceType" ASC
+              `,
+              [pricingPlanRatesId, tier]
+            )
+          : pool.query(
+              `
+              SELECT
+                "id",
+                "planId",
+                "tier",
+                "serviceType",
+                "pricePerKgTzs",
+                "createdAt",
+                "updatedAt"
+              FROM "KgRate"
+              WHERE "planId" = $1
+              ORDER BY "tier" ASC, "serviceType" ASC
+              `,
+              [pricingPlanRatesId]
+            );
+
+      const itemQuery =
+        tier.length > 0
+          ? pool.query(
+              `
+              SELECT
+                "id",
+                "planId",
+                "tier",
+                "itemCode",
+                "priceTzs",
+                "createdAt",
+                "updatedAt"
+              FROM "ItemRate"
+              WHERE "planId" = $1 AND "tier" = $2::"OrderTier"
+              ORDER BY "itemCode" ASC
+              `,
+              [pricingPlanRatesId, tier]
+            )
+          : pool.query(
+              `
+              SELECT
+                "id",
+                "planId",
+                "tier",
+                "itemCode",
+                "priceTzs",
+                "createdAt",
+                "updatedAt"
+              FROM "ItemRate"
+              WHERE "planId" = $1
+              ORDER BY "tier" ASC, "itemCode" ASC
+              `,
+              [pricingPlanRatesId]
+            );
+
+      const [kgRatesResult, itemRatesResult] = await Promise.all([kgQuery, itemQuery]);
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanRatesId,
+          tier: tier || null,
+          kgRates: kgRatesResult.rows,
+          itemRates: itemRatesResult.rows,
+        },
+      });
+    }
+
+    const pricingPlanDeliveryFeesId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/pricing\/plans\/([^/]+)\/delivery-fees$/
+    );
+
+    if (method === "POST" && pricingPlanDeliveryFeesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "set delivery zone fees")) return;
+
+      const body = await readJsonBody(req);
+      const fees = Array.isArray(body.fees) ? body.fees : [];
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id", "name", "status"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanDeliveryFeesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      for (const fee of fees) {
+        const zoneId = String(fee.zoneId ?? "").trim();
+        const doorFeeTzs = Number(fee.doorFeeTzs);
+        const freeThresholdTzs =
+          fee.freeThresholdTzs === null ||
+          fee.freeThresholdTzs === undefined ||
+          fee.freeThresholdTzs === ""
+            ? null
+            : Number(fee.freeThresholdTzs);
+
+        if (!zoneId) {
+          return sendError(res, 400, "VALIDATION_ERROR", "zoneId is required");
+        }
+
+        if (!Number.isInteger(doorFeeTzs) || doorFeeTzs < 0) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "doorFeeTzs must be a non-negative integer"
+          );
+        }
+
+        if (
+          freeThresholdTzs !== null &&
+          (!Number.isInteger(freeThresholdTzs) || freeThresholdTzs < 0)
+        ) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "freeThresholdTzs must be null or a non-negative integer"
+          );
+        }
+
+        const zoneExists = await pool.query(
+          `
+          SELECT "id"
+          FROM "Zone"
+          WHERE "id" = $1
+          `,
+          [zoneId]
+        );
+
+        if (zoneExists.rowCount === 0) {
+          return sendError(res, 400, "VALIDATION_ERROR", "zoneId was not found");
+        }
+      }
+
+      await pool.query("BEGIN");
+
+      try {
+        for (const fee of fees) {
+          const zoneId = String(fee.zoneId);
+          const doorFeeTzs = Number(fee.doorFeeTzs);
+          const freeThresholdTzs =
+            fee.freeThresholdTzs === null ||
+            fee.freeThresholdTzs === undefined ||
+            fee.freeThresholdTzs === ""
+              ? null
+              : Number(fee.freeThresholdTzs);
+
+          await pool.query(
+            `
+            INSERT INTO "DeliveryZoneFee" (
+              "id", "planId", "zoneId", "doorFeeTzs", "freeThresholdTzs", "createdAt", "updatedAt"
+            )
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+            ON CONFLICT ("planId", "zoneId")
+            DO UPDATE SET
+              "doorFeeTzs" = EXCLUDED."doorFeeTzs",
+              "freeThresholdTzs" = EXCLUDED."freeThresholdTzs",
+              "updatedAt" = NOW()
+            `,
+            [crypto.randomUUID(), pricingPlanDeliveryFeesId, zoneId, doorFeeTzs, freeThresholdTzs]
+          );
+        }
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PRICING_DELIVERY_FEES_UPSERTED",
+          targetType: "PRICING_PLAN",
+          targetId: pricingPlanDeliveryFeesId,
+          reason: null,
+          before: null,
+          after: {
+            feeCount: fees.length,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const savedFees = await pool.query(
+        `
+        SELECT
+          dzf."id",
+          dzf."planId",
+          dzf."zoneId",
+          z."name" AS "zoneName",
+          dzf."doorFeeTzs",
+          dzf."freeThresholdTzs",
+          dzf."createdAt",
+          dzf."updatedAt"
+        FROM "DeliveryZoneFee" dzf
+        INNER JOIN "Zone" z ON z."id" = dzf."zoneId"
+        WHERE dzf."planId" = $1
+        ORDER BY z."name" ASC
+        `,
+        [pricingPlanDeliveryFeesId]
+      );
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanDeliveryFeesId,
+          deliveryFees: savedFees.rows,
+        },
+      });
+    }
+
+    if (method === "GET" && pricingPlanDeliveryFeesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "read delivery zone fees")) return;
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanDeliveryFeesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      const savedFees = await pool.query(
+        `
+        SELECT
+          dzf."id",
+          dzf."planId",
+          dzf."zoneId",
+          z."name" AS "zoneName",
+          dzf."doorFeeTzs",
+          dzf."freeThresholdTzs",
+          dzf."createdAt",
+          dzf."updatedAt"
+        FROM "DeliveryZoneFee" dzf
+        INNER JOIN "Zone" z ON z."id" = dzf."zoneId"
+        WHERE dzf."planId" = $1
+        ORDER BY z."name" ASC
+        `,
+        [pricingPlanDeliveryFeesId]
+      );
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanDeliveryFeesId,
+          deliveryFees: savedFees.rows,
+          ruleSummary: {
+            DOOR: "zone fee applies",
+            SHOP_DROP: "customer delivery fee is 0",
+            HYBRID: "return-to-door fee applies during invoice computation",
+          },
+        },
+      });
+    }
+
+    const pricingPlanMinimumChargesId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/pricing\/plans\/([^/]+)\/minimum-charges$/
+    );
+
+    if (method === "POST" && pricingPlanMinimumChargesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "set minimum charge rules")) return;
+
+      const body = await readJsonBody(req);
+      const rules = Array.isArray(body.rules) ? body.rules : [];
+
+      const validTiers = new Set(["STANDARD_48H", "EXPRESS_24H", "SAME_DAY"]);
+      const validChannels = new Set(["DOOR", "SHOP_DROP", "HYBRID"]);
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id", "name", "status"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanMinimumChargesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      for (const rule of rules) {
+        const tier = String(rule.tier ?? "").trim();
+        const channelRaw = rule.channel;
+        const channel =
+          channelRaw === null || channelRaw === undefined || String(channelRaw).trim() === ""
+            ? null
+            : String(channelRaw).trim();
+        const minimumTzs = Number(rule.minimumTzs);
+
+        if (!validTiers.has(tier)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "minimum charge tier is invalid");
+        }
+
+        if (channel !== null && !validChannels.has(channel)) {
+          return sendError(res, 400, "VALIDATION_ERROR", "minimum charge channel is invalid");
+        }
+
+        if (!Number.isInteger(minimumTzs) || minimumTzs < 0) {
+          return sendError(
+            res,
+            400,
+            "VALIDATION_ERROR",
+            "minimumTzs must be a non-negative integer"
+          );
+        }
+      }
+
+      await pool.query("BEGIN");
+
+      try {
+        for (const rule of rules) {
+          const tier = String(rule.tier);
+          const channelRaw = rule.channel;
+          const channel =
+            channelRaw === null || channelRaw === undefined || String(channelRaw).trim() === ""
+              ? null
+              : String(channelRaw).trim();
+          const minimumTzs = Number(rule.minimumTzs);
+
+          await pool.query(
+            `
+            INSERT INTO "MinimumChargeRule" (
+              "id", "planId", "tier", "channel", "minimumTzs", "createdAt", "updatedAt"
+            )
+            VALUES ($1, $2, $3::"OrderTier", $4::"OrderChannel", $5, NOW(), NOW())
+            ON CONFLICT ("planId", "tier", "channel")
+            DO UPDATE SET
+              "minimumTzs" = EXCLUDED."minimumTzs",
+              "updatedAt" = NOW()
+            `,
+            [crypto.randomUUID(), pricingPlanMinimumChargesId, tier, channel, minimumTzs]
+          );
+        }
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PRICING_MINIMUM_CHARGES_UPSERTED",
+          targetType: "PRICING_PLAN",
+          targetId: pricingPlanMinimumChargesId,
+          reason: null,
+          before: null,
+          after: {
+            ruleCount: rules.length,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const savedRules = await pool.query(
+        `
+        SELECT
+          "id",
+          "planId",
+          "tier",
+          "channel",
+          "minimumTzs",
+          "createdAt",
+          "updatedAt"
+        FROM "MinimumChargeRule"
+        WHERE "planId" = $1
+        ORDER BY "tier" ASC, "channel" ASC NULLS FIRST
+        `,
+        [pricingPlanMinimumChargesId]
+      );
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanMinimumChargesId,
+          minimumChargeRules: savedRules.rows,
+        },
+      });
+    }
+
+    if (method === "GET" && pricingPlanMinimumChargesId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "read minimum charge rules")) return;
+
+      const tier = String(url.searchParams.get("tier") ?? "").trim();
+      const channel = String(url.searchParams.get("channel") ?? "").trim();
+
+      const existingPlan = await pool.query(
+        `
+        SELECT "id"
+        FROM "PricingPlan"
+        WHERE "id" = $1
+        `,
+        [pricingPlanMinimumChargesId]
+      );
+
+      if (existingPlan.rowCount === 0) {
+        return sendError(res, 404, "PRICING_PLAN_NOT_FOUND", "Pricing plan not found");
+      }
+
+      const filters = ['"planId" = $1'];
+      const params: Array<string> = [pricingPlanMinimumChargesId];
+
+      if (tier.length > 0) {
+        filters.push(`"tier" = $${params.length + 1}::"OrderTier"`);
+        params.push(tier);
+      }
+
+      if (channel.length > 0) {
+        filters.push(`"channel" = $${params.length + 1}::"OrderChannel"`);
+        params.push(channel);
+      }
+
+      const savedRules = await pool.query(
+        `
+        SELECT
+          "id",
+          "planId",
+          "tier",
+          "channel",
+          "minimumTzs",
+          "createdAt",
+          "updatedAt"
+        FROM "MinimumChargeRule"
+        WHERE ${filters.join(" AND ")}
+        ORDER BY "tier" ASC, "channel" ASC NULLS FIRST
+        `,
+        params
+      );
+
+      return json(res, 200, {
+        data: {
+          planId: pricingPlanMinimumChargesId,
+          tier: tier || null,
+          channel: channel || null,
+          minimumChargeRules: savedRules.rows,
+        },
+      });
+    }
+
+    const orderInvoiceId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/invoice$/);
+    if (method === "GET" && orderInvoiceId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+
+      const orderResult = await pool.query(
+        `
+        SELECT
+          o."id",
+          o."orderNumber",
+          o."customerUserId",
+          o."affiliateShopId",
+          o."channel",
+          o."tier",
+          o."zoneId",
+          o."hubId",
+          o."statusCurrent",
+          ops."pricingPlanId",
+          ops."pricingPlanEffectiveFrom",
+          ops."quoteStatus",
+          ops."quotedAt",
+          ops."finalizedAt",
+          ops."inputsJson",
+          ot."subtotal",
+          ot."deliveryTotal",
+          ot."discountTotal",
+          ot."grandTotal",
+          ot."balanceDue"
+        FROM "Order" o
+        LEFT JOIN "OrderPricingSnapshot" ops ON ops."orderId" = o."id"
+        LEFT JOIN "OrderTotals" ot ON ot."orderId" = o."id"
+        WHERE o."id" = $1
+        LIMIT 1
+        `,
+        [orderInvoiceId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const order = orderResult.rows[0];
+      const customerUserId = getString(order, "customerUserId", "customeruserid");
+      const affiliateShopId = order.affiliateShopId ? String(order.affiliateShopId) : null;
+
+      const scope = await resolveScope(user);
+      const isAdmin = user.role === "ADMIN" || user.role === "DEV_ADMIN";
+      const isOwner = user.role === "CUSTOMER" && customerUserId === user.id;
+      const isAffiliateScoped =
+        user.role === "AFFILIATE_STAFF" &&
+        scope.affiliateShopId &&
+        affiliateShopId &&
+        scope.affiliateShopId === affiliateShopId;
+
+      if (!isAdmin && !isOwner && !isAffiliateScoped) {
+        return sendError(res, 403, "FORBIDDEN", "You cannot access this invoice");
+      }
+
+      const lineItemsResult = await pool.query(
+        `
+        SELECT
+          "id",
+          "type",
+          "description",
+          "quantity",
+          "unitPrice",
+          "amount",
+          "metaJson",
+          "createdAt",
+          "updatedAt"
+        FROM "OrderLineItem"
+        WHERE "orderId" = $1
+        ORDER BY "createdAt" ASC, "description" ASC
+        `,
+        [orderInvoiceId]
+      );
+
+      return json(res, 200, {
+        data: {
+          order: {
+            id: getString(order, "id"),
+            orderNumber: getString(order, "orderNumber", "ordernumber"),
+            channel: getString(order, "channel"),
+            tier: getString(order, "tier"),
+            zoneId: getString(order, "zoneId", "zoneid"),
+            hubId: getString(order, "hubId", "hubid"),
+            statusCurrent: getString(order, "statusCurrent", "statuscurrent"),
+          },
+          pricingSnapshot: {
+            pricingPlanId: order.pricingPlanId ?? null,
+            pricingPlanEffectiveFrom: order.pricingPlanEffectiveFrom ?? null,
+            quoteStatus: order.quoteStatus ?? null,
+            quotedAt: order.quotedAt ?? null,
+            finalizedAt: order.finalizedAt ?? null,
+            inputsJson: order.inputsJson ?? null,
+          },
+          lineItems: lineItemsResult.rows,
+          totals: {
+            subtotal: Number(order.subtotal ?? 0),
+            deliveryTotal: Number(order.deliveryTotal ?? 0),
+            discountTotal: Number(order.discountTotal ?? 0),
+            grandTotal: Number(order.grandTotal ?? 0),
+            balanceDue: Number(order.balanceDue ?? 0),
+          },
+        },
+      });
+    }
+
+    const adminIntakeOrderId = pathParam(url.pathname, /^\/v1\/admin\/orders\/([^/]+)\/intake$/);
+    if (method === "POST" && adminIntakeOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (
+        !requireRoles(
+          user,
+          res,
+          ["ADMIN", "DEV_ADMIN", "HUB_STAFF"],
+          "finalize order intake pricing"
+        )
+      )
+        return;
+
+      const body = await readJsonBody(req);
+      const actualWeightKg = parseNumeric(body.actualWeightKg);
+      const itemEntries = Array.isArray(body.itemEntries) ? body.itemEntries : [];
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (actualWeightKg === null || actualWeightKg <= 0) {
+        return sendError(res, 400, "VALIDATION_ERROR", "actualWeightKg must be a positive number");
+      }
+
+      const orderResult = await pool.query(
+        `
+        SELECT
+          o."id",
+          o."orderNumber",
+          o."channel",
+          o."tier",
+          o."zoneId",
+          o."hubId",
+          o."statusCurrent",
+          ops."pricingPlanId",
+          ops."pricingPlanEffectiveFrom",
+          ops."quotedAt"
+        FROM "Order" o
+        LEFT JOIN "OrderPricingSnapshot" ops ON ops."orderId" = o."id"
+        WHERE o."id" = $1
+        LIMIT 1
+        `,
+        [adminIntakeOrderId]
+      );
+
+      if (orderResult.rows.length === 0) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const order = orderResult.rows[0];
+      const pricingPlanId = order.pricingPlanId ? String(order.pricingPlanId) : null;
+
+      if (!pricingPlanId) {
+        return sendError(
+          res,
+          409,
+          "PRICING_SNAPSHOT_NOT_FOUND",
+          "Order pricing snapshot was not found"
+        );
+      }
+
+      await pool.query("BEGIN");
+
+      try {
+        const orderChannel = getString(order, "channel");
+        const orderTier = getString(order, "tier");
+        const orderZoneId = getString(order, "zoneId", "zoneid");
+
+        if (!orderChannel || !orderTier || !orderZoneId) {
+          throw new Error("Order is missing pricing context for finalization");
+        }
+
+        const finalBreakdown = await computeOrderPricingBreakdown({
+          orderId: adminIntakeOrderId,
+          channel: orderChannel as "DOOR" | "SHOP_DROP" | "HYBRID",
+          tier: orderTier as "STANDARD_48H" | "EXPRESS_24H" | "SAME_DAY",
+          zoneId: orderZoneId,
+          pricingPlanId,
+          estimatedWeightKg: null,
+          actualWeightKg,
+          itemEntries,
+        });
+
+        await replaceOrderPricingState({
+          orderId: adminIntakeOrderId,
+          pricingPlanId,
+          pricingPlanEffectiveFrom: order.pricingPlanEffectiveFrom ?? null,
+          quoteStatus: "FINALIZED",
+          quotedAt: true,
+          finalizedAt: true,
+          inputsJson: finalBreakdown.inputsJson,
+          lineItems: finalBreakdown.lineItems,
+          subtotal: finalBreakdown.subtotal,
+          deliveryTotal: finalBreakdown.deliveryTotal,
+          discountTotal: finalBreakdown.discountTotal,
+          grandTotal: finalBreakdown.grandTotal,
+          balanceDue: finalBreakdown.balanceDue,
+        });
+
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [adminIntakeOrderId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'RECEIVED_AT_HUB', NOW(), $3,
+            $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            crypto.randomUUID(),
+            adminIntakeOrderId,
+            user.id,
+            user.role,
+            notes ?? "Order intake recorded and pricing finalized",
+            JSON.stringify({
+              actionCode: "ORDER_PRICING_FINALIZED",
+              actualWeightKg,
+              itemEntries,
+              pricingPlanId,
+              grandTotal: finalBreakdown.grandTotal,
+            }),
+          ]
+        );
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const snapshotResult = await pool.query(
+        `
+        SELECT
+          "pricingPlanId",
+          "pricingPlanEffectiveFrom",
+          "quoteStatus",
+          "quotedAt",
+          "finalizedAt",
+          "inputsJson"
+        FROM "OrderPricingSnapshot"
+        WHERE "orderId" = $1
+        LIMIT 1
+        `,
+        [adminIntakeOrderId]
+      );
+
+      const totalsResult = await pool.query(
+        `
+        SELECT
+          "subtotal",
+          "deliveryTotal",
+          "discountTotal",
+          "grandTotal",
+          "balanceDue"
+        FROM "OrderTotals"
+        WHERE "orderId" = $1
+        LIMIT 1
+        `,
+        [adminIntakeOrderId]
+      );
+
+      return json(res, 200, {
+        data: {
+          orderId: adminIntakeOrderId,
+          pricingSnapshot: snapshotResult.rows[0] ?? null,
+          totals: totalsResult.rows[0] ?? null,
+        },
+      });
+    }
     return sendError(res, 404, "NOT_FOUND", "Route not found");
   } catch (error) {
     console.error(error);

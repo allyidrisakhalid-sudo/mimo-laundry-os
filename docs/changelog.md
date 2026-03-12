@@ -249,3 +249,11 @@ Add-Content docs\acceptance.md @"
 - Added affiliate shop pickup workflow endpoints for ready-for-pickup and customer pickup completion
 - Reused existing dispatch and OTP delivery proof flow for affiliate hybrid returns
 - Added affiliate operations workflow documentation at docs/product/affiliate_ops_workflow.md
+
+## Chapter 9.1.6 completed
+
+- Fixed pricing migration history by replacing five no-op pricing migrations with one real migration for pricing contract tables
+- Added invoice endpoint for order pricing snapshot, line items, and totals
+- Added admin intake endpoint for final pricing recalculation using actual weight
+- Added estimated quote generation during customer order creation
+- Verified locked-plan quote-to-final recalculation flow on live API
