@@ -302,3 +302,14 @@ Add-Content docs\acceptance.md @"
 - Fixed affiliate order estimated pricing snapshot creation so affiliate orders can be quoted/finalized/paid correctly
 - Fixed commission calculation fallback to seeded percentageBps values
 - Fixed payout workflow so commission rows are bound to payout drafts and totals remain correct through DRAFT -> APPROVED -> PAID
+
+## Chapter 9.5 completed
+
+- Added minimal accounting v1 chart of accounts with seed support
+- Added append-only journal entry and journal line system
+- Added automatic posting rules for invoices, payments, refunds, commissions, and payouts
+- Added driver cash report endpoint with mismatch detection
+- Added daily close report endpoint grouped by hub, zone, and channel
+- Added accounting v1 documentation and traceability rules
+- Verified daily close totals against direct database sums
+- Verified journal balance and accounting audit trail coverage

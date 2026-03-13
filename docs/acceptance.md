@@ -515,3 +515,50 @@ Gate satisfied: Invoice totals match line items; receipt is consistent.
 - Verified audit logs exist for COMMISSION_EARNED_CREATED, PAYOUT_APPROVED, and PAYOUT_PAID.
 
 Gate satisfied: affiliate commissions and payouts work end-to-end with correct totals and audit trail.
+
+## Chapter 9.5 PASS
+
+- Re-ran Chapter 9.4 pre-flight proof successfully before implementation.
+- Added minimal chart of accounts with idempotent seed for:
+  - 1000 Cash on Hand
+  - 1010 Mobile Money Clearing
+  - 1100 Accounts Receivable
+  - 2000 Affiliate Commissions Payable
+  - 2010 Customer Credits Payable
+  - 4000 Laundry Service Revenue
+  - 4010 Delivery Revenue
+  - 4020 Add-ons Revenue
+  - 4900 Discounts / Promotions
+  - 5100 Refund Expense
+  - 5200 Affiliate Commission Expense
+- Added append-only JournalEntry and JournalLine accounting models.
+- Added automatic journal posting hooks for:
+  - invoice finalization
+  - payment recording
+  - refund issuance
+  - commission accrual
+  - payout settlement
+- Added admin daily close report endpoint:
+  - GET /v1/admin/reports/daily-close?date=YYYY-MM-DD
+- Added admin driver cash report endpoint:
+  - GET /v1/admin/reports/driver-cash?date=YYYY-MM-DD
+- Verified driver cash mismatch reporting:
+  - submitted reconciliation showed mismatchFlag = true for a deliberate mismatch case
+- Verified daily close report matched direct DB totals on 2026-03-13:
+  - ordersTotal = 25
+  - serviceRevenueTzs = 190000
+  - deliveryRevenueTzs = 12000
+  - addonsRevenueTzs = 0
+  - discountsTzs = 0
+  - grossRevenueTzs = 202000
+  - paymentsTotalTzs = 183000
+  - refundsTotalTzs = 9500
+  - commissionEarnedTzs = 8400
+  - payoutPaidTzs = 8400
+- Verified journal entries were balanced for all sampled entries (debits == credits).
+- Verified audit logs exist for privileged accounting actions including:
+  - REFUND_ISSUE
+  - PAYOUT_APPROVED
+  - PAYOUT_PAID
+
+Gate satisfied: Daily report matches DB; reconciliation flags mismatches.

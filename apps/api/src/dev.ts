@@ -6669,6 +6669,290 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (method === "GET" && url.pathname === "/v1/admin/reports/daily-close") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "view daily close report")) return;
+
+      const dateValue = String(url.searchParams.get("date") ?? getTodayDateUtcString()).trim();
+
+      const ordersResult = await pool.query(
+        `
+        SELECT
+          o."hubId" AS "hubId",
+          o."zoneId" AS "zoneId",
+          o."channel" AS "channel",
+          COUNT(*)::int AS "ordersCount",
+          COUNT(*) FILTER (WHERE o."statusCurrent" = 'CREATED')::int AS "createdCount",
+          COUNT(*) FILTER (WHERE o."statusCurrent" = 'RECEIVED_AT_HUB')::int AS "atHubCount",
+          COUNT(*) FILTER (
+            WHERE o."statusCurrent" IN ('WASHING_STARTED', 'DRYING_STARTED', 'IRONING_STARTED')
+          )::int AS "inCleaningCount",
+          COUNT(*) FILTER (WHERE o."statusCurrent" = 'PACKED')::int AS "readyCount",
+          COUNT(*) FILTER (WHERE o."statusCurrent" = 'OUT_FOR_DELIVERY')::int AS "outForDeliveryCount",
+          COUNT(*) FILTER (WHERE o."statusCurrent" = 'DELIVERED')::int AS "deliveredCount",
+          0::int AS "cancelledCount",
+          COALESCE(SUM(ot."subtotal"), 0)::int AS "serviceRevenueTzs",
+          COALESCE(SUM(ot."deliveryTotal"), 0)::int AS "deliveryRevenueTzs",
+          COALESCE(SUM(ot."discountTotal"), 0)::int AS "discountTotalTzs",
+          COALESCE(
+            SUM(
+              GREATEST(
+                COALESCE(ot."grandTotal", 0)
+                - COALESCE(ot."subtotal", 0)
+                - COALESCE(ot."deliveryTotal", 0)
+                + COALESCE(ot."discountTotal", 0),
+                0
+              )
+            ),
+            0
+          )::int AS "addonsRevenueTzs",
+          COALESCE(SUM(ot."grandTotal"), 0)::int AS "grossRevenueTzs"
+        FROM "Order" o
+        LEFT JOIN "OrderTotals" ot ON ot."orderId" = o."id"
+        WHERE o."createdAt"::date = $1::date
+        GROUP BY o."hubId", o."zoneId", o."channel"
+        ORDER BY o."hubId" ASC NULLS LAST, o."zoneId" ASC NULLS LAST, o."channel" ASC NULLS LAST
+        `,
+        [dateValue]
+      );
+
+      const paymentsResult = await pool.query(
+        `
+        SELECT
+          o."hubId" AS "hubId",
+          o."zoneId" AS "zoneId",
+          o."channel" AS "channel",
+          COALESCE(SUM(CASE WHEN p."method" = 'CASH' THEN p."amountTzs" ELSE 0 END), 0)::int AS "cashPaymentsTzs",
+          COALESCE(SUM(CASE WHEN p."method" = 'MOBILE_MONEY' THEN p."amountTzs" ELSE 0 END), 0)::int AS "mobileMoneyPaymentsTzs",
+          COALESCE(SUM(CASE WHEN p."method" = 'CARD' THEN p."amountTzs" ELSE 0 END), 0)::int AS "cardPaymentsTzs",
+          COALESCE(SUM(p."amountTzs"), 0)::int AS "paymentsTotalTzs"
+        FROM "Payment" p
+        INNER JOIN "Order" o ON o."id" = p."orderId"
+        WHERE p."status" = 'RECORDED'
+          AND p."createdAt"::date = $1::date
+        GROUP BY o."hubId", o."zoneId", o."channel"
+        `,
+        [dateValue]
+      );
+
+      const refundsResult = await pool.query(
+        `
+        SELECT
+          o."hubId" AS "hubId",
+          o."zoneId" AS "zoneId",
+          o."channel" AS "channel",
+          COALESCE(SUM(CASE WHEN r."method" = 'CASH' THEN r."amountTzs" ELSE 0 END), 0)::int AS "cashRefundsTzs",
+          COALESCE(SUM(CASE WHEN r."method" = 'MOBILE_MONEY' THEN r."amountTzs" ELSE 0 END), 0)::int AS "mobileMoneyRefundsTzs",
+          COALESCE(SUM(CASE WHEN r."method" = 'CREDIT' THEN r."amountTzs" ELSE 0 END), 0)::int AS "creditRefundsTzs",
+          COALESCE(SUM(r."amountTzs"), 0)::int AS "refundsTotalTzs"
+        FROM "Refund" r
+        INNER JOIN "Order" o ON o."id" = r."orderId"
+        WHERE r."status" = 'ISSUED'
+          AND r."createdAt"::date = $1::date
+        GROUP BY o."hubId", o."zoneId", o."channel"
+        `,
+        [dateValue]
+      );
+
+      const commissionsResult = await pool.query(
+        `
+        SELECT
+          o."hubId" AS "hubId",
+          o."zoneId" AS "zoneId",
+          o."channel" AS "channel",
+          COALESCE(SUM(cle."amountTzs"), 0)::int AS "commissionEarnedTzs"
+        FROM "CommissionLedgerEntry" cle
+        INNER JOIN "Order" o ON o."id" = cle."orderId"
+        WHERE cle."status" IN ('EARNED', 'APPROVED', 'PAID')
+          AND cle."createdAt"::date = $1::date
+        GROUP BY o."hubId", o."zoneId", o."channel"
+        `,
+        [dateValue]
+      );
+
+      const payoutsResult = await pool.query(
+        `
+        SELECT
+          NULL::text AS "hubId",
+          aff."zoneId" AS "zoneId",
+          'SHOP_DROP'::text AS "channel",
+          COALESCE(SUM(CASE WHEN p."status" = 'PAID' THEN p."totalAmountTzs" ELSE 0 END), 0)::int AS "payoutPaidTzs"
+        FROM "Payout" p
+        INNER JOIN "AffiliateShop" aff ON aff."id" = p."affiliateShopId"
+        WHERE p."paidAt" IS NOT NULL
+          AND p."paidAt"::date = $1::date
+        GROUP BY aff."zoneId"
+        `,
+        [dateValue]
+      );
+
+      type DailyCloseGroup = {
+        hubId: string | null;
+        zoneId: string | null;
+        channel: string;
+        orders: {
+          total: number;
+          created: number;
+          atHub: number;
+          inCleaning: number;
+          ready: number;
+          outForDelivery: number;
+          delivered: number;
+          cancelled: number;
+        };
+        revenue: {
+          serviceTzs: number;
+          deliveryTzs: number;
+          addonsTzs: number;
+          discountsTzs: number;
+          grossTzs: number;
+        };
+        payments: {
+          cashTzs: number;
+          mobileMoneyTzs: number;
+          cardTzs: number;
+          totalTzs: number;
+        };
+        refunds: {
+          cashTzs: number;
+          mobileMoneyTzs: number;
+          creditTzs: number;
+          totalTzs: number;
+        };
+        commissions: {
+          earnedTzs: number;
+        };
+        payouts: {
+          paidTzs: number;
+        };
+      };
+
+      const groups = new Map<string, DailyCloseGroup>();
+
+      function keyOf(hubId: string | null, zoneId: string | null, channel: string | null) {
+        return `${hubId ?? "null"}::${zoneId ?? "null"}::${channel ?? "UNKNOWN"}`;
+      }
+
+      function ensureGroup(hubId: string | null, zoneId: string | null, channel: string | null) {
+        const normalizedChannel = channel ?? "UNKNOWN";
+        const key = keyOf(hubId, zoneId, normalizedChannel);
+
+        if (!groups.has(key)) {
+          groups.set(key, {
+            hubId: hubId ?? null,
+            zoneId: zoneId ?? null,
+            channel: normalizedChannel,
+            orders: {
+              total: 0,
+              created: 0,
+              atHub: 0,
+              inCleaning: 0,
+              ready: 0,
+              outForDelivery: 0,
+              delivered: 0,
+              cancelled: 0,
+            },
+            revenue: {
+              serviceTzs: 0,
+              deliveryTzs: 0,
+              addonsTzs: 0,
+              discountsTzs: 0,
+              grossTzs: 0,
+            },
+            payments: {
+              cashTzs: 0,
+              mobileMoneyTzs: 0,
+              cardTzs: 0,
+              totalTzs: 0,
+            },
+            refunds: {
+              cashTzs: 0,
+              mobileMoneyTzs: 0,
+              creditTzs: 0,
+              totalTzs: 0,
+            },
+            commissions: {
+              earnedTzs: 0,
+            },
+            payouts: {
+              paidTzs: 0,
+            },
+          });
+        }
+
+        return groups.get(key)!;
+      }
+
+      for (const row of ordersResult.rows) {
+        const group = ensureGroup(row.hubId ?? null, row.zoneId ?? null, row.channel ?? null);
+        group.orders.total = Number(row.ordersCount ?? 0);
+        group.orders.created = Number(row.createdCount ?? 0);
+        group.orders.atHub = Number(row.atHubCount ?? 0);
+        group.orders.inCleaning = Number(row.inCleaningCount ?? 0);
+        group.orders.ready = Number(row.readyCount ?? 0);
+        group.orders.outForDelivery = Number(row.outForDeliveryCount ?? 0);
+        group.orders.delivered = Number(row.deliveredCount ?? 0);
+        group.orders.cancelled = Number(row.cancelledCount ?? 0);
+        group.revenue.serviceTzs = Number(row.serviceRevenueTzs ?? 0);
+        group.revenue.deliveryTzs = Number(row.deliveryRevenueTzs ?? 0);
+        group.revenue.addonsTzs = Number(row.addonsRevenueTzs ?? 0);
+        group.revenue.discountsTzs = Number(row.discountTotalTzs ?? 0);
+        group.revenue.grossTzs = Number(row.grossRevenueTzs ?? 0);
+      }
+
+      for (const row of paymentsResult.rows) {
+        const group = ensureGroup(row.hubId ?? null, row.zoneId ?? null, row.channel ?? null);
+        group.payments.cashTzs = Number(row.cashPaymentsTzs ?? 0);
+        group.payments.mobileMoneyTzs = Number(row.mobileMoneyPaymentsTzs ?? 0);
+        group.payments.cardTzs = Number(row.cardPaymentsTzs ?? 0);
+        group.payments.totalTzs = Number(row.paymentsTotalTzs ?? 0);
+      }
+
+      for (const row of refundsResult.rows) {
+        const group = ensureGroup(row.hubId ?? null, row.zoneId ?? null, row.channel ?? null);
+        group.refunds.cashTzs = Number(row.cashRefundsTzs ?? 0);
+        group.refunds.mobileMoneyTzs = Number(row.mobileMoneyRefundsTzs ?? 0);
+        group.refunds.creditTzs = Number(row.creditRefundsTzs ?? 0);
+        group.refunds.totalTzs = Number(row.refundsTotalTzs ?? 0);
+      }
+
+      for (const row of commissionsResult.rows) {
+        const group = ensureGroup(row.hubId ?? null, row.zoneId ?? null, row.channel ?? null);
+        group.commissions.earnedTzs = Number(row.commissionEarnedTzs ?? 0);
+      }
+
+      for (const row of payoutsResult.rows) {
+        const group = ensureGroup(null, row.zoneId ?? null, row.channel ?? "SHOP_DROP");
+        group.payouts.paidTzs = Number(row.payoutPaidTzs ?? 0);
+      }
+
+      const groupsList = Array.from(groups.values()).sort((a, b) =>
+        `${a.hubId ?? ""}|${a.zoneId ?? ""}|${a.channel}`.localeCompare(
+          `${b.hubId ?? ""}|${b.zoneId ?? ""}|${b.channel}`
+        )
+      );
+
+      return json(res, 200, {
+        data: {
+          date: dateValue,
+          groups: groupsList,
+          summary: {
+            groupCount: groupsList.length,
+            ordersTotal: groupsList.reduce((sum, g) => sum + g.orders.total, 0),
+            serviceRevenueTzs: groupsList.reduce((sum, g) => sum + g.revenue.serviceTzs, 0),
+            deliveryRevenueTzs: groupsList.reduce((sum, g) => sum + g.revenue.deliveryTzs, 0),
+            addonsRevenueTzs: groupsList.reduce((sum, g) => sum + g.revenue.addonsTzs, 0),
+            discountsTzs: groupsList.reduce((sum, g) => sum + g.revenue.discountsTzs, 0),
+            grossRevenueTzs: groupsList.reduce((sum, g) => sum + g.revenue.grossTzs, 0),
+            paymentsTotalTzs: groupsList.reduce((sum, g) => sum + g.payments.totalTzs, 0),
+            refundsTotalTzs: groupsList.reduce((sum, g) => sum + g.refunds.totalTzs, 0),
+            commissionEarnedTzs: groupsList.reduce((sum, g) => sum + g.commissions.earnedTzs, 0),
+            payoutPaidTzs: groupsList.reduce((sum, g) => sum + g.payouts.paidTzs, 0),
+          },
+        },
+      });
+    }
     if (method === "GET" && url.pathname === "/v1/admin/reports/driver-cash") {
       const user = await requireAuth(req, res);
       if (!user) return;
