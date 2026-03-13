@@ -321,3 +321,13 @@ Add-Content docs\acceptance.md @"
 - Added admin queue operations endpoints for enqueue, failed list, job detail, and retry
 - Added runtime logging for queue processing, retries, and failures
 - Verified retry/dead-letter behavior with intentional fail jobs
+
+## Chapter 10.1 completed
+
+- Added BullMQ + Redis background job foundation
+- Added new pps/worker runtime with notifications, sla-alerts, and finance queues
+- Added retry/backoff policy and failed-job visibility endpoints
+- Added customer address endpoints needed for direct customer order flow
+- Added scheduled-job persistence migration for reliability records
+- Added reliability documentation for worker runtime, queues, retry policy, and admin visibility
+- Verified success, retry, dead-letter-style failed visibility, and scheduled runtime behavior

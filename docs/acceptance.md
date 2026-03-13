@@ -576,3 +576,19 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Verified failed jobs remain visible through admin failed-job endpoints.
 - Verified non-admin access to admin job endpoints returns 403.
 - Gate satisfied: background jobs can be enqueued, retried, observed, and failed safely.
+
+## Chapter 10.1 PASS
+
+- Re-verified prior system stability before adding background jobs.
+- Added BullMQ + Redis worker foundation with dedicated pps/worker process.
+- Added queues:
+  otifications, sla-alerts, and inance.
+- Added admin job endpoints for enqueue, failed list, job detail, and retry.
+- Verified worker connects to Redis successfully.
+- Verified success jobs are processed asynchronously by worker.
+- Verified fail jobs retry with exponential backoff and end in visible failed state after 3 attempts.
+- Verified failed jobs remain queryable with failure reason through admin endpoints.
+- Verified non-admin access to admin job endpoints returns 403.
+- Added scheduled job persistence support for alert/reminder/payout draft records.
+- Verified scheduled-job runtime window with API healthy and queue visibility intact.
+- Gate satisfied: Jobs run repeatedly with logs; failures are visible.
