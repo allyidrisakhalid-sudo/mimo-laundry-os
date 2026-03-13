@@ -855,10 +855,65 @@ model CashReconciliation {
 }
 
 
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+
+enum JournalSourceType {
+  INVOICE
+  PAYMENT
+  REFUND
+  COMMISSION
+  PAYOUT
+  ADJUSTMENT
+}
+model Account {
+  id        String      @id
+  code      String      @unique
+  name      String
+  type      AccountType
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  journalLines JournalLine[]
+
+  @@index([type, isActive])
+}
 
 
 
 
+model JournalEntry {
+  id              String            @id
+  entryNumber     String            @unique
+  description     String
+  sourceType      JournalSourceType
+  sourceId        String
+  occurredAt      DateTime
+  createdByUserId String?
+  createdAt       DateTime          @default(now())
+  lines           JournalLine[]
 
+  @@unique([sourceType, sourceId])
+  @@index([occurredAt])
+}
 
+model JournalLine {
+  id             String       @id
+  journalEntryId String
+  accountId      String
+  debitTzs       Int          @default(0)
+  creditTzs      Int          @default(0)
+  memo           String?
+  createdAt      DateTime     @default(now())
 
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account        Account      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([journalEntryId])
+  @@index([accountId])
+}

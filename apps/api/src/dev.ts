@@ -570,6 +570,72 @@ function nextBagTagCode() {
   return `BAG-${Date.now()}`;
 }
 
+async function seedChartOfAccounts() {
+  const accounts = [
+    { id: "acct_1000_cash_on_hand", code: "1000", name: "Cash on Hand", type: "ASSET" },
+    {
+      id: "acct_1010_mobile_money_clearing",
+      code: "1010",
+      name: "Mobile Money Clearing",
+      type: "ASSET",
+    },
+    {
+      id: "acct_1100_accounts_receivable",
+      code: "1100",
+      name: "Accounts Receivable",
+      type: "ASSET",
+    },
+    {
+      id: "acct_2000_affiliate_commissions_payable",
+      code: "2000",
+      name: "Affiliate Commissions Payable",
+      type: "LIABILITY",
+    },
+    {
+      id: "acct_2010_customer_credits_payable",
+      code: "2010",
+      name: "Customer Credits Payable",
+      type: "LIABILITY",
+    },
+    {
+      id: "acct_4000_laundry_service_revenue",
+      code: "4000",
+      name: "Laundry Service Revenue",
+      type: "REVENUE",
+    },
+    { id: "acct_4010_delivery_revenue", code: "4010", name: "Delivery Revenue", type: "REVENUE" },
+    { id: "acct_4020_addons_revenue", code: "4020", name: "Add-ons Revenue", type: "REVENUE" },
+    {
+      id: "acct_4900_discounts_promotions",
+      code: "4900",
+      name: "Discounts / Promotions",
+      type: "EXPENSE",
+    },
+    { id: "acct_5000_payment_fees", code: "5000", name: "Payment Fees", type: "EXPENSE" },
+    { id: "acct_5100_refund_expense", code: "5100", name: "Refund Expense", type: "EXPENSE" },
+    {
+      id: "acct_5200_affiliate_commission_expense",
+      code: "5200",
+      name: "Affiliate Commission Expense",
+      type: "EXPENSE",
+    },
+  ];
+
+  for (const account of accounts) {
+    await pool.query(
+      `
+      INSERT INTO "Account" ("id", "code", "name", "type", "isActive", "createdAt")
+      VALUES ($1, $2, $3, $4::"AccountType", TRUE, NOW())
+      ON CONFLICT ("code")
+      DO UPDATE SET
+        "name" = EXCLUDED."name",
+        "type" = EXCLUDED."type",
+        "isActive" = TRUE
+      `,
+      [account.id, account.code, account.name, account.type]
+    );
+  }
+}
 function formatMoneyTzs(amount: number) {
   return new Intl.NumberFormat("en-TZ", {
     style: "currency",
@@ -818,6 +884,13 @@ async function evaluateCommissionEligibility(params: {
 
     const finalEntry = inserted.rows[0];
 
+    await postCommissionJournalIfMissing({
+      commissionLedgerEntryId: String(finalEntry?.id ?? ledgerEntryId),
+      amountTzs: Number(finalEntry?.amountTzs ?? amountTzs),
+      orderId: params.orderId,
+      createdByUserId: params.actorUserId ?? null,
+    });
+
     await pool.query(
       `
       INSERT INTO "OrderEvent" (
@@ -863,7 +936,7 @@ async function evaluateCommissionEligibility(params: {
         amountTzs: Number(finalEntry?.amountTzs ?? amountTzs),
         status: finalEntry?.status ?? "EARNED",
       },
-      requestMeta: params.requestMeta,
+      ...(params.requestMeta ? { requestMeta: params.requestMeta } : {}),
     });
 
     await pool.query("COMMIT");
@@ -877,6 +950,353 @@ async function evaluateCommissionEligibility(params: {
     await pool.query("ROLLBACK");
     throw error;
   }
+}
+
+type JournalLineInput = {
+  accountCode: string;
+  debitTzs: number;
+  creditTzs: number;
+  memo?: string | null;
+};
+
+async function getAccountIdByCode(code: string): Promise<string> {
+  const result = await pool.query(
+    `
+    SELECT "id"
+    FROM "Account"
+    WHERE "code" = $1
+      AND "isActive" = TRUE
+    LIMIT 1
+    `,
+    [code]
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error(`Active account not found for code ${code}`);
+  }
+
+  return String(result.rows[0].id);
+}
+
+function nextJournalEntryNumber() {
+  return `JRN-${Date.now()}-${Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0")}`;
+}
+
+async function createJournalEntryIfMissing(params: {
+  sourceType: "INVOICE" | "PAYMENT" | "REFUND" | "COMMISSION" | "PAYOUT" | "ADJUSTMENT";
+  sourceId: string;
+  description: string;
+  occurredAt?: string | Date | null;
+  createdByUserId?: string | null;
+  lines: JournalLineInput[];
+}) {
+  const existing = await pool.query(
+    `
+    SELECT "id", "entryNumber"
+    FROM "JournalEntry"
+    WHERE "sourceType" = $1::"JournalSourceType"
+      AND "sourceId" = $2
+    LIMIT 1
+    `,
+    [params.sourceType, params.sourceId]
+  );
+
+  if (existing.rows.length > 0) {
+    return existing.rows[0];
+  }
+
+  const normalizedLines = params.lines.filter(
+    (line) => Number(line.debitTzs ?? 0) > 0 || Number(line.creditTzs ?? 0) > 0
+  );
+
+  const totalDebits = normalizedLines.reduce((sum, line) => sum + Number(line.debitTzs ?? 0), 0);
+  const totalCredits = normalizedLines.reduce((sum, line) => sum + Number(line.creditTzs ?? 0), 0);
+
+  if (normalizedLines.length === 0) {
+    throw new Error(`Journal entry ${params.sourceType}/${params.sourceId} has no lines`);
+  }
+
+  if (totalDebits !== totalCredits) {
+    throw new Error(
+      `Journal entry ${params.sourceType}/${params.sourceId} is unbalanced: debits=${totalDebits} credits=${totalCredits}`
+    );
+  }
+
+  const journalEntryId = crypto.randomUUID();
+  const entryNumber = nextJournalEntryNumber();
+  const occurredAt =
+    params.occurredAt instanceof Date
+      ? params.occurredAt.toISOString()
+      : (params.occurredAt ?? new Date().toISOString());
+
+  await pool.query(
+    `
+    INSERT INTO "JournalEntry" (
+      "id", "entryNumber", "description", "sourceType", "sourceId",
+      "occurredAt", "createdByUserId", "createdAt"
+    )
+    VALUES ($1, $2, $3, $4::"JournalSourceType", $5, $6::timestamptz, $7, NOW())
+    `,
+    [
+      journalEntryId,
+      entryNumber,
+      params.description,
+      params.sourceType,
+      params.sourceId,
+      occurredAt,
+      params.createdByUserId ?? null,
+    ]
+  );
+
+  for (const line of normalizedLines) {
+    const accountId = await getAccountIdByCode(line.accountCode);
+    await pool.query(
+      `
+      INSERT INTO "JournalLine" (
+        "id", "journalEntryId", "accountId", "debitTzs", "creditTzs", "memo", "createdAt"
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        journalEntryId,
+        accountId,
+        Number(line.debitTzs ?? 0),
+        Number(line.creditTzs ?? 0),
+        line.memo ?? null,
+      ]
+    );
+  }
+
+  return { id: journalEntryId, entryNumber };
+}
+
+function classifyInvoiceLineAccount(row: Record<string, unknown>) {
+  const description = String(row.description ?? "").toLowerCase();
+  const meta =
+    row.metaJson && typeof row.metaJson === "object"
+      ? (row.metaJson as Record<string, unknown>)
+      : {};
+  const itemCode = typeof meta.itemCode === "string" ? meta.itemCode : null;
+  const ruleType = typeof meta.ruleType === "string" ? meta.ruleType : null;
+
+  if (itemCode) return "4020";
+  if (ruleType === "DELIVERY_ZONE_FEE") return "4010";
+  if (description.includes("delivery fee")) return "4010";
+  return "4000";
+}
+
+async function postInvoiceJournalIfMissing(params: {
+  orderId: string;
+  createdByUserId?: string | null;
+}) {
+  const orderResult = await pool.query(
+    `
+    SELECT
+      o."id",
+      o."orderNumber",
+      ot."grandTotal"
+    FROM "Order" o
+    INNER JOIN "OrderTotals" ot ON ot."orderId" = o."id"
+    WHERE o."id" = $1
+    LIMIT 1
+    `,
+    [params.orderId]
+  );
+
+  if (orderResult.rows.length === 0) {
+    throw new Error("Order not found for invoice journal");
+  }
+
+  const lineItemsResult = await pool.query(
+    `
+    SELECT
+      "id",
+      "type",
+      "description",
+      "amount",
+      "metaJson"
+    FROM "OrderLineItem"
+    WHERE "orderId" = $1
+    ORDER BY "createdAt" ASC
+    `,
+    [params.orderId]
+  );
+
+  const grandTotal = Number(orderResult.rows[0].grandTotal ?? 0);
+  const revenueCredits = new Map<string, number>();
+  let discountDebit = 0;
+
+  for (const row of lineItemsResult.rows as Array<Record<string, unknown>>) {
+    const type = String(row.type ?? "");
+    const amount = Number(row.amount ?? 0);
+
+    if (type === "DISCOUNT") {
+      discountDebit += Math.abs(amount);
+      continue;
+    }
+
+    const accountCode = classifyInvoiceLineAccount(row);
+    revenueCredits.set(accountCode, (revenueCredits.get(accountCode) ?? 0) + amount);
+  }
+
+  const lines: JournalLineInput[] = [
+    {
+      accountCode: "1100",
+      debitTzs: grandTotal,
+      creditTzs: 0,
+      memo: `Invoice finalized for order ${String(orderResult.rows[0].orderNumber ?? params.orderId)}`,
+    },
+  ];
+
+  for (const [accountCode, amount] of revenueCredits.entries()) {
+    lines.push({
+      accountCode,
+      debitTzs: 0,
+      creditTzs: amount,
+      memo: `Revenue recognition for order ${String(orderResult.rows[0].orderNumber ?? params.orderId)}`,
+    });
+  }
+
+  if (discountDebit > 0) {
+    lines.push({
+      accountCode: "4900",
+      debitTzs: discountDebit,
+      creditTzs: 0,
+      memo: `Discounts applied for order ${String(orderResult.rows[0].orderNumber ?? params.orderId)}`,
+    });
+  }
+
+  return createJournalEntryIfMissing({
+    sourceType: "INVOICE",
+    sourceId: params.orderId,
+    description: `Invoice journal for order ${String(orderResult.rows[0].orderNumber ?? params.orderId)}`,
+    createdByUserId: params.createdByUserId ?? null,
+    lines,
+  });
+}
+
+async function postPaymentJournalIfMissing(params: {
+  paymentId: string;
+  method: "CASH" | "MOBILE_MONEY" | "CARD";
+  amountTzs: number;
+  orderId: string;
+  createdByUserId?: string | null;
+}) {
+  const debitAccountCode = params.method === "CASH" ? "1000" : "1010";
+
+  return createJournalEntryIfMissing({
+    sourceType: "PAYMENT",
+    sourceId: params.paymentId,
+    description: `Payment journal for order ${params.orderId}`,
+    createdByUserId: params.createdByUserId ?? null,
+    lines: [
+      {
+        accountCode: debitAccountCode,
+        debitTzs: params.amountTzs,
+        creditTzs: 0,
+        memo: `${params.method} payment received`,
+      },
+      {
+        accountCode: "1100",
+        debitTzs: 0,
+        creditTzs: params.amountTzs,
+        memo: "Accounts receivable settled",
+      },
+    ],
+  });
+}
+
+async function postRefundJournalIfMissing(params: {
+  refundId: string;
+  method: "CASH" | "MOBILE_MONEY" | "CREDIT";
+  amountTzs: number;
+  orderId: string;
+  createdByUserId?: string | null;
+}) {
+  const creditAccountCode =
+    params.method === "CASH" ? "1000" : params.method === "MOBILE_MONEY" ? "1010" : "2010";
+
+  return createJournalEntryIfMissing({
+    sourceType: "REFUND",
+    sourceId: params.refundId,
+    description: `Refund journal for order ${params.orderId}`,
+    createdByUserId: params.createdByUserId ?? null,
+    lines: [
+      {
+        accountCode: "5100",
+        debitTzs: params.amountTzs,
+        creditTzs: 0,
+        memo: "Refund expense recognized",
+      },
+      {
+        accountCode: creditAccountCode,
+        debitTzs: 0,
+        creditTzs: params.amountTzs,
+        memo: `Refund issued via ${params.method}`,
+      },
+    ],
+  });
+}
+
+async function postCommissionJournalIfMissing(params: {
+  commissionLedgerEntryId: string;
+  amountTzs: number;
+  orderId: string;
+  createdByUserId?: string | null;
+}) {
+  return createJournalEntryIfMissing({
+    sourceType: "COMMISSION",
+    sourceId: params.commissionLedgerEntryId,
+    description: `Commission accrual for order ${params.orderId}`,
+    createdByUserId: params.createdByUserId ?? null,
+    lines: [
+      {
+        accountCode: "5200",
+        debitTzs: params.amountTzs,
+        creditTzs: 0,
+        memo: "Affiliate commission expense accrued",
+      },
+      {
+        accountCode: "2000",
+        debitTzs: 0,
+        creditTzs: params.amountTzs,
+        memo: "Affiliate commissions payable accrued",
+      },
+    ],
+  });
+}
+
+async function postPayoutJournalIfMissing(params: {
+  payoutId: string;
+  paymentMethod: "MOBILE_MONEY" | "CASH" | "BANK";
+  totalAmountTzs: number;
+  createdByUserId?: string | null;
+}) {
+  const creditAccountCode = params.paymentMethod === "CASH" ? "1000" : "1010";
+
+  return createJournalEntryIfMissing({
+    sourceType: "PAYOUT",
+    sourceId: params.payoutId,
+    description: `Affiliate payout settlement ${params.payoutId}`,
+    createdByUserId: params.createdByUserId ?? null,
+    lines: [
+      {
+        accountCode: "2000",
+        debitTzs: params.totalAmountTzs,
+        creditTzs: 0,
+        memo: "Affiliate commissions payable settled",
+      },
+      {
+        accountCode: creditAccountCode,
+        debitTzs: 0,
+        creditTzs: params.totalAmountTzs,
+        memo: `Payout disbursed via ${params.paymentMethod}`,
+      },
+    ],
+  });
 }
 
 function getTodayDateUtcString() {
@@ -5592,6 +6012,17 @@ const server = http.createServer(async (req, res) => {
         return sendError(res, 403, "FORBIDDEN", "Order does not belong to customer");
       }
 
+      if (!orderId) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      await evaluateCommissionEligibility({
+        orderId,
+        actorUserId: user.id,
+        actorRole: user.role,
+        requestMeta: getRequestMeta(req),
+      });
+
       const receiptResult = await pool.query(
         `
         SELECT
@@ -5746,6 +6177,14 @@ const server = http.createServer(async (req, res) => {
 
         const newBalance = await syncOrderBalanceDue(orderId);
 
+        await postPaymentJournalIfMissing({
+          paymentId,
+          method: "CASH",
+          amountTzs,
+          orderId,
+          createdByUserId: user.id,
+        });
+
         await pool.query(
           `
           INSERT INTO "OrderEvent" (
@@ -5808,6 +6247,13 @@ const server = http.createServer(async (req, res) => {
           error instanceof Error ? error.message : "Cash payment recording failed"
         );
       }
+
+      await evaluateCommissionEligibility({
+        orderId,
+        actorUserId: user.id,
+        actorRole: user.role,
+        requestMeta: getRequestMeta(req),
+      });
 
       const receiptResult = await pool.query(
         `
@@ -6223,6 +6669,102 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (method === "GET" && url.pathname === "/v1/admin/reports/driver-cash") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "view driver cash report")) return;
+
+      const dateValue = String(url.searchParams.get("date") ?? getTodayDateUtcString()).trim();
+
+      const result = await pool.query(
+        `
+        SELECT
+          dp."id" AS "driverId",
+          dp."userId" AS "driverUserId",
+          u."fullName" AS "driverName",
+          u."phone" AS "driverPhone",
+          COALESCE(expected.expected_cash_tzs, 0) AS "expectedCashTzs",
+          cr."id" AS "reconciliationId",
+          cr."declaredCashTzs",
+          cr."differenceTzs",
+          cr."status",
+          cr."submittedAt",
+          cr."approvedAt",
+          cr."approvedByUserId"
+        FROM "DriverProfile" dp
+        INNER JOIN "User" u ON u."id" = dp."userId"
+        LEFT JOIN (
+          SELECT
+            p."collectedByUserId" AS "driverUserId",
+            COALESCE(SUM(p."amountTzs"), 0) AS expected_cash_tzs
+          FROM "Payment" p
+          WHERE p."method" = 'CASH'
+            AND p."status" = 'RECORDED'
+            AND p."collectedByUserId" IS NOT NULL
+            AND p."collectedAt"::date = $1::date
+          GROUP BY p."collectedByUserId"
+        ) expected ON expected."driverUserId" = dp."userId"
+        LEFT JOIN "CashReconciliation" cr
+          ON cr."driverId" = dp."id"
+         AND cr."date" = $2
+        WHERE dp."isActive" = TRUE
+        ORDER BY u."fullName" ASC
+        `,
+        [dateValue, dateValue]
+      );
+
+      const rows = result.rows.map((row) => {
+        const expectedCashTzs = Number(row.expectedCashTzs ?? 0);
+        const declaredCashTzs =
+          row.declaredCashTzs === null || row.declaredCashTzs === undefined
+            ? null
+            : Number(row.declaredCashTzs);
+        const differenceTzs =
+          row.differenceTzs === null || row.differenceTzs === undefined
+            ? declaredCashTzs === null
+              ? null
+              : declaredCashTzs - expectedCashTzs
+            : Number(row.differenceTzs);
+
+        const status =
+          getString(row, "status") ?? (declaredCashTzs === null ? "OPEN" : "SUBMITTED");
+
+        const mismatchFlag =
+          declaredCashTzs !== null && differenceTzs !== null && differenceTzs !== 0;
+
+        return {
+          driverId: getString(row, "driverId", "driverid"),
+          driverUserId: getString(row, "driverUserId", "driveruserid"),
+          driverName: getString(row, "driverName", "drivername"),
+          driverPhone: getString(row, "driverPhone", "driverphone"),
+          expectedCashTzs,
+          declaredCashTzs,
+          differenceTzs,
+          mismatchFlag,
+          status,
+          reconciliationId: getString(row, "reconciliationId", "reconciliationid"),
+          submittedAt: row.submittedAt ?? null,
+          approvedAt: row.approvedAt ?? null,
+          approvedByUserId: getString(row, "approvedByUserId", "approvedbyuserid"),
+        };
+      });
+
+      return json(res, 200, {
+        data: {
+          date: dateValue,
+          drivers: rows,
+          summary: {
+            driverCount: rows.length,
+            submittedCount: rows.filter((row) => row.status === "SUBMITTED").length,
+            approvedCount: rows.filter((row) => row.status === "APPROVED").length,
+            mismatchCount: rows.filter((row) => row.mismatchFlag).length,
+            expectedCashTzs: rows.reduce((sum, row) => sum + row.expectedCashTzs, 0),
+            declaredCashTzs: rows.reduce((sum, row) => sum + (row.declaredCashTzs ?? 0), 0),
+          },
+        },
+      });
+    }
+
     if (method === "POST" && url.pathname === "/v1/admin/refunds") {
       const user = await requireAuth(req, res);
       if (!user) return;
@@ -6300,6 +6842,14 @@ const server = http.createServer(async (req, res) => {
         }
 
         const newBalance = await syncOrderBalanceDue(orderId);
+
+        await postRefundJournalIfMissing({
+          refundId,
+          method: methodValue as "CASH" | "MOBILE_MONEY" | "CREDIT",
+          amountTzs,
+          orderId,
+          createdByUserId: user.id,
+        });
 
         await pool.query(
           `
@@ -6480,6 +7030,11 @@ const server = http.createServer(async (req, res) => {
           discountTotal: finalBreakdown.discountTotal,
           grandTotal: finalBreakdown.grandTotal,
           balanceDue: finalBreakdown.balanceDue,
+        });
+
+        await postInvoiceJournalIfMissing({
+          orderId: adminIntakeOrderId,
+          createdByUserId: user.id,
         });
 
         await pool.query(
@@ -6917,6 +7472,13 @@ const server = http.createServer(async (req, res) => {
           ]
         );
 
+        await postPayoutJournalIfMissing({
+          payoutId: adminPayoutMarkPaidId,
+          paymentMethod: paymentMethod as "MOBILE_MONEY" | "CASH" | "BANK",
+          totalAmountTzs: Number(totalsResult.rows[0]?.total ?? 0),
+          createdByUserId: user.id,
+        });
+
         await recordAudit({
           actorUserId: user.id,
           actorRole: user.role,
@@ -7047,6 +7609,12 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+(async () => {
+  await seedChartOfAccounts();
+})().catch((error) => {
+  console.error("Failed to seed chart of accounts", error);
+  process.exit(1);
+});
 server.listen(PORT, () => {
   console.log(`Mimo API running on http://localhost:${PORT}`);
   console.log(`Swagger UI running on http://localhost:${PORT}/api`);
