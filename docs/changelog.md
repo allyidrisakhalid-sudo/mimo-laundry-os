@@ -291,3 +291,14 @@ Add-Content docs\acceptance.md @"
 - Added payments v1 documentation at docs/finance/payments_v1.md
 - Fixed payment SQL parameter typing for nullable custody fields
 - Fixed refund event enum alignment in application and database
+
+## Chapter 9.4 completed
+
+- Added affiliate commission ledger model and payout workflow schema
+- Added commission earning logic for affiliate orders only after delivered + fully paid
+- Added affiliate commission and payout read endpoints
+- Added admin commission listing, payout draft creation, payout approval, payout payment, and payout report endpoints
+- Added payout audit actions for approval and payment
+- Fixed affiliate order estimated pricing snapshot creation so affiliate orders can be quoted/finalized/paid correctly
+- Fixed commission calculation fallback to seeded percentageBps values
+- Fixed payout workflow so commission rows are bound to payout drafts and totals remain correct through DRAFT -> APPROVED -> PAID

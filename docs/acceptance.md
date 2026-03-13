@@ -498,3 +498,20 @@ Gate satisfied: Invoice totals match line items; receipt is consistent.
   - confirmed latest receipt shows final mobile money reference
   - confirmed final balance due returned to zero
 - Gate satisfied: Paid orders close balance; refund adjusts ledger correctly.
+
+## Chapter 9.4 PASS
+
+- Verified affiliate order flow can progress from quoted to finalized to paid to delivered.
+- Verified affiliate commission is created only when order is both DELIVERED and fully PAID.
+- Verified delivered-but-unpaid order creates no commission.
+- Verified paid-but-undelivered order creates no commission.
+- Verified delivered-and-paid order creates exactly one earned commission ledger entry.
+- Verified positive commission amount for fresh proof order: TSh 1,200 on TSh 12,000 service total.
+- Verified payout draft total matched earned commission total.
+- Verified payout approval preserved total correctly.
+- Verified payout mark-paid preserved total correctly.
+- Verified payout report showed paid total correctly for scoped window.
+- Verified affiliate-scoped commission and payout endpoints returned expected records.
+- Verified audit logs exist for COMMISSION_EARNED_CREATED, PAYOUT_APPROVED, and PAYOUT_PAID.
+
+Gate satisfied: affiliate commissions and payouts work end-to-end with correct totals and audit trail.

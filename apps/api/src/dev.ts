@@ -656,6 +656,229 @@ async function syncOrderBalanceDue(orderId: string): Promise<number> {
   return ledger.balanceDue;
 }
 
+async function evaluateCommissionEligibility(params: {
+  orderId: string;
+  actorUserId?: string | null;
+  actorRole?: string | null;
+  requestMeta?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+}) {
+  const orderResult = await pool.query(
+    `
+    SELECT
+      o."id",
+      o."orderNumber",
+      o."sourceType",
+      o."affiliateShopId",
+      o."statusCurrent",
+      o."channel",
+      o."tier",
+      o."zoneId",
+      ot."subtotal",
+      ot."deliveryTotal",
+      ot."discountTotal",
+      ot."grandTotal",
+      ot."balanceDue",
+      s."commissionPlanId",
+      cp."id" AS "planId",
+      cp."type" AS "planType",
+      cp."fixedAmountTzs",
+      cp."percentRate",
+      cp."percentageBps",
+      cp."includeDeliveryInPercent"
+    FROM "Order" o
+    LEFT JOIN "OrderTotals" ot ON ot."orderId" = o."id"
+    LEFT JOIN "AffiliateShop" s ON s."id" = o."affiliateShopId"
+    LEFT JOIN "CommissionPlan" cp ON cp."id" = s."commissionPlanId"
+    WHERE o."id" = $1
+    LIMIT 1
+    `,
+    [params.orderId]
+  );
+
+  if (orderResult.rows.length === 0) {
+    return { eligible: false, reason: "ORDER_NOT_FOUND" as const };
+  }
+
+  const order = orderResult.rows[0];
+  const sourceType = getString(order, "sourceType", "sourcetype");
+  const affiliateShopId = getString(order, "affiliateShopId", "affiliateshopid");
+  const statusCurrent = getString(order, "statusCurrent", "statuscurrent");
+  const planId = getString(order, "planId", "planid");
+  const planType = getString(order, "planType", "plantype");
+
+  if (sourceType !== "AFFILIATE" || !affiliateShopId) {
+    return { eligible: false, reason: "NOT_AFFILIATE_ORDER" as const };
+  }
+
+  const ledger = await getOrderLedgerSummary(params.orderId);
+  const isDelivered = statusCurrent === "DELIVERED";
+  const isPaid = ledger.balanceDue <= 0 && ledger.paymentsRecorded > 0;
+
+  if (!isDelivered || !isPaid) {
+    return {
+      eligible: false,
+      reason: "NOT_DELIVERED_AND_PAID" as const,
+      isDelivered,
+      isPaid,
+    };
+  }
+
+  if (!planId || !planType) {
+    return { eligible: false, reason: "COMMISSION_PLAN_NOT_FOUND" as const };
+  }
+
+  const existingEntry = await pool.query(
+    `
+    SELECT "id", "status", "amountTzs"
+    FROM "CommissionLedgerEntry"
+    WHERE "orderId" = $1
+    LIMIT 1
+    `,
+    [params.orderId]
+  );
+
+  if (existingEntry.rows.length > 0) {
+    return {
+      eligible: true,
+      created: false,
+      reason: "ALREADY_EXISTS" as const,
+      ledgerEntry: existingEntry.rows[0],
+    };
+  }
+
+  const subtotal = Number(order.subtotal ?? 0);
+  const deliveryTotal = Number(order.deliveryTotal ?? 0);
+  const fixedAmountTzs = order.fixedAmountTzs === null ? null : Number(order.fixedAmountTzs);
+  const percentRate = order.percentRate === null ? null : Number(order.percentRate);
+  const percentageBps = order.percentageBps === null ? null : Number(order.percentageBps);
+  const includeDeliveryInPercent =
+    order.includeDeliveryInPercent === true || order.includedeliveryinpercent === true;
+
+  let baseAmountTzs: number | null = null;
+  let rate: number | null = null;
+  let amountTzs = 0;
+  let calculationType: "FIXED_PER_ORDER" | "PERCENT_OF_SERVICE";
+
+  if (planType === "FIXED_PER_ORDER") {
+    calculationType = "FIXED_PER_ORDER";
+    amountTzs = fixedAmountTzs ?? 0;
+  } else {
+    calculationType = "PERCENT_OF_SERVICE";
+    baseAmountTzs = includeDeliveryInPercent ? subtotal + deliveryTotal : subtotal;
+    rate = percentRate ?? percentageBps ?? 0;
+    amountTzs = Math.round((baseAmountTzs * rate) / 10000);
+  }
+
+  await pool.query("BEGIN");
+  try {
+    const ledgerEntryId = crypto.randomUUID();
+
+    await pool.query(
+      `
+      INSERT INTO "CommissionLedgerEntry" (
+        "id",
+        "affiliateShopId",
+        "orderId",
+        "planId",
+        "calculationType",
+        "baseAmountTzs",
+        "rate",
+        "amountTzs",
+        "status",
+        "earnedAt",
+        "createdAt"
+      )
+      VALUES ($1, $2, $3, $4, $5::"CommissionCalculationType", $6, $7, $8, 'EARNED', NOW(), NOW())
+      ON CONFLICT ("orderId") DO NOTHING
+      `,
+      [
+        ledgerEntryId,
+        affiliateShopId,
+        params.orderId,
+        planId,
+        calculationType,
+        baseAmountTzs,
+        rate,
+        amountTzs,
+      ]
+    );
+
+    const inserted = await pool.query(
+      `
+      SELECT "id", "amountTzs", "status"
+      FROM "CommissionLedgerEntry"
+      WHERE "orderId" = $1
+      LIMIT 1
+      `,
+      [params.orderId]
+    );
+
+    const finalEntry = inserted.rows[0];
+
+    await pool.query(
+      `
+      INSERT INTO "OrderEvent" (
+        "id", "orderId", "eventType", "occurredAt", "actorUserId",
+        "actorRole", "notes", "payloadJson", "createdAt"
+      )
+      VALUES (
+        $1, $2, 'PAYMENT_DUE', NOW(), $3, $4, $5, $6::jsonb, NOW()
+      )
+      `,
+      [
+        crypto.randomUUID(),
+        params.orderId,
+        params.actorUserId ?? null,
+        params.actorRole ?? null,
+        "Commission earned for affiliate order",
+        JSON.stringify({
+          actionCode: "COMMISSION_EARNED",
+          commissionLedgerEntryId: finalEntry?.id ?? null,
+          affiliateShopId,
+          planId,
+          calculationType,
+          baseAmountTzs,
+          rate,
+          amountTzs: Number(finalEntry?.amountTzs ?? amountTzs),
+        }),
+      ]
+    );
+
+    await recordAudit({
+      actorUserId: params.actorUserId ?? null,
+      actorRole: params.actorRole ?? null,
+      actionCode: "COMMISSION_EARNED_CREATED",
+      targetType: "ORDER",
+      targetId: params.orderId,
+      after: {
+        commissionLedgerEntryId: finalEntry?.id ?? null,
+        affiliateShopId,
+        planId,
+        calculationType,
+        baseAmountTzs,
+        rate,
+        amountTzs: Number(finalEntry?.amountTzs ?? amountTzs),
+        status: finalEntry?.status ?? "EARNED",
+      },
+      requestMeta: params.requestMeta,
+    });
+
+    await pool.query("COMMIT");
+
+    return {
+      eligible: true,
+      created: true,
+      ledgerEntry: finalEntry ?? null,
+    };
+  } catch (error) {
+    await pool.query("ROLLBACK");
+    throw error;
+  }
+}
+
 function getTodayDateUtcString() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -2395,6 +2618,35 @@ const server = http.createServer(async (req, res) => {
           [bagId, orderId, tagCode]
         );
 
+        const activePlan = await _getActivePricingPlanForChannel(channel);
+
+        const quoteBreakdown = await computeOrderPricingBreakdown({
+          orderId,
+          channel,
+          tier,
+          zoneId,
+          pricingPlanId: activePlan.id,
+          estimatedWeightKg: 1,
+          actualWeightKg: null,
+          itemEntries: [],
+        });
+
+        await replaceOrderPricingState({
+          orderId,
+          pricingPlanId: activePlan.id,
+          pricingPlanEffectiveFrom: activePlan.effectiveFrom,
+          quoteStatus: "ESTIMATED",
+          quotedAt: true,
+          finalizedAt: false,
+          inputsJson: quoteBreakdown.inputsJson,
+          lineItems: quoteBreakdown.lineItems,
+          subtotal: quoteBreakdown.subtotal,
+          deliveryTotal: quoteBreakdown.deliveryTotal,
+          discountTotal: quoteBreakdown.discountTotal,
+          grandTotal: quoteBreakdown.grandTotal,
+          balanceDue: quoteBreakdown.balanceDue,
+        });
+
         await pool.query(
           `
           INSERT INTO "OrderEvent" (
@@ -2402,7 +2654,8 @@ const server = http.createServer(async (req, res) => {
           )
           VALUES
             ($1, $2, 'ORDER_CREATED', NOW(), $3, 'AFFILIATE_STAFF', $4, $5::jsonb, NOW()),
-            ($6, $2, 'HUB_ASSIGNED', NOW(), $3, 'AFFILIATE_STAFF', $7, $8::jsonb, NOW())
+            ($6, $2, 'HUB_ASSIGNED', NOW(), $3, 'AFFILIATE_STAFF', $7, $8::jsonb, NOW()),
+            ($9, $2, 'PAYMENT_DUE', NOW(), $3, 'AFFILIATE_STAFF', $10, $11::jsonb, NOW())
           `,
           [
             crypto.randomUUID(),
@@ -2428,6 +2681,17 @@ const server = http.createServer(async (req, res) => {
               receivedAtShop: true,
               affiliateShopId,
               customerPhone,
+            }),
+            crypto.randomUUID(),
+            "Estimated quote generated at affiliate order creation",
+            JSON.stringify({
+              actionCode: "ORDER_QUOTE_GENERATED",
+              pricingPlanId: activePlan.id,
+              pricingPlanEffectiveFrom: activePlan.effectiveFrom,
+              quoteStatus: "ESTIMATED",
+              grandTotal: quoteBreakdown.grandTotal,
+              affiliateShopId,
+              channel,
             }),
           ]
         );
@@ -2748,11 +3012,168 @@ const server = http.createServer(async (req, res) => {
         throw error;
       }
 
+      await evaluateCommissionEligibility({
+        orderId: affiliateOrderPickedUpId,
+        actorUserId: authUser.id,
+        actorRole: authUser.role,
+        requestMeta: getRequestMeta(req),
+      });
+
       return json(res, 200, {
         data: {
           orderId: affiliateOrderPickedUpId,
           pickedUpByCustomer: true,
           statusCurrent: "DELIVERED",
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/affiliate/commissions") {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(
+          res,
+          403,
+          "FORBIDDEN",
+          "Only affiliate staff can view affiliate commissions"
+        );
+      }
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId"
+        FROM "AffiliateStaffProfile" asp
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      const affiliateShopId = getString(
+        affiliateScopeResult.rows[0] ?? {},
+        "affiliateShopId",
+        "affiliateshopid"
+      );
+      if (!affiliateShopId) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate shop scope was not found"
+        );
+      }
+
+      const from = String(url.searchParams.get("from") ?? "").trim();
+      const to = String(url.searchParams.get("to") ?? "").trim();
+
+      const params: unknown[] = [affiliateShopId];
+      let whereSql = `WHERE cle."affiliateShopId" = $1`;
+
+      if (from) {
+        params.push(from);
+        whereSql += ` AND cle."earnedAt" >= $${params.length}::timestamptz`;
+      }
+
+      if (to) {
+        params.push(to);
+        whereSql += ` AND cle."earnedAt" <= $${params.length}::timestamptz`;
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          cle."id",
+          cle."affiliateShopId",
+          cle."orderId",
+          cle."planId",
+          cle."calculationType",
+          cle."baseAmountTzs",
+          cle."rate",
+          cle."amountTzs",
+          cle."status",
+          cle."earnedAt",
+          cle."approvedAt",
+          cle."paidAt",
+          cle."payoutId",
+          o."orderNumber"
+        FROM "CommissionLedgerEntry" cle
+        INNER JOIN "Order" o ON o."id" = cle."orderId"
+        ${whereSql}
+        ORDER BY cle."earnedAt" DESC, cle."createdAt" DESC
+        `,
+        params
+      );
+
+      return json(res, 200, {
+        data: {
+          commissions: result.rows,
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/affiliate/payouts") {
+      const authUser = await requireAuth(req, res);
+      if (!authUser) return;
+
+      if (authUser.role !== "AFFILIATE_STAFF") {
+        return sendError(res, 403, "FORBIDDEN", "Only affiliate staff can view affiliate payouts");
+      }
+
+      const affiliateScopeResult = await pool.query(
+        `
+        SELECT asp."affiliateShopId"
+        FROM "AffiliateStaffProfile" asp
+        WHERE asp."userId" = $1
+          AND asp."isActive" = TRUE
+        LIMIT 1
+        `,
+        [authUser.id]
+      );
+
+      const affiliateShopId = getString(
+        affiliateScopeResult.rows[0] ?? {},
+        "affiliateShopId",
+        "affiliateshopid"
+      );
+      if (!affiliateShopId) {
+        return sendError(
+          res,
+          403,
+          "AFFILIATE_SCOPE_NOT_FOUND",
+          "Affiliate shop scope was not found"
+        );
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          p."id",
+          p."affiliateShopId",
+          p."periodStart",
+          p."periodEnd",
+          p."totalAmountTzs",
+          p."status",
+          p."approvedByUserId",
+          p."approvedAt",
+          p."paidByUserId",
+          p."paidAt",
+          p."paymentMethod",
+          p."paymentReference",
+          p."createdAt",
+          p."updatedAt"
+        FROM "Payout" p
+        WHERE p."affiliateShopId" = $1
+        ORDER BY p."createdAt" DESC
+        `,
+        [affiliateShopId]
+      );
+
+      return json(res, 200, {
+        data: {
+          payouts: result.rows,
         },
       });
     }
@@ -5586,6 +6007,13 @@ const server = http.createServer(async (req, res) => {
         );
       }
 
+      await evaluateCommissionEligibility({
+        orderId,
+        actorUserId: user.id,
+        actorRole: user.role,
+        requestMeta: getRequestMeta(req),
+      });
+
       const receiptResult = await pool.query(
         `
         SELECT
@@ -6135,6 +6563,478 @@ const server = http.createServer(async (req, res) => {
         },
       });
     }
+    if (method === "GET" && url.pathname === "/v1/admin/commissions") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "list commission ledger")) return;
+
+      const shopId = String(url.searchParams.get("shopId") ?? "").trim();
+      const from = String(url.searchParams.get("from") ?? "").trim();
+      const to = String(url.searchParams.get("to") ?? "").trim();
+
+      const params: unknown[] = [];
+      const conditions: string[] = [];
+
+      if (shopId) {
+        params.push(shopId);
+        conditions.push(`cle."affiliateShopId" = $${params.length}`);
+      }
+      if (from) {
+        params.push(from);
+        conditions.push(`cle."earnedAt" >= $${params.length}::timestamptz`);
+      }
+      if (to) {
+        params.push(to);
+        conditions.push(`cle."earnedAt" <= $${params.length}::timestamptz`);
+      }
+
+      const whereSql = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+      const result = await pool.query(
+        `
+        SELECT
+          cle."id",
+          cle."affiliateShopId",
+          s."name" AS "affiliateShopName",
+          cle."orderId",
+          o."orderNumber",
+          cle."planId",
+          cle."calculationType",
+          cle."baseAmountTzs",
+          cle."rate",
+          cle."amountTzs",
+          cle."status",
+          cle."earnedAt",
+          cle."approvedAt",
+          cle."paidAt",
+          cle."payoutId"
+        FROM "CommissionLedgerEntry" cle
+        INNER JOIN "AffiliateShop" s ON s."id" = cle."affiliateShopId"
+        INNER JOIN "Order" o ON o."id" = cle."orderId"
+        ${whereSql}
+        ORDER BY cle."earnedAt" DESC, cle."createdAt" DESC
+        `,
+        params
+      );
+
+      return json(res, 200, {
+        data: {
+          commissions: result.rows,
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/admin/payouts") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "create payout draft")) return;
+
+      const body = await readJsonBody(req);
+      const affiliateShopId = String(body.affiliateShopId ?? "").trim();
+      const periodStart = String(body.periodStart ?? "").trim();
+      const periodEnd = String(body.periodEnd ?? "").trim();
+
+      if (!affiliateShopId || !periodStart || !periodEnd) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "affiliateShopId, periodStart, and periodEnd are required"
+        );
+      }
+
+      const eligibleEntries = await pool.query(
+        `
+        SELECT
+          "id",
+          "amountTzs"
+        FROM "CommissionLedgerEntry"
+        WHERE "affiliateShopId" = $1
+          AND "status" = 'EARNED'
+          AND "payoutId" IS NULL
+          AND "earnedAt" >= $2::timestamptz
+          AND "earnedAt" <= $3::timestamptz
+        ORDER BY "earnedAt" ASC, "createdAt" ASC
+        `,
+        [affiliateShopId, periodStart, periodEnd]
+      );
+
+      if (eligibleEntries.rows.length === 0) {
+        return sendError(
+          res,
+          409,
+          "NO_ELIGIBLE_COMMISSIONS",
+          "No earned commission entries found for the selected period"
+        );
+      }
+
+      const totalAmountTzs = eligibleEntries.rows.reduce(
+        (sum, row) => sum + Number(row.amountTzs ?? 0),
+        0
+      );
+      const payoutId = crypto.randomUUID();
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Payout" (
+            "id", "affiliateShopId", "periodStart", "periodEnd", "totalAmountTzs",
+            "status", "createdAt", "updatedAt"
+          )
+          VALUES ($1, $2, $3::timestamptz, $4::timestamptz, $5, 'DRAFT', NOW(), NOW())
+          `,
+          [payoutId, affiliateShopId, periodStart, periodEnd, totalAmountTzs]
+        );
+
+        const eligibleIds = eligibleEntries.rows.map((row) => String(row.id));
+        for (const entryId of eligibleIds) {
+          await pool.query(
+            `
+            UPDATE "CommissionLedgerEntry"
+            SET "payoutId" = $2
+            WHERE "id" = $1
+              AND "status" = 'EARNED'
+              AND "payoutId" IS NULL
+            `,
+            [entryId, payoutId]
+          );
+        }
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return json(res, 201, {
+        data: {
+          payout: {
+            id: payoutId,
+            affiliateShopId,
+            periodStart,
+            periodEnd,
+            totalAmountTzs,
+            status: "DRAFT",
+            commissionEntryCount: eligibleEntries.rows.length,
+          },
+        },
+      });
+    }
+
+    const adminPayoutApproveId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/payouts\/([^/]+)\/approve$/
+    );
+    if (method === "POST" && adminPayoutApproveId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "approve payout")) return;
+
+      const payoutResult = await pool.query(
+        `
+        SELECT "id", "affiliateShopId", "periodStart", "periodEnd", "status"
+        FROM "Payout"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [adminPayoutApproveId]
+      );
+
+      if (payoutResult.rows.length === 0) {
+        return sendError(res, 404, "PAYOUT_NOT_FOUND", "Payout was not found");
+      }
+
+      const payout = payoutResult.rows[0];
+      const currentStatus = getString(payout, "status");
+      if (currentStatus !== "DRAFT") {
+        return sendError(res, 409, "PAYOUT_NOT_DRAFT", "Only draft payouts can be approved");
+      }
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          UPDATE "CommissionLedgerEntry"
+          SET "status" = 'APPROVED',
+              "approvedAt" = NOW()
+          WHERE "payoutId" = $1
+            AND "status" = 'EARNED'
+          `,
+          [adminPayoutApproveId]
+        );
+
+        const totalsResult = await pool.query(
+          `
+          SELECT COALESCE(SUM("amountTzs"), 0) AS total, COUNT(*) AS count
+          FROM "CommissionLedgerEntry"
+          WHERE "payoutId" = $1
+          `,
+          [adminPayoutApproveId]
+        );
+
+        await pool.query(
+          `
+          UPDATE "Payout"
+          SET "status" = 'APPROVED',
+              "approvedByUserId" = $2,
+              "approvedAt" = NOW(),
+              "totalAmountTzs" = $3,
+              "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [adminPayoutApproveId, user.id, Number(totalsResult.rows[0]?.total ?? 0)]
+        );
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PAYOUT_APPROVED",
+          targetType: "PAYOUT",
+          targetId: adminPayoutApproveId,
+          after: {
+            includedCount: Number(totalsResult.rows[0]?.count ?? 0),
+            totalAmountTzs: Number(totalsResult.rows[0]?.total ?? 0),
+          },
+          requestMeta: getRequestMeta(req),
+        });
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const approvedPayout = await pool.query(
+        `
+        SELECT
+          "id", "affiliateShopId", "periodStart", "periodEnd", "totalAmountTzs",
+          "status", "approvedByUserId", "approvedAt", "paidByUserId", "paidAt",
+          "paymentMethod", "paymentReference", "createdAt", "updatedAt"
+        FROM "Payout"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [adminPayoutApproveId]
+      );
+
+      return json(res, 200, {
+        data: {
+          payout: approvedPayout.rows[0],
+        },
+      });
+    }
+
+    const adminPayoutMarkPaidId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/payouts\/([^/]+)\/mark-paid$/
+    );
+    if (method === "POST" && adminPayoutMarkPaidId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "mark payout paid")) return;
+
+      const body = await readJsonBody(req);
+      const paymentMethod = String(body.method ?? "").trim();
+      const paymentReference =
+        body.reference === null || body.reference === undefined
+          ? null
+          : String(body.reference).trim() || null;
+
+      if (!["MOBILE_MONEY", "CASH", "BANK"].includes(paymentMethod)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "method must be MOBILE_MONEY, CASH, or BANK"
+        );
+      }
+
+      const payoutResult = await pool.query(
+        `
+        SELECT "id", "status"
+        FROM "Payout"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [adminPayoutMarkPaidId]
+      );
+
+      if (payoutResult.rows.length === 0) {
+        return sendError(res, 404, "PAYOUT_NOT_FOUND", "Payout was not found");
+      }
+
+      const currentStatus = getString(payoutResult.rows[0], "status");
+      if (currentStatus !== "APPROVED") {
+        return sendError(
+          res,
+          409,
+          "PAYOUT_NOT_APPROVED",
+          "Only approved payouts can be marked paid"
+        );
+      }
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          UPDATE "CommissionLedgerEntry"
+          SET "status" = 'PAID',
+              "paidAt" = NOW()
+          WHERE "payoutId" = $1
+            AND "status" = 'APPROVED'
+          `,
+          [adminPayoutMarkPaidId]
+        );
+
+        const totalsResult = await pool.query(
+          `
+          SELECT COALESCE(SUM("amountTzs"), 0) AS total, COUNT(*) AS count
+          FROM "CommissionLedgerEntry"
+          WHERE "payoutId" = $1
+          `,
+          [adminPayoutMarkPaidId]
+        );
+
+        await pool.query(
+          `
+          UPDATE "Payout"
+          SET "status" = 'PAID',
+              "paidByUserId" = $2,
+              "paidAt" = NOW(),
+              "paymentMethod" = $3::"PayoutMethod",
+              "paymentReference" = $4,
+              "updatedAt" = NOW(),
+              "totalAmountTzs" = $5
+          WHERE "id" = $1
+          `,
+          [
+            adminPayoutMarkPaidId,
+            user.id,
+            paymentMethod,
+            paymentReference,
+            Number(totalsResult.rows[0]?.total ?? 0),
+          ]
+        );
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PAYOUT_PAID",
+          targetType: "PAYOUT",
+          targetId: adminPayoutMarkPaidId,
+          after: {
+            includedCount: Number(totalsResult.rows[0]?.count ?? 0),
+            totalAmountTzs: Number(totalsResult.rows[0]?.total ?? 0),
+            paymentMethod,
+            paymentReference,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      const paidPayout = await pool.query(
+        `
+        SELECT
+          "id", "affiliateShopId", "periodStart", "periodEnd", "totalAmountTzs",
+          "status", "approvedByUserId", "approvedAt", "paidByUserId", "paidAt",
+          "paymentMethod", "paymentReference", "createdAt", "updatedAt"
+        FROM "Payout"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [adminPayoutMarkPaidId]
+      );
+
+      return json(res, 200, {
+        data: {
+          payout: paidPayout.rows[0],
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/admin/payouts/report") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN"], "view payout reports")) return;
+
+      const shopId = String(url.searchParams.get("shopId") ?? "").trim();
+      const from = String(url.searchParams.get("from") ?? "").trim();
+      const to = String(url.searchParams.get("to") ?? "").trim();
+
+      if (!shopId || !from || !to) {
+        return sendError(res, 400, "VALIDATION_ERROR", "shopId, from, and to are required");
+      }
+
+      const totalsResult = await pool.query(
+        `
+        SELECT
+          COALESCE(SUM(CASE WHEN "status" = 'EARNED' THEN "amountTzs" ELSE 0 END), 0) AS earned,
+          COALESCE(SUM(CASE WHEN "status" = 'APPROVED' THEN "amountTzs" ELSE 0 END), 0) AS approved,
+          COALESCE(SUM(CASE WHEN "status" = 'PAID' THEN "amountTzs" ELSE 0 END), 0) AS paid
+        FROM "CommissionLedgerEntry"
+        WHERE "affiliateShopId" = $1
+          AND "earnedAt" >= $2::timestamptz
+          AND "earnedAt" <= $3::timestamptz
+        `,
+        [shopId, from, to]
+      );
+
+      const payoutsResult = await pool.query(
+        `
+        SELECT
+          "id", "affiliateShopId", "periodStart", "periodEnd", "totalAmountTzs",
+          "status", "approvedByUserId", "approvedAt", "paidByUserId", "paidAt",
+          "paymentMethod", "paymentReference", "createdAt", "updatedAt"
+        FROM "Payout"
+        WHERE "affiliateShopId" = $1
+          AND "periodStart" >= $2::timestamptz
+          AND "periodEnd" <= $3::timestamptz
+        ORDER BY "createdAt" DESC
+        `,
+        [shopId, from, to]
+      );
+
+      const entriesResult = await pool.query(
+        `
+        SELECT
+          cle."id",
+          cle."orderId",
+          o."orderNumber",
+          cle."amountTzs",
+          cle."status",
+          cle."earnedAt",
+          cle."approvedAt",
+          cle."paidAt",
+          cle."payoutId"
+        FROM "CommissionLedgerEntry" cle
+        INNER JOIN "Order" o ON o."id" = cle."orderId"
+        WHERE cle."affiliateShopId" = $1
+          AND cle."earnedAt" >= $2::timestamptz
+          AND cle."earnedAt" <= $3::timestamptz
+        ORDER BY cle."earnedAt" DESC
+        `,
+        [shopId, from, to]
+      );
+
+      return json(res, 200, {
+        data: {
+          totals: {
+            earned: Number(totalsResult.rows[0]?.earned ?? 0),
+            approved: Number(totalsResult.rows[0]?.approved ?? 0),
+            paid: Number(totalsResult.rows[0]?.paid ?? 0),
+          },
+          payouts: payoutsResult.rows,
+          entries: entriesResult.rows,
+        },
+      });
+    }
+
     return sendError(res, 404, "NOT_FOUND", "Route not found");
   } catch (error) {
     console.error(error);
