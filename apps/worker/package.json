@@ -1,0 +1,22 @@
+{
+  "name": "@mimo/worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/dev.ts",
+    "build": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx,.mjs,.cjs --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"console.log('worker test ok')\""
+  },
+  "dependencies": {
+    "bullmq": "^5.58.5",
+    "dotenv": "^17.2.3",
+    "ioredis": "^5.8.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

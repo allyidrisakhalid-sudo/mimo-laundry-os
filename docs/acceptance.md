@@ -562,3 +562,17 @@ Gate satisfied: affiliate commissions and payouts work end-to-end with correct t
   - PAYOUT_PAID
 
 Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
+
+## Chapter 10.1.2 PASS
+
+- Added BullMQ-backed admin job enqueue endpoint.
+- Added failed job list endpoint for admin visibility.
+- Added single job detail endpoint for admin inspection.
+- Added job retry endpoint for admin operations.
+- Added worker runtime with notifications, sla-alerts, and finance queues.
+- Verified worker connects to Redis successfully.
+- Verified admin can enqueue success job and worker completes it.
+- Verified fail jobs retry with exponential backoff and end in failed state after 3 attempts.
+- Verified failed jobs remain visible through admin failed-job endpoints.
+- Verified non-admin access to admin job endpoints returns 403.
+- Gate satisfied: background jobs can be enqueued, retried, observed, and failed safely.

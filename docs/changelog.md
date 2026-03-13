@@ -313,3 +313,11 @@ Add-Content docs\acceptance.md @"
 - Added accounting v1 documentation and traceability rules
 - Verified daily close totals against direct database sums
 - Verified journal balance and accounting audit trail coverage
+
+## Chapter 10.1.2 completed
+
+- Added BullMQ + Redis worker foundation in new pps/worker
+- Added root worker dev script and parallel API/worker dev support
+- Added admin queue operations endpoints for enqueue, failed list, job detail, and retry
+- Added runtime logging for queue processing, retries, and failures
+- Verified retry/dead-letter behavior with intentional fail jobs

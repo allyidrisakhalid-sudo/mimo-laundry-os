@@ -20,6 +20,7 @@ import { URL } from "node:url";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pg from "pg";
+import { Queue } from "bullmq";
 
 const { Pool } = pg;
 
@@ -34,6 +35,77 @@ const pool = new Pool({
 const DATABASE_URL_SAFE = DATABASE_URL.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
 console.log("[mimo-api] DATABASE_URL =", DATABASE_URL_SAFE);
 
+const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
+const redisUrl = new URL(REDIS_URL);
+
+const queueConnection = {
+  host: redisUrl.hostname,
+  port: Number(redisUrl.port || 6379),
+  username: redisUrl.username || undefined,
+  password: redisUrl.password || undefined,
+  maxRetriesPerRequest: null as null,
+};
+
+const notificationsQueue = new Queue("notifications", { connection: queueConnection });
+const slaAlertsQueue = new Queue("sla-alerts", { connection: queueConnection });
+const financeQueue = new Queue("finance", { connection: queueConnection });
+
+const queueRegistry = {
+  notifications: notificationsQueue,
+  "sla-alerts": slaAlertsQueue,
+  finance: financeQueue,
+} as const;
+
+type QueueName = keyof typeof queueRegistry;
+
+function getQueueByName(queueName: string) {
+  if (queueName === "notifications") return queueRegistry.notifications;
+  if (queueName === "sla-alerts") return queueRegistry["sla-alerts"];
+  if (queueName === "finance") return queueRegistry.finance;
+  return null;
+}
+
+function summarizeJobPayload(data: unknown) {
+  if (!data || typeof data !== "object") return data;
+  const record = data as Record<string, unknown>;
+  return Object.fromEntries(Object.entries(record).slice(0, 8));
+}
+
+async function _enqueueNamedJob(
+  queueName: QueueName,
+  jobName: string,
+  data: Record<string, unknown>,
+  opts?: {
+    jobId?: string;
+    attempts?: number;
+    backoffDelayMs?: number;
+  }
+) {
+  const queue = queueRegistry[queueName];
+
+  const jobOptions: {
+    attempts: number;
+    backoff: { type: "exponential"; delay: number };
+    removeOnComplete: number;
+    removeOnFail: false;
+    jobId?: string;
+  } = {
+    attempts: opts?.attempts ?? 3,
+    backoff: {
+      type: "exponential",
+      delay: opts?.backoffDelayMs ?? 1000,
+    },
+    removeOnComplete: 50,
+    removeOnFail: false,
+  };
+
+  if (opts?.jobId) {
+    jobOptions.jobId = opts.jobId;
+  }
+
+  return queue.add(jobName, data, jobOptions);
+}
+console.log("[api] REDIS_URL =", REDIS_URL);
 type PricingBreakdownInput = {
   orderId: string;
   channel: "DOOR" | "SHOP_DROP" | "HYBRID";
@@ -3598,6 +3670,303 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (method === "GET" && url.pathname === "/v1/customer-addresses") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+
+      if (user.role !== "CUSTOMER") {
+        return sendError(res, 403, "FORBIDDEN", "Only customers can view customer addresses");
+      }
+
+      const result = await pool.query(
+        `
+        SELECT
+          "id",
+          "label",
+          "contactName",
+          "phone",
+          "addressLine1",
+          "zoneId",
+          "notes",
+          "createdAt",
+          "updatedAt"
+        FROM "CustomerAddress"
+        WHERE "userId" = $1
+        ORDER BY "createdAt" ASC
+        `,
+        [user.id]
+      );
+
+      return json(res, 200, {
+        data: {
+          addresses: result.rows.map((row) => ({
+            id: getString(row, "id"),
+            label: getString(row, "label"),
+            contactName: getString(row, "contactName", "contactname"),
+            phone: getString(row, "phone"),
+            line1: getString(row, "addressLine1", "addressline1"),
+            zoneId: getString(row, "zoneId", "zoneid"),
+            notes: getString(row, "notes"),
+            createdAt: row.createdAt ?? row.createdat ?? null,
+            updatedAt: row.updatedAt ?? row.updatedat ?? null,
+          })),
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/customer-addresses") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+
+      if (user.role !== "CUSTOMER") {
+        return sendError(res, 403, "FORBIDDEN", "Only customers can create customer addresses");
+      }
+
+      const body = await readJsonBody(req);
+
+      const label = String(body.label ?? "").trim();
+      const line1 = String(body.line1 ?? "").trim();
+      const zoneId = String(body.zoneId ?? "").trim();
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (!label || !line1 || !zoneId) {
+        return sendError(res, 400, "VALIDATION_ERROR", "label, line1, and zoneId are required");
+      }
+
+      const zoneResult = await pool.query(
+        `
+        SELECT "id", "isActive"
+        FROM "Zone"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [zoneId]
+      );
+
+      if (zoneResult.rows.length === 0) {
+        return sendError(res, 404, "ZONE_NOT_FOUND", "Zone was not found");
+      }
+
+      const zoneIsActive =
+        zoneResult.rows[0].isActive === true || zoneResult.rows[0].isactive === true;
+
+      if (!zoneIsActive) {
+        return sendError(res, 409, "ZONE_NOT_ACTIVE", "Zone is not active");
+      }
+
+      const addressId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "CustomerAddress" (
+          "id", "userId", "label", "contactName", "phone", "addressLine1",
+          "zoneId", "locationLat", "locationLng", "notes", "createdAt", "updatedAt"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, NULL, NULL, $8, NOW(), NOW()
+        )
+        `,
+        [addressId, user.id, label, user.fullName, user.phone, line1, zoneId, notes]
+      );
+
+      const createdResult = await pool.query(
+        `
+        SELECT
+          "id",
+          "label",
+          "contactName",
+          "phone",
+          "addressLine1",
+          "zoneId",
+          "notes",
+          "createdAt",
+          "updatedAt"
+        FROM "CustomerAddress"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [addressId]
+      );
+
+      const row = createdResult.rows[0];
+
+      return json(res, 201, {
+        data: {
+          address: {
+            id: getString(row, "id"),
+            label: getString(row, "label"),
+            contactName: getString(row, "contactName", "contactname"),
+            phone: getString(row, "phone"),
+            line1: getString(row, "addressLine1", "addressline1"),
+            zoneId: getString(row, "zoneId", "zoneid"),
+            notes: getString(row, "notes"),
+            createdAt: row.createdAt ?? row.createdat ?? null,
+            updatedAt: row.updatedAt ?? row.updatedat ?? null,
+          },
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/admin/jobs/enqueue") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "enqueue admin jobs")) return;
+
+      const body = await readJsonBody(req);
+      const queueName = String(body.queue ?? "").trim();
+      const jobName = String(body.jobName ?? "").trim();
+
+      if (!queueName || !jobName) {
+        return sendError(res, 400, "VALIDATION_ERROR", "queue and jobName are required");
+      }
+
+      const queue = getQueueByName(queueName);
+      if (!queue) {
+        return sendError(res, 404, "QUEUE_NOT_FOUND", "Queue was not found");
+      }
+
+      const job = await queue.add(
+        jobName,
+        {
+          ...(body.data && typeof body.data === "object" ? body.data : {}),
+          requestedByUserId: user.id,
+          requestedAt: new Date().toISOString(),
+        },
+        {
+          attempts: Number(body.attempts ?? 3),
+          backoff: {
+            type: "exponential",
+            delay: Number(body.backoffDelayMs ?? 1000),
+          },
+          removeOnComplete: 50,
+          removeOnFail: false,
+        }
+      );
+
+      return json(res, 201, {
+        data: {
+          job: {
+            id: job.id,
+            name: job.name,
+            queue: queueName,
+            attempts: job.opts.attempts ?? null,
+          },
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/admin/jobs/failed") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "view failed jobs")) return;
+
+      const queueName = String(url.searchParams.get("queue") ?? "").trim();
+      if (!queueName) {
+        return sendError(res, 400, "VALIDATION_ERROR", "queue query param is required");
+      }
+
+      const queue = getQueueByName(queueName);
+      if (!queue) {
+        return sendError(res, 404, "QUEUE_NOT_FOUND", "Queue was not found");
+      }
+
+      const jobs = await queue.getFailed(0, 50);
+
+      return json(res, 200, {
+        data: {
+          queue: queueName,
+          jobs: jobs.map((job) => ({
+            id: job.id,
+            name: job.name,
+            queue: queueName,
+            attemptsMade: job.attemptsMade,
+            failedReason: job.failedReason ?? null,
+            dataSummary: summarizeJobPayload(job.data),
+            timestamp: job.timestamp ?? null,
+            finishedOn: job.finishedOn ?? null,
+            processedOn: job.processedOn ?? null,
+          })),
+        },
+      });
+    }
+
+    const adminJobId = pathParam(url.pathname, /^\/v1\/admin\/jobs\/([^/]+)$/);
+    if (method === "GET" && adminJobId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "view job details")) return;
+
+      const queueName = String(url.searchParams.get("queue") ?? "").trim();
+      if (!queueName) {
+        return sendError(res, 400, "VALIDATION_ERROR", "queue query param is required");
+      }
+
+      const queue = getQueueByName(queueName);
+      if (!queue) {
+        return sendError(res, 404, "QUEUE_NOT_FOUND", "Queue was not found");
+      }
+
+      const job = await queue.getJob(adminJobId);
+      if (!job) {
+        return sendError(res, 404, "JOB_NOT_FOUND", "Job was not found");
+      }
+
+      const state = await job.getState();
+
+      return json(res, 200, {
+        data: {
+          job: {
+            id: job.id,
+            name: job.name,
+            queue: queueName,
+            state,
+            attemptsMade: job.attemptsMade,
+            failedReason: job.failedReason ?? null,
+            data: job.data,
+            returnvalue: job.returnvalue ?? null,
+            timestamp: job.timestamp ?? null,
+            processedOn: job.processedOn ?? null,
+            finishedOn: job.finishedOn ?? null,
+            opts: job.opts,
+          },
+        },
+      });
+    }
+
+    const adminJobRetryId = pathParam(url.pathname, /^\/v1\/admin\/jobs\/([^/]+)\/retry$/);
+    if (method === "POST" && adminJobRetryId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "retry failed jobs")) return;
+
+      const body = await readJsonBody(req);
+      const queueName = String(body.queue ?? "").trim();
+      if (!queueName) {
+        return sendError(res, 400, "VALIDATION_ERROR", "queue is required");
+      }
+
+      const queue = getQueueByName(queueName);
+      if (!queue) {
+        return sendError(res, 404, "QUEUE_NOT_FOUND", "Queue was not found");
+      }
+
+      const job = await queue.getJob(adminJobRetryId);
+      if (!job) {
+        return sendError(res, 404, "JOB_NOT_FOUND", "Job was not found");
+      }
+
+      await job.retry();
+
+      return json(res, 200, {
+        data: {
+          retried: true,
+          jobId: adminJobRetryId,
+          queue: queueName,
+        },
+      });
+    }
     if (method === "GET" && url.pathname === "/v1/auth/me") {
       const user = await requireAuth(req, res);
       if (!user) return;

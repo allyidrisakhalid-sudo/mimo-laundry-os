@@ -4,19 +4,22 @@
   "version": "0.0.1",
   "packageManager": "pnpm@10.17.0",
   "scripts": {
-    "dev": "node ./scripts/dev.mjs",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "dev": "pnpm --parallel --filter @mimo/api --filter @mimo/worker dev",
+    "worker:dev": "pnpm --filter @mimo/worker dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "gen:sdk": "pnpm --filter @mimo/sdk refresh:openapi && pnpm --filter @mimo/sdk gen",
     "check:sdk": "pnpm --filter @mimo/sdk check"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
+    "bullmq": "^5.71.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "ioredis": "^5.10.0",
     "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "turbo": "^2.8.3"
