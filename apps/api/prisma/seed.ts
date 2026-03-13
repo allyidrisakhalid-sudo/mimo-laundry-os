@@ -19,12 +19,20 @@ async function main() {
     await client.query("BEGIN");
 
     await client.query('DELETE FROM "AuditLog"');
+    await client.query('DELETE FROM "Receipt"');
+    await client.query('DELETE FROM "Refund"');
+    await client.query('DELETE FROM "CustomerCreditLedger"');
+    await client.query('DELETE FROM "CashReconciliation"');
+    await client.query('DELETE FROM "Payment"');
     await client.query('DELETE FROM "RefreshToken"');
     await client.query('DELETE FROM "TripStop"');
     await client.query('DELETE FROM "Trip"');
     await client.query('DELETE FROM "OrderIssue"');
     await client.query('DELETE FROM "OrderEvent"');
     await client.query('DELETE FROM "Bag"');
+    await client.query('DELETE FROM "OrderLineItem"');
+    await client.query('DELETE FROM "OrderTotals"');
+    await client.query('DELETE FROM "OrderPricingSnapshot"');
     await client.query('DELETE FROM "Order"');
     await client.query('DELETE FROM "CustomerAddress"');
     await client.query('DELETE FROM "DriverProfile"');
@@ -32,6 +40,12 @@ async function main() {
     await client.query('DELETE FROM "HubStaffProfile"');
     await client.query('DELETE FROM "User"');
     await client.query('DELETE FROM "AffiliateShop"');
+    await client.query('DELETE FROM "ItemRate"');
+    await client.query('DELETE FROM "KgRate"');
+    await client.query('DELETE FROM "MinimumChargeRule"');
+    await client.query('DELETE FROM "DeliveryZoneFee"');
+    await client.query('DELETE FROM "PricingPlanChannel"');
+    await client.query('DELETE FROM "PricingPlan"');
     await client.query('DELETE FROM "CommissionPlan"');
     await client.query('DELETE FROM "Hub"');
     await client.query('DELETE FROM "Zone"');
@@ -51,6 +65,74 @@ async function main() {
       ]
     );
 
+    await client.query(
+      `
+      INSERT INTO "PricingPlan" (
+        "id", "name", "status", "effectiveFrom", "effectiveTo", "createdAt", "updatedAt"
+      )
+      VALUES
+        (
+          'plan_standard_v1',
+          'Standard Launch Plan',
+          'ACTIVE',
+          NOW() - INTERVAL '1 day',
+          NULL,
+          NOW(),
+          NOW()
+        )
+      `
+    );
+
+    await client.query(
+      `
+      INSERT INTO "PricingPlanChannel" ("id", "planId", "channel", "createdAt")
+      VALUES
+        ('ppc_plan_standard_v1_door', 'plan_standard_v1', 'DOOR', NOW()),
+        ('ppc_plan_standard_v1_shop_drop', 'plan_standard_v1', 'SHOP_DROP', NOW()),
+        ('ppc_plan_standard_v1_hybrid', 'plan_standard_v1', 'HYBRID', NOW())
+      `
+    );
+
+    await client.query(
+      `
+      INSERT INTO "KgRate" (
+        "id", "planId", "tier", "serviceType", "pricePerKgTzs", "createdAt", "updatedAt"
+      )
+      VALUES
+        ('kgr_standard_48h', 'plan_standard_v1', 'STANDARD_48H', 'WASH_DRY_FOLD', 4000, NOW(), NOW()),
+        ('kgr_express_24h', 'plan_standard_v1', 'EXPRESS_24H', 'WASH_DRY_FOLD', 5500, NOW(), NOW()),
+        ('kgr_same_day', 'plan_standard_v1', 'SAME_DAY', 'WASH_DRY_FOLD', 7000, NOW(), NOW())
+      `
+    );
+
+    await client.query(
+      `
+      INSERT INTO "DeliveryZoneFee" (
+        "id", "planId", "zoneId", "doorFeeTzs", "freeThresholdTzs", "createdAt", "updatedAt"
+      )
+      VALUES
+        ('dzf_plan_standard_v1_zone_a', 'plan_standard_v1', 'zone_a', 3000, NULL, NOW(), NOW()),
+        ('dzf_plan_standard_v1_zone_b', 'plan_standard_v1', 'zone_b', 3500, NULL, NOW(), NOW())
+      `
+    );
+
+    await client.query(
+      `
+      INSERT INTO "MinimumChargeRule" (
+        "id", "planId", "tier", "channel", "minimumTzs", "createdAt", "updatedAt"
+      )
+      VALUES
+        ('mcr_standard_48h_door', 'plan_standard_v1', 'STANDARD_48H', 'DOOR', 4000, NOW(), NOW()),
+        ('mcr_standard_48h_shop_drop', 'plan_standard_v1', 'STANDARD_48H', 'SHOP_DROP', 4000, NOW(), NOW()),
+        ('mcr_standard_48h_hybrid', 'plan_standard_v1', 'STANDARD_48H', 'HYBRID', 4000, NOW(), NOW()),
+        ('mcr_express_24h_door', 'plan_standard_v1', 'EXPRESS_24H', 'DOOR', 5500, NOW(), NOW()),
+        ('mcr_express_24h_shop_drop', 'plan_standard_v1', 'EXPRESS_24H', 'SHOP_DROP', 5500, NOW(), NOW()),
+        ('mcr_express_24h_hybrid', 'plan_standard_v1', 'EXPRESS_24H', 'HYBRID', 5500, NOW(), NOW()),
+        ('mcr_same_day_door', 'plan_standard_v1', 'SAME_DAY', 'DOOR', 7000, NOW(), NOW()),
+        ('mcr_same_day_shop_drop', 'plan_standard_v1', 'SAME_DAY', 'SHOP_DROP', 7000, NOW(), NOW()),
+        ('mcr_same_day_hybrid', 'plan_standard_v1', 'SAME_DAY', 'HYBRID', 7000, NOW(), NOW())
+      `
+    );
     await client.query(
       `
       INSERT INTO "CommissionPlan" ("id", "name", "fixedAmountTzs", "isActive", "createdAt", "updatedAt", "kind", "notes", "percentageBps")

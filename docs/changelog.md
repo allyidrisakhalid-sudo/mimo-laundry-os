@@ -280,3 +280,14 @@ Add-Content docs\acceptance.md @"
 - Added payment audit logging with PAYMENT_RECORD entries
 - Added docs/finance/invoicing_receipts.md
 - Fixed payment amount parsing bug in API verification cycle
+
+## Chapter 9.3 completed
+
+- Added cash payment workflow with custody fields and immediate receipt generation
+- Added driver cash reconciliation submit and admin approval flow
+- Added mobile money manual-reference workflow with provider fields
+- Added refund issuance workflow and refund timeline events
+- Added order balance endpoint and expanded payments endpoint with refunds and ledger summary
+- Added payments v1 documentation at docs/finance/payments_v1.md
+- Fixed payment SQL parameter typing for nullable custody fields
+- Fixed refund event enum alignment in application and database

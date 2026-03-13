@@ -472,3 +472,29 @@ Proof:
 - Verified API build passed.
 
 Gate satisfied: Invoice totals match line items; receipt is consistent.
+
+## Chapter 9.3 PASS
+
+- Re-ran Chapter 9.2 payment and receipt proof before implementation.
+- Added cash payment recording endpoint at POST /v1/payments/cash.
+- Added mobile money payment recording endpoint at POST /v1/payments/mobile-money.
+- Added driver reconciliation submit endpoint at POST /v1/driver/reconciliation/submit.
+- Added admin reconciliation summary endpoint at GET /v1/admin/reconciliation/drivers?date=....
+- Added admin reconciliation approval endpoint at POST /v1/admin/reconciliation/:id/approve.
+- Added refund issuance endpoint at POST /v1/admin/refunds.
+- Added customer order balance endpoint at GET /v1/orders/:id/balance.
+- Expanded GET /v1/orders/:id/payments to include refunds and ledger summary.
+- Added payment custody and reconciliation persistence support.
+- Added refund persistence support and order refund event flow.
+- Added docs/finance/payments_v1.md.
+- Verified end-to-end gate proof:
+  - created order and finalized invoice
+  - recorded partial cash payment
+  - confirmed balance decreased
+  - submitted and approved driver reconciliation
+  - issued refund successfully
+  - confirmed refunds list updated and balance increased
+  - recorded final mobile money payment with reference
+  - confirmed latest receipt shows final mobile money reference
+  - confirmed final balance due returned to zero
+- Gate satisfied: Paid orders close balance; refund adjusts ledger correctly.

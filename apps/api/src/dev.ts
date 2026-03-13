@@ -578,6 +578,87 @@ function formatMoneyTzs(amount: number) {
   }).format(amount);
 }
 
+async function getOrderLedgerSummary(orderId: string): Promise<{
+  grandTotal: number;
+  paymentsRecorded: number;
+  refundsIssued: number;
+  creditsNet: number;
+  balanceDue: number;
+}> {
+  const totalsResult = await pool.query(
+    `
+    SELECT "grandTotal"
+    FROM "OrderTotals"
+    WHERE "orderId" = $1
+    LIMIT 1
+    `,
+    [orderId]
+  );
+
+  const grandTotal = Number(totalsResult.rows[0]?.grandTotal ?? 0);
+
+  const paymentResult = await pool.query(
+    `
+    SELECT COALESCE(SUM("amountTzs"), 0) AS total
+    FROM "Payment"
+    WHERE "orderId" = $1
+      AND "status" = 'RECORDED'
+    `,
+    [orderId]
+  );
+
+  const refundResult = await pool.query(
+    `
+    SELECT COALESCE(SUM("amountTzs"), 0) AS total
+    FROM "Refund"
+    WHERE "orderId" = $1
+      AND "status" = 'ISSUED'
+    `,
+    [orderId]
+  );
+
+  const creditResult = await pool.query(
+    `
+    SELECT COALESCE(SUM("amountTzs"), 0) AS total
+    FROM "CustomerCreditLedger"
+    WHERE "orderId" = $1
+    `,
+    [orderId]
+  );
+
+  const paymentsRecorded = Number(paymentResult.rows[0]?.total ?? 0);
+  const refundsIssued = Number(refundResult.rows[0]?.total ?? 0);
+  const creditsNet = Number(creditResult.rows[0]?.total ?? 0);
+  const balanceDue = grandTotal - paymentsRecorded + refundsIssued - creditsNet;
+
+  return {
+    grandTotal,
+    paymentsRecorded,
+    refundsIssued,
+    creditsNet,
+    balanceDue,
+  };
+}
+
+async function syncOrderBalanceDue(orderId: string): Promise<number> {
+  const ledger = await getOrderLedgerSummary(orderId);
+
+  await pool.query(
+    `
+    UPDATE "OrderTotals"
+    SET "balanceDue" = $2,
+        "updatedAt" = NOW()
+    WHERE "orderId" = $1
+    `,
+    [orderId, ledger.balanceDue]
+  );
+
+  return ledger.balanceDue;
+}
+
+function getTodayDateUtcString() {
+  return new Date().toISOString().slice(0, 10);
+}
 function nextReceiptNumber(date = new Date()) {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -4978,6 +5059,16 @@ const server = http.createServer(async (req, res) => {
           p."receivedByUserId",
           p."receivedAt",
           p."status",
+          p."provider",
+          p."providerTxnId",
+          p."verifiedAt",
+          p."verifiedByUserId",
+          p."collectedByUserId",
+          p."collectedAt",
+          p."collectedFrom",
+          p."receivedAtHubByUserId",
+          p."receivedAtHubAt",
+          p."cashBatchId",
           p."createdAt",
           p."updatedAt"
         FROM "Payment" p
@@ -4987,6 +5078,28 @@ const server = http.createServer(async (req, res) => {
         [orderPaymentsId]
       );
 
+      const refundsResult = await pool.query(
+        `
+        SELECT
+          r."id",
+          r."orderId",
+          r."paymentId",
+          r."amountTzs",
+          r."method",
+          r."reference",
+          r."reason",
+          r."createdByUserId",
+          r."createdAt",
+          r."status"
+        FROM "Refund" r
+        WHERE r."orderId" = $1
+        ORDER BY r."createdAt" ASC
+        `,
+        [orderPaymentsId]
+      );
+
+      const ledger = await getOrderLedgerSummary(orderPaymentsId);
+
       return json(res, 200, {
         data: {
           orderId: orderPaymentsId,
@@ -4994,10 +5107,53 @@ const server = http.createServer(async (req, res) => {
             ...row,
             amountFormatted: formatMoneyTzs(Number(row.amountTzs ?? 0)),
           })),
+          refunds: refundsResult.rows.map((row) => ({
+            ...row,
+            amountFormatted: formatMoneyTzs(Number(row.amountTzs ?? 0)),
+          })),
+          ledger: {
+            ...ledger,
+            grandTotalFormatted: formatMoneyTzs(ledger.grandTotal),
+            paymentsRecordedFormatted: formatMoneyTzs(ledger.paymentsRecorded),
+            refundsIssuedFormatted: formatMoneyTzs(ledger.refundsIssued),
+            creditsNetFormatted: formatMoneyTzs(ledger.creditsNet),
+            balanceDueFormatted: formatMoneyTzs(ledger.balanceDue),
+          },
         },
       });
     }
+    const orderBalanceId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/balance$/);
+    if (method === "GET" && orderBalanceId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
 
+      const order = await fetchOrderById(orderBalanceId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      if (
+        user.role === "CUSTOMER" &&
+        getString(order, "customerUserId", "customeruserid") !== user.id
+      ) {
+        return sendError(res, 403, "FORBIDDEN", "Order does not belong to customer");
+      }
+
+      const ledger = await getOrderLedgerSummary(orderBalanceId);
+      await syncOrderBalanceDue(orderBalanceId);
+
+      return json(res, 200, {
+        data: {
+          orderId: orderBalanceId,
+          ...ledger,
+          grandTotalFormatted: formatMoneyTzs(ledger.grandTotal),
+          paymentsRecordedFormatted: formatMoneyTzs(ledger.paymentsRecorded),
+          refundsIssuedFormatted: formatMoneyTzs(ledger.refundsIssued),
+          creditsNetFormatted: formatMoneyTzs(ledger.creditsNet),
+          balanceDueFormatted: formatMoneyTzs(ledger.balanceDue),
+        },
+      });
+    }
     const orderReceiptId = pathParam(url.pathname, /^\/v1\/orders\/([^/]+)\/receipt$/);
     if (method === "GET" && orderReceiptId) {
       const user = await requireAuth(req, res);
@@ -5052,78 +5208,70 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    if (method === "POST" && url.pathname === "/v1/payments") {
+    if (method === "POST" && url.pathname === "/v1/payments/cash") {
       const user = await requireAuth(req, res);
       if (!user) return;
-      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"], "record payment"))
+      if (
+        !requireRoles(
+          user,
+          res,
+          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"],
+          "record cash payment"
+        )
+      )
         return;
 
       const body = await readJsonBody(req);
       const orderId = String(body.orderId ?? "").trim();
-      const methodValue = String(body.method ?? "").trim();
+      const amountTzs = Number.isInteger(Number(body.amountTzs)) ? Number(body.amountTzs) : null;
+      const collectedFromValue = String(body.collectedFrom ?? "").trim();
       const referenceRaw =
         body.reference === null || body.reference === undefined
           ? null
           : String(body.reference).trim() || null;
-      const amountTzsRaw = Number(body.amountTzs);
-      const amountTzs = Number.isInteger(amountTzsRaw) ? amountTzsRaw : null;
+      const collectedByUserId = String(body.collectedByUserId ?? user.id).trim();
+      const receivedAtHubByUserId =
+        body.receivedAtHubByUserId === null || body.receivedAtHubByUserId === undefined
+          ? null
+          : String(body.receivedAtHubByUserId).trim() || null;
+      const cashBatchId =
+        body.cashBatchId === null || body.cashBatchId === undefined
+          ? null
+          : String(body.cashBatchId).trim() || null;
 
-      if (!orderId) {
-        return sendError(res, 400, "VALIDATION_ERROR", "orderId is required");
-      }
-
-      const validMethods = new Set(["CASH", "MOBILE_MONEY", "CARD"]);
-      if (!validMethods.has(methodValue)) {
+      if (!orderId || amountTzs === null || amountTzs <= 0) {
         return sendError(
           res,
           400,
           "VALIDATION_ERROR",
-          "method must be CASH, MOBILE_MONEY, or CARD"
+          "orderId and positive integer amountTzs are required"
         );
       }
 
-      if (amountTzs === null || amountTzs <= 0) {
-        return sendError(res, 400, "VALIDATION_ERROR", "amountTzs must be a positive integer");
+      if (!["CUSTOMER", "AFFILIATE", "OTHER"].includes(collectedFromValue)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "collectedFrom must be CUSTOMER, AFFILIATE, or OTHER"
+        );
       }
 
-      if (methodValue === "MOBILE_MONEY" && !referenceRaw) {
-        return sendError(res, 400, "VALIDATION_ERROR", "reference is required for MOBILE_MONEY");
-      }
-
-      const orderResult = await pool.query(
-        `
-        SELECT
-          o."id",
-          o."orderNumber",
-          o."customerUserId",
-          ot."grandTotal",
-          ot."balanceDue"
-        FROM "Order" o
-        LEFT JOIN "OrderTotals" ot ON ot."orderId" = o."id"
-        WHERE o."id" = $1
-        LIMIT 1
-        `,
-        [orderId]
-      );
-
-      if (orderResult.rows.length === 0) {
+      const order = await fetchOrderById(orderId);
+      if (!order) {
         return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
       }
 
-      const order = orderResult.rows[0];
-      const grandTotal = Number(order.grandTotal ?? 0);
-      const balanceDue = Number(order.balanceDue ?? 0);
-
-      if (grandTotal <= 0) {
+      const ledgerBefore = await getOrderLedgerSummary(orderId);
+      if (ledgerBefore.grandTotal <= 0) {
         return sendError(res, 409, "INVOICE_NOT_READY", "Invoice totals are not ready for payment");
       }
-
-      if (amountTzs !== balanceDue) {
+      if (amountTzs > ledgerBefore.balanceDue) {
         return sendError(
           res,
           409,
-          "PAYMENT_AMOUNT_MISMATCH",
-          `amountTzs must equal current balanceDue (${balanceDue}) in v1`
+          "PAYMENT_EXCEEDS_BALANCE",
+          `amountTzs cannot exceed current balanceDue (${ledgerBefore.balanceDue})`
         );
       }
 
@@ -5138,14 +5286,30 @@ const server = http.createServer(async (req, res) => {
           `
           INSERT INTO "Payment" (
             "id", "orderId", "method", "amountTzs", "reference",
-            "receivedByUserId", "receivedAt", "status", "createdAt", "updatedAt"
+            "receivedByUserId", "receivedAt", "status",
+            "collectedByUserId", "collectedAt", "collectedFrom",
+            "receivedAtHubByUserId", "receivedAtHubAt", "cashBatchId",
+            "createdAt", "updatedAt"
           )
           VALUES (
-            $1, $2, $3::"PaymentMethod", $4, $5,
-            $6, NOW(), 'RECORDED', NOW(), NOW()
+            $1, $2, 'CASH', $3, $4,
+            $5, NOW(), 'RECORDED',
+            $6, NOW(), $7::"CashCollectedFrom",
+            $8, CASE WHEN $8::text IS NULL THEN NULL ELSE NOW() END, $9,
+            NOW(), NOW()
           )
           `,
-          [paymentId, orderId, methodValue, amountTzs, paymentReference, user.id]
+          [
+            paymentId,
+            orderId,
+            amountTzs,
+            paymentReference,
+            user.id,
+            collectedByUserId,
+            collectedFromValue,
+            receivedAtHubByUserId,
+            cashBatchId,
+          ]
         );
 
         await pool.query(
@@ -5154,23 +5318,12 @@ const server = http.createServer(async (req, res) => {
             "id", "receiptNumber", "orderId", "paymentId", "amountTzs",
             "reference", "issuedAt", "issuedByUserId", "createdAt", "updatedAt"
           )
-          VALUES (
-            $1, $2, $3, $4, $5,
-            $6, NOW(), $7, NOW(), NOW()
-          )
+          VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, NOW(), NOW())
           `,
           [receiptId, receiptNumber, orderId, paymentId, amountTzs, paymentReference, user.id]
         );
 
-        await pool.query(
-          `
-          UPDATE "OrderTotals"
-          SET "balanceDue" = GREATEST("balanceDue" - $2, 0),
-              "updatedAt" = NOW()
-          WHERE "orderId" = $1
-          `,
-          [orderId, amountTzs]
-        );
+        const newBalance = await syncOrderBalanceDue(orderId);
 
         await pool.query(
           `
@@ -5179,8 +5332,7 @@ const server = http.createServer(async (req, res) => {
             "actorRole", "notes", "payloadJson", "createdAt"
           )
           VALUES (
-            $1, $2, 'PAID', NOW(), $3,
-            $4, $5, $6::jsonb, NOW()
+            $1, $2, 'PAID', NOW(), $3, $4, $5, $6::jsonb, NOW()
           )
           `,
           [
@@ -5188,15 +5340,17 @@ const server = http.createServer(async (req, res) => {
             orderId,
             user.id,
             user.role,
-            "Payment recorded and receipt issued",
+            "Cash payment recorded and receipt issued",
             JSON.stringify({
               actionCode: "ORDER_PAYMENT_RECORDED",
               paymentId,
               receiptId,
               receiptNumber,
-              method: methodValue,
+              method: "CASH",
               amountTzs,
               reference: paymentReference,
+              collectedFrom: collectedFromValue,
+              balanceDueAfter: newBalance,
             }),
           ]
         );
@@ -5211,9 +5365,14 @@ const server = http.createServer(async (req, res) => {
             paymentId,
             receiptId,
             receiptNumber,
-            method: methodValue,
+            method: "CASH",
             amountTzs,
             reference: paymentReference,
+            collectedFrom: collectedFromValue,
+            collectedByUserId,
+            receivedAtHubByUserId,
+            cashBatchId,
+            balanceDueAfter: newBalance,
           },
           requestMeta: getRequestMeta(req),
         });
@@ -5225,7 +5384,7 @@ const server = http.createServer(async (req, res) => {
           res,
           500,
           "PAYMENT_RECORD_FAILED",
-          error instanceof Error ? error.message : "Payment recording failed"
+          error instanceof Error ? error.message : "Cash payment recording failed"
         );
       }
 
@@ -5253,7 +5412,7 @@ const server = http.createServer(async (req, res) => {
           payment: {
             id: paymentId,
             orderId,
-            method: methodValue,
+            method: "CASH",
             amountTzs,
             amountFormatted: formatMoneyTzs(amountTzs),
             reference: paymentReference,
@@ -5262,6 +5421,536 @@ const server = http.createServer(async (req, res) => {
           receipt: {
             ...receiptResult.rows[0],
             amountFormatted: formatMoneyTzs(Number(receiptResult.rows[0]?.amountTzs ?? 0)),
+          },
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/payments/mobile-money") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (
+        !requireRoles(
+          user,
+          res,
+          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"],
+          "record mobile money payment"
+        )
+      )
+        return;
+
+      const body = await readJsonBody(req);
+      const orderId = String(body.orderId ?? "").trim();
+      const amountTzs = Number.isInteger(Number(body.amountTzs)) ? Number(body.amountTzs) : null;
+      const reference = String(body.reference ?? "").trim();
+      const provider = String(body.provider ?? "").trim();
+      const providerTxnId =
+        body.providerTxnId === null || body.providerTxnId === undefined
+          ? null
+          : String(body.providerTxnId).trim() || null;
+
+      if (!orderId || amountTzs === null || amountTzs <= 0) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "orderId and positive integer amountTzs are required"
+        );
+      }
+      if (!reference) {
+        return sendError(res, 400, "VALIDATION_ERROR", "reference is required for MOBILE_MONEY");
+      }
+      if (!["MPESA", "TIGO", "AIRTEL", "HALOPESA", "OTHER"].includes(provider)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "provider must be MPESA, TIGO, AIRTEL, HALOPESA, or OTHER"
+        );
+      }
+
+      const order = await fetchOrderById(orderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const ledgerBefore = await getOrderLedgerSummary(orderId);
+      if (ledgerBefore.grandTotal <= 0) {
+        return sendError(res, 409, "INVOICE_NOT_READY", "Invoice totals are not ready for payment");
+      }
+      if (amountTzs > ledgerBefore.balanceDue) {
+        return sendError(
+          res,
+          409,
+          "PAYMENT_EXCEEDS_BALANCE",
+          `amountTzs cannot exceed current balanceDue (${ledgerBefore.balanceDue})`
+        );
+      }
+
+      const paymentId = crypto.randomUUID();
+      const receiptId = crypto.randomUUID();
+      const receiptNumber = nextReceiptNumber();
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Payment" (
+            "id", "orderId", "method", "amountTzs", "reference",
+            "receivedByUserId", "receivedAt", "status",
+            "provider", "providerTxnId", "verifiedAt", "verifiedByUserId",
+            "createdAt", "updatedAt"
+          )
+          VALUES (
+            $1, $2, 'MOBILE_MONEY', $3, $4,
+            $5, NOW(), 'RECORDED',
+            $6::"MobileMoneyProvider", $7, NOW(), $5,
+            NOW(), NOW()
+          )
+          `,
+          [paymentId, orderId, amountTzs, reference, user.id, provider, providerTxnId]
+        );
+
+        await pool.query(
+          `
+          INSERT INTO "Receipt" (
+            "id", "receiptNumber", "orderId", "paymentId", "amountTzs",
+            "reference", "issuedAt", "issuedByUserId", "createdAt", "updatedAt"
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, NOW(), NOW())
+          `,
+          [receiptId, receiptNumber, orderId, paymentId, amountTzs, reference, user.id]
+        );
+
+        const newBalance = await syncOrderBalanceDue(orderId);
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES (
+            $1, $2, 'PAID', NOW(), $3, $4, $5, $6::jsonb, NOW()
+          )
+          `,
+          [
+            crypto.randomUUID(),
+            orderId,
+            user.id,
+            user.role,
+            "Mobile money payment recorded",
+            JSON.stringify({
+              actionCode: "ORDER_PAYMENT_RECORDED",
+              paymentId,
+              receiptId,
+              receiptNumber,
+              method: "MOBILE_MONEY",
+              amountTzs,
+              reference,
+              provider,
+              providerTxnId,
+              balanceDueAfter: newBalance,
+            }),
+          ]
+        );
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "PAYMENT_RECORD",
+          targetType: "ORDER",
+          targetId: orderId,
+          after: {
+            paymentId,
+            receiptId,
+            receiptNumber,
+            method: "MOBILE_MONEY",
+            amountTzs,
+            reference,
+            provider,
+            providerTxnId,
+            balanceDueAfter: newBalance,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        return sendError(
+          res,
+          500,
+          "PAYMENT_RECORD_FAILED",
+          error instanceof Error ? error.message : "Mobile money payment recording failed"
+        );
+      }
+
+      const receiptResult = await pool.query(
+        `
+        SELECT
+          r."id",
+          r."receiptNumber",
+          r."orderId",
+          r."paymentId",
+          r."amountTzs",
+          r."reference",
+          r."issuedAt",
+          p."method" AS "paymentMethod"
+        FROM "Receipt" r
+        INNER JOIN "Payment" p ON p."id" = r."paymentId"
+        WHERE r."id" = $1
+        LIMIT 1
+        `,
+        [receiptId]
+      );
+
+      return json(res, 201, {
+        data: {
+          payment: {
+            id: paymentId,
+            orderId,
+            method: "MOBILE_MONEY",
+            amountTzs,
+            amountFormatted: formatMoneyTzs(amountTzs),
+            reference,
+            provider,
+            providerTxnId,
+            status: "RECORDED",
+          },
+          receipt: {
+            ...receiptResult.rows[0],
+            amountFormatted: formatMoneyTzs(Number(receiptResult.rows[0]?.amountTzs ?? 0)),
+          },
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/driver/reconciliation/submit") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["DRIVER"], "submit reconciliation")) return;
+
+      const body = await readJsonBody(req);
+      const dateValue = String(body.date ?? getTodayDateUtcString()).trim();
+      const declaredCashTzs = Number.isInteger(Number(body.declaredCashTzs))
+        ? Number(body.declaredCashTzs)
+        : null;
+
+      if (declaredCashTzs === null || declaredCashTzs < 0) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "declaredCashTzs must be a non-negative integer"
+        );
+      }
+
+      const driverResult = await pool.query(
+        `
+        SELECT "id"
+        FROM "DriverProfile"
+        WHERE "userId" = $1
+        LIMIT 1
+        `,
+        [user.id]
+      );
+
+      if (driverResult.rows.length === 0) {
+        return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
+      }
+
+      const driverId = String(driverResult.rows[0].id);
+
+      const expectedResult = await pool.query(
+        `
+        SELECT COALESCE(SUM(p."amountTzs"), 0) AS total
+        FROM "Payment" p
+        WHERE p."method" = 'CASH'
+          AND p."status" = 'RECORDED'
+          AND p."collectedByUserId" = $1
+          AND p."collectedAt"::date = $2::date
+        `,
+        [user.id, dateValue]
+      );
+
+      const expectedCashTzs = Number(expectedResult.rows[0]?.total ?? 0);
+      const differenceTzs = declaredCashTzs - expectedCashTzs;
+      const reconciliationId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "CashReconciliation" (
+          "id", "driverId", "date", "expectedCashTzs", "declaredCashTzs",
+          "differenceTzs", "status", "submittedAt"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, 'SUBMITTED', NOW()
+        )
+        ON CONFLICT ("driverId", "date")
+        DO UPDATE SET
+          "expectedCashTzs" = EXCLUDED."expectedCashTzs",
+          "declaredCashTzs" = EXCLUDED."declaredCashTzs",
+          "differenceTzs" = EXCLUDED."differenceTzs",
+          "status" = 'SUBMITTED',
+          "submittedAt" = NOW(),
+          "approvedAt" = NULL,
+          "approvedByUserId" = NULL
+        `,
+        [reconciliationId, driverId, dateValue, expectedCashTzs, declaredCashTzs, differenceTzs]
+      );
+
+      return json(res, 200, {
+        data: {
+          driverId,
+          date: dateValue,
+          expectedCashTzs,
+          declaredCashTzs,
+          differenceTzs,
+          status: "SUBMITTED",
+        },
+      });
+    }
+
+    const adminReconciliationApproveId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/reconciliation\/([^/]+)\/approve$/
+    );
+    if (method === "POST" && adminReconciliationApproveId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "approve reconciliation")) return;
+
+      const existing = await pool.query(
+        `
+        SELECT *
+        FROM "CashReconciliation"
+        WHERE "id" = $1
+        LIMIT 1
+        `,
+        [adminReconciliationApproveId]
+      );
+
+      if (existing.rows.length === 0) {
+        return sendError(res, 404, "RECONCILIATION_NOT_FOUND", "Reconciliation was not found");
+      }
+
+      await pool.query(
+        `
+        UPDATE "CashReconciliation"
+        SET "status" = 'APPROVED',
+            "approvedAt" = NOW(),
+            "approvedByUserId" = $2
+        WHERE "id" = $1
+        `,
+        [adminReconciliationApproveId, user.id]
+      );
+
+      return json(res, 200, {
+        data: {
+          reconciliationId: adminReconciliationApproveId,
+          status: "APPROVED",
+          approvedByUserId: user.id,
+        },
+      });
+    }
+
+    if (method === "GET" && url.pathname === "/v1/admin/reconciliation/drivers") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "view reconciliation summary")) return;
+
+      const dateValue = String(url.searchParams.get("date") ?? getTodayDateUtcString()).trim();
+
+      const result = await pool.query(
+        `
+        SELECT
+          cr."id",
+          cr."date",
+          cr."expectedCashTzs",
+          cr."declaredCashTzs",
+          cr."differenceTzs",
+          cr."status",
+          cr."submittedAt",
+          cr."approvedAt",
+          cr."approvedByUserId",
+          dp."id" AS "driverId",
+          dp."userId" AS "driverUserId",
+          u."fullName" AS "driverName",
+          u."phone" AS "driverPhone"
+        FROM "CashReconciliation" cr
+        INNER JOIN "DriverProfile" dp ON dp."id" = cr."driverId"
+        INNER JOIN "User" u ON u."id" = dp."userId"
+        WHERE cr."date" = $1
+        ORDER BY u."fullName" ASC
+        `,
+        [dateValue]
+      );
+
+      return json(res, 200, {
+        data: {
+          date: dateValue,
+          reconciliations: result.rows,
+        },
+      });
+    }
+
+    if (method === "POST" && url.pathname === "/v1/admin/refunds") {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN", "HUB_STAFF"], "issue refund")) return;
+
+      const body = await readJsonBody(req);
+      const orderId = String(body.orderId ?? "").trim();
+      const paymentId =
+        body.paymentId === null || body.paymentId === undefined
+          ? null
+          : String(body.paymentId).trim() || null;
+      const amountTzs = Number.isInteger(Number(body.amountTzs)) ? Number(body.amountTzs) : null;
+      const methodValue = String(body.method ?? "").trim();
+      const reference =
+        body.reference === null || body.reference === undefined
+          ? null
+          : String(body.reference).trim() || null;
+      const reason = String(body.reason ?? "").trim();
+
+      if (!orderId || amountTzs === null || amountTzs <= 0 || !reason) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "orderId, positive integer amountTzs, and reason are required"
+        );
+      }
+      if (!["CASH", "MOBILE_MONEY", "CREDIT"].includes(methodValue)) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_ERROR",
+          "method must be CASH, MOBILE_MONEY, or CREDIT"
+        );
+      }
+
+      const order = await fetchOrderById(orderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const customerUserId = getString(order, "customerUserId", "customeruserid");
+      if (!customerUserId) {
+        return sendError(res, 409, "CUSTOMER_NOT_FOUND", "Order has no customer user");
+      }
+
+      const refundId = crypto.randomUUID();
+
+      await pool.query("BEGIN");
+      try {
+        await pool.query(
+          `
+          INSERT INTO "Refund" (
+            "id", "orderId", "paymentId", "amountTzs", "method",
+            "reference", "reason", "createdByUserId", "createdAt", "status"
+          )
+          VALUES (
+            $1, $2, $3, $4, $5::"RefundMethod",
+            $6, $7, $8, NOW(), 'ISSUED'
+          )
+          `,
+          [refundId, orderId, paymentId, amountTzs, methodValue, reference, reason, user.id]
+        );
+
+        if (methodValue === "CREDIT") {
+          await pool.query(
+            `
+            INSERT INTO "CustomerCreditLedger" (
+              "id", "customerUserId", "orderId", "amountTzs", "reason", "createdAt"
+            )
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            `,
+            [crypto.randomUUID(), customerUserId, orderId, amountTzs, reason]
+          );
+        }
+
+        const newBalance = await syncOrderBalanceDue(orderId);
+
+        await pool.query(
+          `
+          INSERT INTO "OrderEvent" (
+            "id", "orderId", "eventType", "occurredAt", "actorUserId",
+            "actorRole", "notes", "payloadJson", "createdAt"
+          )
+          VALUES
+          ($1, $2, 'REFUND_REQUESTED', NOW(), $3, $4, $5, $6::jsonb, NOW()),
+          ($7, $2, 'REFUND_ISSUED', NOW(), $3, $4, $8, $9::jsonb, NOW())
+          `,
+          [
+            crypto.randomUUID(),
+            orderId,
+            user.id,
+            user.role,
+            "Refund requested",
+            JSON.stringify({
+              actionCode: "REFUND_REQUESTED",
+              amountTzs,
+              method: methodValue,
+              reason,
+            }),
+            crypto.randomUUID(),
+            "Refund issued",
+            JSON.stringify({
+              actionCode: "REFUND_ISSUED",
+              refundId,
+              paymentId,
+              amountTzs,
+              method: methodValue,
+              reference,
+              reason,
+              balanceDueAfter: newBalance,
+            }),
+          ]
+        );
+
+        await recordAudit({
+          actorUserId: user.id,
+          actorRole: user.role,
+          actionCode: "REFUND_ISSUE",
+          targetType: "ORDER",
+          targetId: orderId,
+          after: {
+            refundId,
+            paymentId,
+            amountTzs,
+            method: methodValue,
+            reference,
+            reason,
+            balanceDueAfter: newBalance,
+          },
+          requestMeta: getRequestMeta(req),
+        });
+
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        return sendError(
+          res,
+          500,
+          "REFUND_ISSUE_FAILED",
+          error instanceof Error ? error.message : "Refund issuance failed"
+        );
+      }
+
+      return json(res, 201, {
+        data: {
+          refund: {
+            id: refundId,
+            orderId,
+            paymentId,
+            amountTzs,
+            amountFormatted: formatMoneyTzs(amountTzs),
+            method: methodValue,
+            reference,
+            reason,
+            status: "ISSUED",
           },
         },
       });

@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "OrderIssueType" ADD VALUE 'REFUND_REQUESTED';

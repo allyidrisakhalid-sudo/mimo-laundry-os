@@ -74,6 +74,7 @@ enum OrderIssueType {
   MISSING_ITEM
   DELAY
   REFUND_REQUEST
+  REFUND_REQUESTED
 }
 
 enum OrderSourceType {
@@ -216,8 +217,13 @@ model User {
   Order                 Order[]
   refreshTokens         RefreshToken[]
   auditLogs             AuditLog[]
-paymentsRecorded      Payment[] @relation("Payment_receivedByUserId")
-receiptsIssued        Receipt[] @relation("Receipt_issuedByUserId")
+  paymentsReceived        Payment[]             @relation("Payment_receivedByUserId")
+  paymentsCollected       Payment[]             @relation("Payment_collectedByUserId")
+  paymentsReceivedAtHub   Payment[]             @relation("Payment_receivedAtHubByUserId")
+  paymentsVerified        Payment[]             @relation("Payment_verifiedByUserId")
+  receiptsIssued          Receipt[]             @relation("Receipt_issuedByUserId")
+  refundsCreated          Refund[]              @relation("Refund_createdByUserId")
+  reconciliationsApproved CashReconciliation[]  @relation("CashReconciliation_approvedByUserId")
 }
 
 model DriverProfile {
@@ -235,6 +241,7 @@ model DriverProfile {
   homeZone           Zone                     @relation(fields: [homeZoneId], references: [id])
   user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   Trip               Trip[]
+  cashReconciliations CashReconciliation[]
 }
 
 model CustomerAddress {
@@ -292,6 +299,7 @@ model Order {
 
   totals   OrderTotals?
 payments Payment[]
+  refunds           Refund[]
 receipts Receipt[]
 }
 
@@ -475,8 +483,41 @@ enum PaymentMethod {
 }
 
 enum PaymentStatus {
+  PENDING
   RECORDED
   REVERSED
+}
+
+
+enum CashCollectedFrom {
+  CUSTOMER
+  AFFILIATE
+  OTHER
+}
+
+enum MobileMoneyProvider {
+  MPESA
+  TIGO
+  AIRTEL
+  HALOPESA
+  OTHER
+}
+
+enum RefundMethod {
+  CASH
+  MOBILE_MONEY
+  CREDIT
+}
+
+enum RefundStatus {
+  ISSUED
+  REVERSED
+}
+
+enum CashReconciliationStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
 }
 
 model PricingPlan {
@@ -623,23 +664,39 @@ model OrderTotals {
 }
 
 model Payment {
-  id               String        @id
-  orderId          String
-  method           PaymentMethod
-  amountTzs        Int
-  reference        String?
-  receivedByUserId String?
-  receivedAt       DateTime      @default(now())
-  status           PaymentStatus @default(RECORDED)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                     String              @id
+  orderId                String
+  method                 PaymentMethod
+  amountTzs              Int
+  reference              String?
+  receivedByUserId       String?
+  receivedAt             DateTime            @default(now())
+  status                 PaymentStatus       @default(RECORDED)
+  collectedByUserId      String?
+  collectedAt            DateTime?
+  collectedFrom          CashCollectedFrom?
+  receivedAtHubByUserId  String?
+  receivedAtHubAt        DateTime?
+  cashBatchId            String?
+  provider               MobileMoneyProvider?
+  providerTxnId          String?
+  rawCallbackJson        Json?
+  verifiedAt             DateTime?
+  verifiedByUserId       String?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
-  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  receivedBy User?     @relation("Payment_receivedByUserId", fields: [receivedByUserId], references: [id], onDelete: SetNull)
-  receipts   Receipt[]
+  order                  Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  receivedBy             User?               @relation("Payment_receivedByUserId", fields: [receivedByUserId], references: [id], onDelete: SetNull)
+  collectedBy            User?               @relation("Payment_collectedByUserId", fields: [collectedByUserId], references: [id], onDelete: SetNull)
+  receivedAtHubBy        User?               @relation("Payment_receivedAtHubByUserId", fields: [receivedAtHubByUserId], references: [id], onDelete: SetNull)
+  verifiedBy             User?               @relation("Payment_verifiedByUserId", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+  receipts               Receipt[]
+  refunds                Refund[]
 
   @@index([orderId, receivedAt])
   @@index([status])
+  @@index([method, receivedAt])
 }
 
 model Receipt {
@@ -660,4 +717,60 @@ model Receipt {
 
   @@index([orderId, issuedAt])
 }
+
+
+model Refund {
+  id              String       @id
+  orderId         String
+  paymentId       String?
+  amountTzs       Int
+  method          RefundMethod
+  reference       String?
+  reason          String
+  createdByUserId String
+  createdAt       DateTime     @default(now())
+  status          RefundStatus @default(ISSUED)
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payment    Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  createdBy  User     @relation("Refund_createdByUserId", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([status])
+}
+
+model CustomerCreditLedger {
+  id             String   @id
+  customerUserId String
+  orderId        String?
+  amountTzs      Int
+  reason         String
+  createdAt      DateTime @default(now())
+
+  @@index([customerUserId, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model CashReconciliation {
+  id                String                   @id
+  driverId          String
+  date              String
+  expectedCashTzs   Int
+  declaredCashTzs   Int?
+  differenceTzs     Int?
+  status            CashReconciliationStatus @default(OPEN)
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  approvedByUserId  String?
+
+  driver            DriverProfile            @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  approvedBy        User?                    @relation("CashReconciliation_approvedByUserId", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([driverId, date])
+  @@index([date, status])
+}
+
+
+
+
 
