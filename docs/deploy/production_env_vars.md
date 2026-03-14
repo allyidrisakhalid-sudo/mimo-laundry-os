@@ -13,7 +13,7 @@
 - R2_PUBLIC_BASE_URL
 - SENTRY_DSN
 - APP_ENV=production
-- CORS_ALLOWED_ORIGINS=https://app.mimolaundry.org
+- CORS_ALLOWED_ORIGINS=https://www.mimolaundry.org,https://app.mimolaundry.org
 - LOG_LEVEL=info
 
 ## Web
@@ -21,12 +21,7 @@
 - NEXT_PUBLIC_API_BASE_URL=https://api.mimolaundry.org
 - NEXT_PUBLIC_APP_ENV=production
 
-## Verified production targets
+## Correction note
 
-- Web URL: https://app.mimolaundry.org
-- API URL: https://api.mimolaundry.org
-
-## Hosting note
-
-- Current Vercel project is used as the production web target.
-- Render production API service: mimo-laundry-os-prod-api
+- Production web must not reference staging API.
+- Any old value such as https://mimo-laundry-os-staging-api.onrender.com is invalid for production.

@@ -388,3 +388,10 @@ Add-Content docs\acceptance.md @"
 - Verified production customer order read path and admin daily close reporting
 - Verified RBAC by proving customer requests to admin endpoints return 403
 - Locked current Vercel project as the production web target
+
+## Chapter 12.1 started
+
+- Added operational readiness SOP pack for hub, driver, affiliate, support, and admin routines
+- Added dry-run simulation plan for 10 mixed orders across door and shop workflows
+- Added dry-run results template to capture evidence, issues, and pass/fail outcome
+- Revalidated Chapter 11.3 production pre-flight requirements before simulation

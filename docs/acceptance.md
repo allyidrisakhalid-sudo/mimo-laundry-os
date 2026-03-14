@@ -769,3 +769,22 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Vercel domain verification screenshot
 - Render custom domain verification screenshot
 - Production deploy proof
+
+## Chapter 12.1 IN PROGRESS
+
+- Re-verified Chapter 11.3 production pre-flight requirements before operational simulation:
+  - production web reachable
+  - production API reachable
+  - \/v1/health\ checked
+  - \/v1/health/db\ checked
+  - monitoring documentation present
+- Created operational readiness pack:
+  - \docs/ops/sop_hub.md\
+  - \docs/ops/sop_driver.md\
+  - \docs/ops/sop_affiliate.md\
+  - \docs/ops/support_playbooks.md\
+  - \docs/ops/admin_routines.md\
+  - \docs/ops/dry_run_plan.md\
+  - \docs/ops/dry_run_results.md\
+- Next required action: execute the 10-order dry-run and fill \docs/ops/dry_run_results.md\.
+- PASS is not granted until the dry-run completes and evidence is recorded.
