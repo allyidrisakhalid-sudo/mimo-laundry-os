@@ -341,3 +341,12 @@ Add-Content docs\acceptance.md @"
 - Added abuse simulation tests for login and OTP throttling
 - Added Vitest API harness and Windows-safe process cleanup for repeatable local test execution
 - Added security hardening documentation in docs/security/security_hardening.md
+
+## Chapter 10.4 completed
+
+- Added automated PostgreSQL backup script in scripts/backup_db.ps1
+- Added scripted restore drill in scripts/restore_db.ps1
+- Added backup retention and disaster recovery runbook in docs/reliability/backups_disaster_recovery.md
+- Hardened backup/restore env resolution for local and staging-like execution
+- Updated API dotenv loading to respect injected runtime DATABASE_URL during restore verification
+- Verified backup artifact creation, staging-like restore, restored data checks, and API boot against restored database

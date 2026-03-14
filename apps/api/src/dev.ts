@@ -9,11 +9,11 @@ const serviceEnvPath = path.resolve(process.cwd(), "apps/api/.env");
 const localServiceEnvPath = path.resolve(process.cwd(), ".env");
 
 if (fs.existsSync(serviceEnvPath)) {
-  dotenv.config({ path: serviceEnvPath, override: true });
+  dotenv.config({ path: serviceEnvPath, override: false });
 } else if (fs.existsSync(localServiceEnvPath)) {
-  dotenv.config({ path: localServiceEnvPath, override: true });
+  dotenv.config({ path: localServiceEnvPath, override: false });
 } else if (fs.existsSync(repoRootEnvPath)) {
-  dotenv.config({ path: repoRootEnvPath, override: true });
+  dotenv.config({ path: repoRootEnvPath, override: false });
 }
 
 import crypto from "node:crypto";

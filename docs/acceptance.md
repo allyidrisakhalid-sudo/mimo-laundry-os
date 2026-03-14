@@ -627,3 +627,25 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Verified full API test suite passes:
   - 15 tests passed
 - Gate satisfied: Abuse tests fail safely; forbidden access always blocked.
+
+## Chapter 10.4 PASS
+
+- Re-ran Chapter 10.3 pre-flight verification successfully before backup work.
+- Added database backup script at scripts/backup_db.ps1.
+- Added restore drill script at scripts/restore_db.ps1.
+- Added backup and disaster recovery runbook at docs/reliability/backups_disaster_recovery.md.
+- Corrected backup/restore script DATABASE_URL precedence so repo app config is preferred unless explicitly overridden.
+- Corrected API env loading so injected runtime DATABASE_URL is respected during restore drill boot.
+- Produced backup artifact:
+  - ackups/db/mimo-db-mimo_laundry_os-20260314-134646.dump
+  - size: 125911 bytes
+- Restored backup into staging-like database mimo_laundry_os_staging_restore.
+- Verified restored tables exist and restored data is present:
+  - orders_count = 2
+  - users_count = 8
+- Booted API against restored database and confirmed startup log referenced mimo_laundry_os_staging_restore.
+- Verified:
+  - GET /v1/health returned ok
+  - GET /v1/health/db returned ok
+  - admin login succeeded against restored database
+- Gate satisfied: Restore succeeds and app boots.
