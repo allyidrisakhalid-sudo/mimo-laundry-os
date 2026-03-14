@@ -360,3 +360,14 @@ Add-Content docs\acceptance.md @"
 - Documented CI/CD workflow, secrets, and deploy sequence in docs/deploy/cicd.md
 - Documented rollback strategy in docs/deploy/rollback.md
 - Added ignore rules for generated SDK dist output and local backups
+
+## Chapter 11.2 completed
+
+- Locked staging hosting targets across Vercel, Render, Neon, Upstash, and Cloudflare R2
+- Added staging deployment documentation and environment variable documentation
+- Provisioned isolated staging Postgres, Redis, and private object storage
+- Deployed staging API and worker on Render
+- Deployed staging web on Vercel with monorepo-specific build settings
+- Verified staging health and db health endpoints
+- Verified staging web loads successfully
+- Established full staging environment baseline for production rollout

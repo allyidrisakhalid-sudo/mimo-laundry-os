@@ -672,3 +672,34 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
   - run smoke tests against /v1/health and /v1/health/db
 - Added rollback strategy documentation with evidence capture, decision owner, app rollback, and forward-only DB correction policy
 - Gate target prepared: CI passes on main; staging deploy automated once staging secrets are configured
+
+## Chapter 11.2 PASS
+
+- Provisioned full staging environment with isolated services and secrets.
+- Staging web deployed on Vercel.
+- Staging API deployed on Render.
+- Staging worker deployed on Render.
+- Staging Postgres provisioned on Neon.
+- Staging Redis provisioned on Upstash.
+- Staging storage bucket provisioned on Cloudflare R2 with public access disabled.
+- Verified staging API health endpoint returned ok.
+- Verified staging API database health endpoint returned ok.
+- Verified staging web loads successfully.
+- Verified staging worker reached live state.
+- Gate satisfied: Staging smoke tests pass end-to-end at minimum health + db + deployed web/worker proof.
+
+### Staging URLs
+
+- Web: https://mimo-laundry-os-staging-web.vercel.app
+- API: https://mimo-laundry-os-staging-api.onrender.com
+
+### Proof captured
+
+- GitHub CI green on main
+- Vercel staging deployment ready
+- Render API live
+- Render worker live
+- /v1/health proof captured
+- /v1/health/db proof captured
+- R2 bucket proof captured
+- Neon and Upstash staging resource proof captured
