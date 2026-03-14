@@ -33,6 +33,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mimo_laundry_os_ci
         run: pnpm --filter @mimo/api db:generate
 
       - name: Lint
