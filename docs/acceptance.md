@@ -788,3 +788,26 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
   - \docs/ops/dry_run_results.md\
 - Next required action: execute the 10-order dry-run and fill \docs/ops/dry_run_results.md\.
 - PASS is not granted until the dry-run completes and evidence is recorded.
+
+## Chapter 11.3 correction PASS
+
+### Reopen reason
+
+- Initial Chapter 11.3 acceptance was premature.
+- Production truth was re-validated after Chapter 12.1 exposed gaps.
+
+### Corrected proof
+
+- mimolaundry.org apex resolves and redirects to https://www.mimolaundry.org/
+- www.mimolaundry.org resolves and loads
+- api.mimolaundry.org resolves and health/db-health return ok
+- Production auth works for seeded admin and customer
+- Customer order read works in production
+- Admin daily-close works in production
+- RBAC verified with customer -> admin report returning 403
+- Production role routes now live on deployed web:
+  - /customer
+  - /affiliate
+  - /driver
+  - /hub
+  - /admin

@@ -395,3 +395,11 @@ Add-Content docs\acceptance.md @"
 - Added dry-run simulation plan for 10 mixed orders across door and shop workflows
 - Added dry-run results template to capture evidence, issues, and pass/fail outcome
 - Revalidated Chapter 11.3 production pre-flight requirements before simulation
+
+## Chapter 11.3 corrected
+
+- Reopened Chapter 11.3 after premature acceptance was discovered during Chapter 12.1
+- Verified apex/root domain redirect and www production domain readiness
+- Corrected production web deployment truth and redeployed latest production web
+- Added production role portal routes for customer, affiliate, driver, hub, and admin
+- Re-verified production auth, reporting, RBAC, and live role-route availability
