@@ -61,6 +61,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @mimo/api db:generate
 
+      - name: Apply database migrations
+        run: pnpm --filter @mimo/api db:migrate:deploy
+
       - name: Lint
         run: pnpm -r lint
 
