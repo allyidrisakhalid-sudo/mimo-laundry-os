@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import dotenv from "dotenv";
+import Redis from "ioredis";
 import http from "node:http";
 
 const repoRootEnvPath = path.resolve(process.cwd(), ".env");
@@ -106,6 +107,20 @@ async function _enqueueNamedJob(
   return queue.add(jobName, data, jobOptions);
 }
 console.log("[api] REDIS_URL =", REDIS_URL);
+
+const rateLimitRedis = new Redis({
+  host: redisUrl.hostname,
+  port: Number(redisUrl.port || 6379),
+  username: redisUrl.username || undefined,
+  password: redisUrl.password || undefined,
+  maxRetriesPerRequest: 1,
+  enableReadyCheck: true,
+});
+
+rateLimitRedis.on("error", (error) => {
+  console.error("[rate-limit][redis]", error instanceof Error ? error.message : error);
+});
+
 type PricingBreakdownInput = {
   orderId: string;
   channel: "DOOR" | "SHOP_DROP" | "HYBRID";
@@ -1397,6 +1412,192 @@ function getString(row: Record<string, unknown>, ...keys: string[]) {
   return null;
 }
 
+type RateLimitResult = {
+  allowed: boolean;
+  key: string;
+  count: number;
+  limit: number;
+  remaining: number;
+  retryAfterSeconds: number;
+};
+
+function getClientIp(req: http.IncomingMessage) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return forwarded[0]?.split(",")[0]?.trim() ?? "unknown";
+  }
+
+  return req.socket.remoteAddress?.trim() || "unknown";
+}
+
+function sanitizeRateKeyPart(value: string) {
+  return value.replace(/[^a-zA-Z0-9:_@.+-]/g, "_").slice(0, 120) || "unknown";
+}
+
+async function consumeRateLimit(
+  scope: string,
+  subject: string,
+  limit: number,
+  windowSeconds: number
+): Promise<RateLimitResult> {
+  const key = `rate-limit:${scope}:${sanitizeRateKeyPart(subject)}`;
+  const count = await rateLimitRedis.incr(key);
+
+  if (count === 1) {
+    await rateLimitRedis.expire(key, windowSeconds);
+  }
+
+  const ttlRaw = await rateLimitRedis.ttl(key);
+  const retryAfterSeconds = ttlRaw > 0 ? ttlRaw : windowSeconds;
+  const remaining = Math.max(0, limit - count);
+
+  return {
+    allowed: count <= limit,
+    key,
+    count,
+    limit,
+    remaining,
+    retryAfterSeconds,
+  };
+}
+
+async function enforceRateLimit(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: {
+    scope: string;
+    subject: string;
+    limit: number;
+    windowSeconds: number;
+    message?: string;
+  }
+) {
+  try {
+    const result = await consumeRateLimit(
+      params.scope,
+      params.subject,
+      params.limit,
+      params.windowSeconds
+    );
+
+    res.setHeader("X-RateLimit-Limit", String(params.limit));
+    res.setHeader("X-RateLimit-Remaining", String(result.remaining));
+    res.setHeader("Retry-After", String(result.retryAfterSeconds));
+
+    if (!result.allowed) {
+      return sendError(
+        res,
+        429,
+        "RATE_LIMITED",
+        params.message ?? "Too many requests. Please try again later.",
+        {
+          scope: params.scope,
+          limit: params.limit,
+          retryAfterSeconds: result.retryAfterSeconds,
+          path: req.url ?? "",
+        }
+      );
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[rate-limit][enforce]", error instanceof Error ? error.message : error);
+    return true;
+  }
+}
+function ensureObjectBody(body: unknown) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new Error("Request body must be a JSON object");
+  }
+
+  return body as Record<string, unknown>;
+}
+
+function rejectUnknownFields(body: Record<string, unknown>, allowedFields: string[]) {
+  const allowed = new Set(allowedFields);
+  const unknown = Object.keys(body).filter((key) => !allowed.has(key));
+
+  if (unknown.length > 0) {
+    throw new Error(`Unknown field(s): ${unknown.join(", ")}`);
+  }
+}
+
+function validateOptionalPhotoRef(value: unknown, fieldName: string) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const signedUploadPattern = /^upload:\/\/[A-Za-z0-9/_.-]{1,200}$/;
+  const signedAssetPattern = /^https:\/\/[A-Za-z0-9.-]+\/[A-Za-z0-9/_.?=&%-]{1,500}$/;
+
+  if (
+    uuidPattern.test(normalized) ||
+    signedUploadPattern.test(normalized) ||
+    signedAssetPattern.test(normalized)
+  ) {
+    return normalized;
+  }
+
+  throw new Error(`${fieldName} must be a UUID, upload:// reference, or https asset URL`);
+}
+
+function validateOptionalSignatureName(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  if (normalized.length > 120) {
+    throw new Error("signatureName must be 120 characters or fewer");
+  }
+
+  return normalized;
+}
+
+function validateOptionalNotes(value: unknown, fieldName = "notes") {
+  if (value === null || value === undefined || value === "") return null;
+
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  if (normalized.length > 1000) {
+    throw new Error(`${fieldName} must be 1000 characters or fewer`);
+  }
+
+  return normalized;
+}
+
+function _validatePositiveNumber(value: unknown, fieldName: string, max?: number) {
+  const num = Number(value);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    throw new Error(`${fieldName} must be a positive number`);
+  }
+
+  if (max !== undefined && num > max) {
+    throw new Error(`${fieldName} must be <= ${max}`);
+  }
+
+  return num;
+}
+
+function _validatePositiveInteger(value: unknown, fieldName: string, max?: number) {
+  const num = Number(value);
+
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new Error(`${fieldName} must be a positive integer`);
+  }
+
+  if (max !== undefined && num > max) {
+    throw new Error(`${fieldName} must be <= ${max}`);
+  }
+
+  return num;
+}
 async function readJsonBody(req: http.IncomingMessage) {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -1806,6 +2007,26 @@ const server = http.createServer(async (req, res) => {
       return res.end();
     }
 
+    const requestIp = getClientIp(req);
+    const shouldSkipGlobalRateLimit =
+      method === "OPTIONS" ||
+      url.pathname === "/health" ||
+      url.pathname === "/v1/health" ||
+      url.pathname === "/v1/health/db";
+
+    if (!shouldSkipGlobalRateLimit) {
+      const globalAllowed = await enforceRateLimit(req, res, {
+        scope: "global-ip",
+        subject: requestIp,
+        limit: 120,
+        windowSeconds: 60,
+        message: "Too many requests from this IP. Please slow down.",
+      });
+
+      if (globalAllowed !== true) {
+        return;
+      }
+    }
     if (method === "GET" && url.pathname === "/health") {
       console.log("[login] tokens issued");
 
@@ -1864,9 +2085,28 @@ const server = http.createServer(async (req, res) => {
       return res.end();
     }
 
-    if (method === "GET" && url.pathname === "/api/openapi.json") {
-      console.log("[login] tokens issued");
+    if (method === "GET" && url.pathname === "/api/") {
+      setCorsHeaders(res);
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      return res.end(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mimo API Docs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; color: #111; }
+    code, a { word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>Mimo API Docs</h1>
+  <p>OpenAPI JSON: <a href="/api/openapi.json">/api/openapi.json</a></p>
+</body>
+</html>`);
+    }
 
+    if (method === "GET" && url.pathname === "/api/openapi.json") {
       return json(res, 200, {
         openapi: "3.1.0",
         info: { title: "Mimo API", version: "v1" },
@@ -2160,6 +2400,18 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && url.pathname === "/v1/auth/register") {
+      const registerAllowed = await enforceRateLimit(req, res, {
+        scope: "auth-register-ip",
+        subject: requestIp,
+        limit: 5,
+        windowSeconds: 60,
+        message: "Too many registration attempts from this IP.",
+      });
+
+      if (registerAllowed !== true) {
+        return;
+      }
+
       const body = await readJsonBody(req);
       const phone = normalizePhone(String(body.phone ?? ""));
       const fullName = String(body.fullName ?? "").trim();
@@ -2212,6 +2464,31 @@ const server = http.createServer(async (req, res) => {
     if (method === "POST" && url.pathname === "/v1/auth/login") {
       try {
         const body = await readJsonBody(req);
+
+        const loginIpAllowed = await enforceRateLimit(req, res, {
+          scope: "auth-login-ip",
+          subject: requestIp,
+          limit: 10,
+          windowSeconds: 60,
+          message: "Too many login attempts from this IP.",
+        });
+
+        if (loginIpAllowed !== true) {
+          return;
+        }
+
+        const loginIdentityRaw = String(body.phone ?? body.email ?? "").trim() || "unknown";
+        const loginIdentityAllowed = await enforceRateLimit(req, res, {
+          scope: "auth-login-identity",
+          subject: loginIdentityRaw,
+          limit: 5,
+          windowSeconds: 60,
+          message: "Too many login attempts for this identity.",
+        });
+
+        if (loginIdentityAllowed !== true) {
+          return;
+        }
         const phone = normalizePhone(String(body.phone ?? ""));
         const password = String(body.password ?? "");
 
@@ -4518,17 +4795,37 @@ const server = http.createServer(async (req, res) => {
         return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
       }
 
-      const body = await readJsonBody(req);
+      const body = ensureObjectBody(await readJsonBody(req));
+
+      try {
+        rejectUnknownFields(body, ["tagCode", "photoRef", "notes"]);
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_FAILED",
+          error instanceof Error ? error.message : "Invalid request body"
+        );
+      }
+
       const tagCode = String(body.tagCode ?? "").trim();
-      const photoRef =
-        body.photoRef === null || body.photoRef === undefined
-          ? null
-          : String(body.photoRef).trim() || null;
-      const notes =
-        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+      let photoRef: string | null = null;
+      let notes: string | null = null;
+
+      try {
+        photoRef = validateOptionalPhotoRef(body.photoRef, "photoRef");
+        notes = validateOptionalNotes(body.notes);
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_FAILED",
+          error instanceof Error ? error.message : "Invalid request body"
+        );
+      }
 
       if (!tagCode) {
-        return sendError(res, 400, "VALIDATION_ERROR", "tagCode is required");
+        return sendError(res, 400, "VALIDATION_FAILED", "tagCode is required");
       }
 
       const stopResult = await pool.query(
@@ -4648,6 +4945,18 @@ const server = http.createServer(async (req, res) => {
       if (!user) return;
       if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN"], "generate delivery otp")) return;
 
+      const otpGenerateAllowed = await enforceRateLimit(req, res, {
+        scope: "otp-generate-admin",
+        subject: `${requestIp}:${user.id}`,
+        limit: 3,
+        windowSeconds: 3600,
+        message: "Too many OTP generation requests for this actor.",
+      });
+
+      if (otpGenerateAllowed !== true) {
+        return;
+      }
+
       const body = await readJsonBody(req);
       const expiresInHoursRaw = Number(body.expiresInHours ?? 6);
       const expiresInHours = Number.isFinite(expiresInHoursRaw) ? expiresInHoursRaw : 6;
@@ -4703,25 +5012,41 @@ const server = http.createServer(async (req, res) => {
         return sendError(res, 404, "DRIVER_PROFILE_NOT_FOUND", "Driver profile was not found");
       }
 
-      const body = await readJsonBody(req);
+      const body = ensureObjectBody(await readJsonBody(req));
+
+      try {
+        rejectUnknownFields(body, ["otp", "photoRef", "signatureName", "signatureRef", "notes"]);
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_FAILED",
+          error instanceof Error ? error.message : "Invalid request body"
+        );
+      }
+
       const otp = String(body.otp ?? "").trim();
-      const photoRef =
-        body.photoRef === null || body.photoRef === undefined
-          ? null
-          : String(body.photoRef).trim() || null;
-      const signatureName =
-        body.signatureName === null || body.signatureName === undefined
-          ? null
-          : String(body.signatureName).trim() || null;
-      const signatureRef =
-        body.signatureRef === null || body.signatureRef === undefined
-          ? null
-          : String(body.signatureRef).trim() || null;
-      const notes =
-        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+      let photoRef: string | null = null;
+      let signatureName: string | null = null;
+      let signatureRef: string | null = null;
+      let notes: string | null = null;
+
+      try {
+        photoRef = validateOptionalPhotoRef(body.photoRef, "photoRef");
+        signatureName = validateOptionalSignatureName(body.signatureName);
+        signatureRef = validateOptionalPhotoRef(body.signatureRef, "signatureRef");
+        notes = validateOptionalNotes(body.notes);
+      } catch (error) {
+        return sendError(
+          res,
+          400,
+          "VALIDATION_FAILED",
+          error instanceof Error ? error.message : "Invalid request body"
+        );
+      }
 
       if (!otp) {
-        return sendError(res, 400, "VALIDATION_ERROR", "otp is required");
+        return sendError(res, 400, "VALIDATION_FAILED", "otp is required");
       }
 
       const stopResult = await pool.query(
@@ -4757,6 +5082,18 @@ const server = http.createServer(async (req, res) => {
 
       if (stopStatus === "DONE") {
         return sendError(res, 409, "STOP_ALREADY_COMPLETED", "Stop has already been completed");
+      }
+
+      const otpAttemptAllowed = await enforceRateLimit(req, res, {
+        scope: "otp-delivery-stop",
+        subject: driverDeliverStopId,
+        limit: 6,
+        windowSeconds: 21600,
+        message: "Too many OTP attempts for this delivery stop.",
+      });
+
+      if (otpAttemptAllowed !== true) {
+        return;
       }
 
       const otpResult = await pool.query(
@@ -4905,6 +5242,19 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { data: { auditLogs: result.rows } });
     }
 
+    if (url.pathname.startsWith("/v1/admin/")) {
+      const adminAllowed = await enforceRateLimit(req, res, {
+        scope: "admin-ip",
+        subject: `${requestIp}:admin`,
+        limit: 60,
+        windowSeconds: 60,
+        message: "Too many admin requests for this actor.",
+      });
+
+      if (adminAllowed !== true) {
+        return;
+      }
+    }
     if (method === "GET" && url.pathname === "/v1/admin/audit") {
       const user = await requireAuth(req, res);
       if (!user) return;
@@ -6430,6 +6780,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && url.pathname === "/v1/payments/cash") {
+      const paymentAllowed = await enforceRateLimit(req, res, {
+        scope: "payments-actor",
+        subject: `${requestIp}:cash`,
+        limit: 20,
+        windowSeconds: 60,
+        message: "Too many payment requests for this actor.",
+      });
+
+      if (paymentAllowed !== true) {
+        return;
+      }
       const user = await requireAuth(req, res);
       if (!user) return;
       if (
@@ -6663,6 +7024,17 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === "POST" && url.pathname === "/v1/payments/mobile-money") {
+      const mobileMoneyAllowed = await enforceRateLimit(req, res, {
+        scope: "payments-actor",
+        subject: `${requestIp}:mobile-money`,
+        limit: 20,
+        windowSeconds: 60,
+        message: "Too many payment requests for this actor.",
+      });
+
+      if (mobileMoneyAllowed !== true) {
+        return;
+      }
       const user = await requireAuth(req, res);
       if (!user) return;
       if (

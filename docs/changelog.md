@@ -331,3 +331,13 @@ Add-Content docs\acceptance.md @"
 - Added scheduled-job persistence migration for reliability records
 - Added reliability documentation for worker runtime, queues, retry policy, and admin visibility
 - Verified success, retry, dead-letter-style failed visibility, and scheduled runtime behavior
+
+## Chapter 10.3 completed
+
+- Added Redis-backed abuse protection across auth, admin, payment, and OTP-sensitive routes
+- Added request validation hardening with unknown-field rejection and standardized validation failures
+- Added proof/reference validation rules for photo and signature fields
+- Added API integration privacy tests with scoped RBAC assertions
+- Added abuse simulation tests for login and OTP throttling
+- Added Vitest API harness and Windows-safe process cleanup for repeatable local test execution
+- Added security hardening documentation in docs/security/security_hardening.md

@@ -592,3 +592,38 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Added scheduled job persistence support for alert/reminder/payout draft records.
 - Verified scheduled-job runtime window with API healthy and queue visibility intact.
 - Gate satisfied: Jobs run repeatedly with logs; failures are visible.
+
+## Chapter 10.3 PASS
+
+- Re-ran prior chapter pre-flight and continued Chapter 10.3 from in-progress state safely.
+- Restored and repaired pps/api/src/dev.ts after an interrupted edit left the file header corrupted.
+- Confirmed Redis-backed rate limiting exists for:
+  - auth register
+  - auth login by IP
+  - auth login by identity
+  - admin baseline routes
+  - OTP generation
+  - OTP delivery verification
+  - payment submission routes
+- Confirmed validation hardening is active:
+  - unknown request fields rejected
+  - standardized VALIDATION_FAILED responses returned
+  - proof reference formats constrained
+- Added API integration/privacy test suite in pps/api/test/privacy.test.ts.
+- Added abuse simulation test suite in pps/api/test/abuse.test.ts.
+- Added Windows-safe Vitest API harness in:
+  - pps/api/test/helpers.ts
+  - pps/api/vitest.config.ts
+- Verified automated privacy boundaries with 13 passing assertions covering:
+  - affiliate cross-shop access blocked
+  - driver cross-driver scope blocked
+  - hub cross-hub scope blocked
+  - customer cross-customer scope blocked
+  - admin global access allowed
+  - non-DEV_ADMIN override access blocked
+- Verified abuse protections with passing automated tests:
+  - brute-force login attempts return safe throttled responses
+  - OTP brute-force attempts return safe throttled responses
+- Verified full API test suite passes:
+  - 15 tests passed
+- Gate satisfied: Abuse tests fail safely; forbidden access always blocked.
