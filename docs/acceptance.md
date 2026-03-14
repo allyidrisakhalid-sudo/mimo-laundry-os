@@ -649,3 +649,26 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
   - GET /v1/health/db returned ok
   - admin login succeeded against restored database
 - Gate satisfied: Restore succeeds and app boots.
+
+## Chapter 11.1 PASS
+
+- Re-ran Chapter 10.4 verification before implementation:
+  - pnpm -r lint passed
+  - pnpm -r typecheck passed
+  - pnpm -r test passed
+  - pnpm -r build passed
+- Added CI workflow for pull requests and pushes to main
+- CI runs:
+  - pnpm -r lint
+  - pnpm -r typecheck
+  - pnpm -r test
+  - pnpm -r build
+- Added staging deployment workflow triggered automatically after successful CI on main
+- Staging workflow is structured to:
+  - checkout the exact commit that passed CI
+  - run pnpm --filter @mimo/api db:generate
+  - run pnpm --filter @mimo/api db:migrate:deploy
+  - trigger API and web staging deploy hooks
+  - run smoke tests against /v1/health and /v1/health/db
+- Added rollback strategy documentation with evidence capture, decision owner, app rollback, and forward-only DB correction policy
+- Gate target prepared: CI passes on main; staging deploy automated once staging secrets are configured

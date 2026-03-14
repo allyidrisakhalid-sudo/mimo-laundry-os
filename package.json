@@ -11,7 +11,9 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "gen:sdk": "pnpm --filter @mimo/sdk refresh:openapi && pnpm --filter @mimo/sdk gen",
-    "check:sdk": "pnpm --filter @mimo/sdk check"
+    "check:sdk": "pnpm --filter @mimo/sdk check",
+    "db:generate": "pnpm --filter @mimo/api db:generate",
+    "db:migrate:deploy": "pnpm --filter @mimo/api db:migrate:deploy"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
@@ -28,5 +30,9 @@
     "*.{js,cjs,mjs,ts,tsx,jsx,json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "engines": {
+    "node": "20.x",
+    "pnpm": "10.x"
   }
 }

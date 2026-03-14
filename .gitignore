@@ -18,3 +18,7 @@ secrets/
 .turbo/
 **/.turbo/
 
+
+packages/sdk/dist/
+
+backups/

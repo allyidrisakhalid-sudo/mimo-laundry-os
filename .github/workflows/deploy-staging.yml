@@ -1,0 +1,118 @@
+name: Deploy Staging
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Migrate staging database
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+    steps:
+      - name: Checkout exact commit that passed CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Require staging database secret
+        shell: bash
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "Missing required secret: STAGING_DATABASE_URL"
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @mimo/api db:generate
+
+      - name: Apply production-safe migrations
+        run: pnpm --filter @mimo/api db:migrate:deploy
+
+  deploy_api:
+    name: Deploy staging API/worker
+    needs: migrate
+    runs-on: ubuntu-latest
+    env:
+      STAGING_API_DEPLOY_HOOK_URL: ${{ secrets.STAGING_API_DEPLOY_HOOK_URL }}
+
+    steps:
+      - name: Trigger API/worker deploy hook
+        shell: bash
+        run: |
+          if [ -z "${STAGING_API_DEPLOY_HOOK_URL}" ]; then
+            echo "Missing required secret: STAGING_API_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            -X POST \
+            "${STAGING_API_DEPLOY_HOOK_URL}"
+
+  deploy_web:
+    name: Deploy staging web
+    needs: migrate
+    runs-on: ubuntu-latest
+    env:
+      STAGING_WEB_DEPLOY_HOOK_URL: ${{ secrets.STAGING_WEB_DEPLOY_HOOK_URL }}
+
+    steps:
+      - name: Trigger web deploy hook
+        shell: bash
+        run: |
+          if [ -z "${STAGING_WEB_DEPLOY_HOOK_URL}" ]; then
+            echo "Missing required secret: STAGING_WEB_DEPLOY_HOOK_URL"
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            -X POST \
+            "${STAGING_WEB_DEPLOY_HOOK_URL}"
+
+  smoke_tests:
+    name: Staging smoke tests
+    needs:
+      - deploy_api
+      - deploy_web
+    runs-on: ubuntu-latest
+    env:
+      STAGING_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
+
+    steps:
+      - name: Require staging base URL
+        shell: bash
+        run: |
+          if [ -z "${STAGING_API_BASE_URL}" ]; then
+            echo "Missing required secret: STAGING_API_BASE_URL"
+            exit 1
+          fi
+
+      - name: Health check
+        run: curl --fail --show-error --silent "${STAGING_API_BASE_URL}/v1/health"
+
+      - name: Database health check
+        run: curl --fail --show-error --silent "${STAGING_API_BASE_URL}/v1/health/db"

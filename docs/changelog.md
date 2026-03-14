@@ -350,3 +350,13 @@ Add-Content docs\acceptance.md @"
 - Hardened backup/restore env resolution for local and staging-like execution
 - Updated API dotenv loading to respect injected runtime DATABASE_URL during restore verification
 - Verified backup artifact creation, staging-like restore, restored data checks, and API boot against restored database
+
+## Chapter 11.1 completed
+
+- Added GitHub Actions CI workflow at .github/workflows/ci.yml
+- Added GitHub Actions staging deployment workflow at .github/workflows/deploy-staging.yml
+- Pinned Node version with .nvmrc and added root engines constraints
+- Added deploy-safe Prisma scripts for generate and migrate deploy
+- Documented CI/CD workflow, secrets, and deploy sequence in docs/deploy/cicd.md
+- Documented rollback strategy in docs/deploy/rollback.md
+- Added ignore rules for generated SDK dist output and local backups
