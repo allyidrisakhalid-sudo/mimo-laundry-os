@@ -13,18 +13,21 @@ type HubIntakeResponse = {
   };
 };
 
+type TimelineEvent = {
+  id: string;
+  eventType: string;
+  occurredAt: string;
+  notes: string | null;
+  actorUserId: string | null;
+  actorRole: string | null;
+  payloadJson?: unknown;
+};
+
 type OrderTimelineResponse = {
   data: {
-    orderId: string;
-    events: Array<{
-      id: string;
-      eventType: string;
-      occurredAt: string;
-      notes: string | null;
-      actorUserId: string | null;
-      actorRole: string | null;
-      payloadJson?: unknown;
-    }>;
+    orderId?: string;
+    events?: TimelineEvent[];
+    timeline?: TimelineEvent[];
   };
 };
 
@@ -89,8 +92,16 @@ export default function HubPage() {
           token: liveToken,
         }
       );
+
       setPayload(prettyJson(result));
-      setStatus(`Loaded timeline with ${result.data.events.length} event(s)`);
+
+      const events = Array.isArray(result.data?.events)
+        ? result.data.events
+        : Array.isArray(result.data?.timeline)
+          ? result.data.timeline
+          : [];
+
+      setStatus(`Loaded timeline with ${events.length} event(s)`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Load timeline failed");
       setPayload("");
