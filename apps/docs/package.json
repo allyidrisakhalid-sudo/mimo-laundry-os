@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "node -e \"console.log('docs dev placeholder ok')\"",
     "build": "node -e \"console.log('docs build ok')\"",
-    "lint": "node -e \"console.log(`docs-app lint skipped until source files exist`)\"",
-    "typecheck": "node -e \"console.log(`docs-app typecheck skipped until source files exist`)\"",
-    "test": "node -e \"console.log(`docs-app test skipped until source files exist`)\""
+    "lint": "node -e \"console.log('docs-app lint skipped until source files exist')\"",
+    "typecheck": "node -e \"console.log('docs-app typecheck skipped until source files exist')\"",
+    "test": "node -e \"console.log('docs-app test skipped until source files exist')\""
   }
 }

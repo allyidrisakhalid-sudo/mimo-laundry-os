@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @mimo/api db:generate
+
       - name: Lint
         run: pnpm -r lint
 
