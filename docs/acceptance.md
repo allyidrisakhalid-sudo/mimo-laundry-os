@@ -703,3 +703,69 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - /v1/health/db proof captured
 - R2 bucket proof captured
 - Neon and Upstash staging resource proof captured
+
+## Chapter 11.3 PENDING
+
+### Pre-flight retest of 11.2
+
+- Staging deploy workflow proof: PASTE-STAGING-DEPLOY-LINK-OR-SCREENSHOT-NAME
+- Staging web URL: https://staging.<your-domain>
+- Staging API URL: https://api-staging.<your-domain>
+- Staging /v1/health returned success during pre-flight
+- Staging /v1/health/db returned success during pre-flight
+
+### Production targets
+
+- Web URL: https://app.<your-domain>
+- API URL: https://api.<your-domain>
+- Production Postgres resource: mimo-laundry-os-prod-postgres
+- Production Redis resource: mimo-laundry-os-prod-redis
+- Production storage bucket: mimo-laundry-os-prod
+
+### Required evidence to finalize PASS
+
+- Production web HTTPS proof
+- Production API HTTPS proof
+- Production health proof
+- Production DB health proof
+- Monitoring dashboard proof
+- Controlled alert proof
+- Web logged-in proof
+- Delivered + paid order proof
+- Receipt proof
+- Audit entry proof
+- Production deploy workflow proof: PASTE-PRODUCTION-DEPLOY-LINK-OR-SCREENSHOT-NAME
+
+## Chapter 11.3 PASS
+
+### Production URLs
+
+- Web: https://app.mimolaundry.org
+- API: https://api.mimolaundry.org
+
+### Production infrastructure proof
+
+- Production web custom domain resolves and returns 200
+- Production API custom domain resolves and returns health ok
+- Production DB health endpoint returns ok
+- Production API service is live on Render
+- Production DB, Redis, and storage are configured as separate production resources
+
+### Production workflow proof
+
+- Seeded production database confirmed with users/orders/zones present
+- Admin login succeeded in production
+- Customer login succeeded in production
+- Customer read seeded order order_customer_a successfully
+- Admin read daily close report successfully
+- RBAC verified:
+  - customer access to /v1/admin/audit returned 403
+  - customer access to /v1/admin/reports/daily-close returned 403
+
+### Remaining operator evidence attached outside terminal
+
+- Monitoring dashboard screenshot showing production up
+- Alert test proof
+- Vercel domain verification screenshot
+- Render custom domain verification screenshot
+- Production deploy proof

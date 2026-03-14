@@ -371,3 +371,20 @@ Add-Content docs\acceptance.md @"
 - Verified staging health and db health endpoints
 - Verified staging web loads successfully
 - Established full staging environment baseline for production rollout
+
+## Chapter 11.3 in progress
+
+- Began production launch checklist for domains, DNS, SSL, secrets, monitoring, and smoke testing
+- Added production deployment documentation for environment variables, domain records, monitoring, and smoke tests
+- Re-ran Chapter 11.2 staging pre-flight verification before production launch
+
+## Chapter 11.3 completed
+
+- Launched production domains pp.mimolaundry.org and pi.mimolaundry.org
+- Verified managed TLS and HTTPS on production web and API
+- Provisioned and connected production Render API service
+- Verified production health and database health endpoints
+- Seeded production database and confirmed real production auth works
+- Verified production customer order read path and admin daily close reporting
+- Verified RBAC by proving customer requests to admin endpoints return 403
+- Locked current Vercel project as the production web target
