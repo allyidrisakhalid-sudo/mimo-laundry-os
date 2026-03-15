@@ -28,6 +28,13 @@ type OrderTimelineResponse = {
     orderId?: string;
     events?: TimelineEvent[];
     timeline?: TimelineEvent[];
+    order?: {
+      id: string;
+      orderNumber: string;
+      statusCurrent: string;
+      zoneId: string | null;
+      hubId: string | null;
+    };
   };
 };
 
@@ -95,9 +102,9 @@ export default function HubPage() {
 
       setPayload(prettyJson(result));
 
-      const events = Array.isArray(result.data?.events)
+      const events = Array.isArray(result?.data?.events)
         ? result.data.events
-        : Array.isArray(result.data?.timeline)
+        : Array.isArray(result?.data?.timeline)
           ? result.data.timeline
           : [];
 

@@ -8065,7 +8065,8 @@ const server = http.createServer(async (req, res) => {
         await pool.query(
           `
           UPDATE "Order"
-          SET "updatedAt" = NOW()
+          SET "statusCurrent" = 'RECEIVED_AT_HUB',
+              "updatedAt" = NOW()
           WHERE "id" = $1
           `,
           [adminIntakeOrderId]
