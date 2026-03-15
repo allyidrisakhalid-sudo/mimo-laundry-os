@@ -6944,7 +6944,18 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = CASE
+                WHEN $2 <= 0 THEN 'PAID'
+                ELSE "statusCurrent"
+              END,
+              "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [orderId, newBalance]
+        );
         await recordAudit({
           actorUserId: user.id,
           actorRole: user.role,
@@ -7162,7 +7173,18 @@ const server = http.createServer(async (req, res) => {
             }),
           ]
         );
-
+        await pool.query(
+          `
+          UPDATE "Order"
+          SET "statusCurrent" = CASE
+                WHEN $2 <= 0 THEN 'PAID'
+                ELSE "statusCurrent"
+              END,
+              "updatedAt" = NOW()
+          WHERE "id" = $1
+          `,
+          [orderId, newBalance]
+        );
         await recordAudit({
           actorUserId: user.id,
           actorRole: user.role,
