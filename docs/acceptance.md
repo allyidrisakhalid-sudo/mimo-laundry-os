@@ -904,3 +904,40 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Daily close reflected Zone C, Temeke Hub, SHOP_DROP activity with delivered order and cash total 4000.
 - Gate satisfied:
   - adding a hub/affiliate/driver does not require code changes only admin configuration.
+
+## Chapter 12.4 Continuous Improvement Loop (No Chaos)
+
+- PASS / FAIL: PASS
+- Scope:
+  - weekly ops review report format defined
+  - weekly report example generated from existing launch evidence
+  - pricing update workflow documented with versioned, date-based activation
+  - feature flag rollout documented for safe enable/disable without redeploy
+  - release playbook documented for staging -> production verification
+- Pre-flight retest:
+  - confirmed Chapter 12.3 baseline remains configuration-only
+  - confirmed no code changes are required for hub / affiliate / driver expansion
+- Proof:
+  - docs/ops/weekly_ops_review_template.md created
+  - docs/ops/weekly_reports/2026-W11.md created
+  - docs/finance/pricing_update_workflow.md created
+  - docs/release/feature_flags.md created
+  - docs/release/release_playbook.md created
+  - example weekly report references real Chapter 12.3 launch evidence:
+    - Zone C / Temeke Hub sample
+    - order total = 1
+    - delivered = 1
+    - cash total = 4000
+    - commission earned = 480
+- Integrity controls locked:
+  - old orders never change pricing retroactively
+  - new pricing activates by effectiveFrom
+  - feature flags default disabled and can be rolled back instantly
+  - release verification requires health, timeline, invoice, audit, jobs, and RBAC checks
+- Summary:
+  - Chapter 12.4 established the operational cadence and safe-change framework required to continue improving Laundry OS without chaos.
+  - Weekly review, pricing version control, feature flag rollout, and release verification are now documented and ready for repeated use.
+- Follow-up actions:
+  1. optional future enhancement: implement persisted FeatureFlag model + API endpoints if not yet present
+  2. optional future enhancement: automate weekly report generation from reporting queries
+  3. optional future enhancement: capture one live release runbook execution against the next production deployment

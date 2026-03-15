@@ -466,3 +466,12 @@ Add-Content docs\acceptance.md @"
 - Verified cross-zone trip assignment rejection with ZONE_ASSIGNMENT_MISMATCH
 - Verified timeline, invoice, payment, receipt issuance, commission earning, and daily close reporting for the new zone batch
 - Chapter 12.3 gate satisfied: adding a hub, affiliate, or driver requires configuration only
+
+## Chapter 12.4 completed
+
+- Added weekly ops review template at docs/ops/weekly_ops_review_template.md
+- Added weekly reports folder with example report at docs/ops/weekly_reports/2026-W11.md
+- Added pricing update workflow documenting draft -> stage -> activate-by-date controls
+- Added feature flag rollout documentation with global and zone-scoped rollout rules
+- Added release playbook for staging -> production verification and rollback discipline
+- Captured Chapter 12.4 gate evidence structure for no-downtime and no-data-corruption releases
