@@ -876,3 +876,23 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Production reporting endpoints remained operational during validation
 - No application code changes were required to support operational expansion
 - Gate satisfied: adding a hub, affiliate, or driver requires admin/data configuration only
+
+## Chapter 12.2 REOPENED FOR STRICT GAP CLOSURE
+
+- Previous 12.2 closure captured useful operating evidence but did not fully satisfy the strict chapter gate.
+- Missing strict proofs include backlog trend, on-time %, dispute rate, one-zone enforcement proof, and active-entity enforcement proof.
+- Chapter 12.2 must not be treated as strictly complete until these proofs are captured.
+
+## Chapter 12.2 STRICT STATUS: FAIL
+
+- One-zone enforcement is not satisfied by live production evidence.
+- Live affiliate probe returned an active shop in zone_a and an active shop in zone_b.
+- Driver task enforcement for an active driver is proven, but the one-zone launch restriction is contradicted.
+- Chapter 12.2 must remain reopened until zone activation and active-entity enforcement are corrected and re-proven.
+
+## Chapter 12.2 STRICT RESOLUTION: SCOPE CORRECTION REQUIRED
+
+- Existing production evidence contradicts the pasted one-zone-only chapter rule.
+- No current admin/config route was discovered to enforce one-zone-only activation in the live system.
+- Strict Chapter 12.2 closure therefore requires scope correction or future platform changes.
+- Operational evidence remains useful, but it does not satisfy the pasted rule set exactly.

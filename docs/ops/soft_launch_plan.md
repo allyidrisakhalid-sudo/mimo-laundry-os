@@ -142,3 +142,63 @@
   - keep express disabled
   - reduce accepted new intake until daily volume is at or below cap
   - continue collecting evidence toward a HOLD or GO decision
+
+## Strict gap-closure checklist
+
+The following items must be proven before Chapter 12.2 is treated as strictly complete:
+
+- One-zone enforcement proof
+- Active hub / affiliate / driver enforcement proof
+- Daily backlog measurement from system data
+- On-time % measurement from system data
+- Turnaround median and p90 from system data
+- Dispute rate measurement from system data
+- Conservative SLA availability proof
+- Evidence that only active drivers receive tasks
+
+## Strict finding zone enforcement
+
+Live affiliate availability probe showed:
+
+- zone_a returned active affiliate shop shop_mikocheni
+- zone_b returned active affiliate shop shop_mbagala
+
+Strict interpretation:
+
+- The system was not effectively limited to one active launch zone during Chapter 12.2
+- Therefore the "one zone only" proof is not satisfied
+
+## Strict finding driver task enforcement
+
+Live driver task probe showed:
+
+- GET /v1/driver/tasks succeeded for seeded driver +255700000003
+- active task returned for:
+  - zoneId: zone_a
+  - hubId: hub_kigamboni
+  - orderNumber: ORD-0001
+
+Strict interpretation:
+
+- Driver task generation for an active driver is proven
+- But one-zone enforcement remains unproven and currently contradicted by live affiliate availability
+
+## Strict discovery result repair path
+
+Source and live-route discovery did not reveal an existing admin/config endpoint for:
+
+- activating or deactivating zones
+- activating or deactivating hubs
+- activating or deactivating affiliate shops
+- activating or deactivating drivers
+
+Live evidence still shows:
+
+- zone_a has active affiliate availability
+- zone_b has active affiliate availability
+
+Strict conclusion:
+
+- the one-zone-only Chapter 12.2 rule cannot currently be proven through existing live admin/config controls
+- therefore Chapter 12.2 cannot be treated as a strict PASS under the pasted instructions
+- the correct path is to treat the original chapter instructions as mismatched to the real operated system scope

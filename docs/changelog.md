@@ -451,3 +451,15 @@ Add-Content docs\acceptance.md @"
 - Recorded source evidence for zone-bound affiliate selection, driver-zone trip assignment, and active hub lookup
 - Confirmed production reporting endpoints remained operational during validation
 - Marked Chapter 12.3 PASS
+
+## Chapter 12.2 strict gap finding
+
+- Live affiliate availability probe showed active shops in both zone_a and zone_b
+- This contradicts the strict one-zone-only soft-launch rule
+- Kept Chapter 12.2 reopened for strict gap closure
+
+## Chapter 12.2 strict resolution update
+
+- No existing live admin/config route was discovered for one-zone-only activation enforcement
+- Strict Chapter 12.2 resolution requires scope correction because live production behavior is multi-zone
+- Retained previous operational evidence while marking strict rules as not fully satisfied
