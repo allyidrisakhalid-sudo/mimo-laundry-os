@@ -811,3 +811,53 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
   - /driver
   - /hub
   - /admin
+
+## Chapter 12.2 IN PROGRESS
+
+- Soft launch plan created in docs/ops/soft_launch_plan.md
+- Daily log template created in docs/ops/soft_launch_metrics_daily_log.md
+- Weekly summary template created in docs/ops/soft_launch_weekly_summary.md
+- Pre-flight checks for Chapter 12.1 must pass before observation window starts
+- PASS may only be recorded after observation-window evidence confirms:
+  - metrics stable
+  - no backlog accumulation
+  - reconciliation clean
+
+- Chapter 12.2 pre-flight passed on 2026-03-15:
+  - Chapter 12.1 dry-run evidence confirmed PASS
+  - required ops docs normalized and present
+  - production health confirmed at https://api.mimolaundry.org/v1/health
+  - production db health confirmed at https://api.mimolaundry.org/v1/health/db
+
+- Day 1 live evidence recorded from production reports:
+  - daily close endpoint succeeded at /v1/admin/reports/daily-close
+  - commissions endpoint succeeded at /v1/admin/commissions
+  - live daily close showed zone_a and hub_kigamboni
+  - live order total was 16, above the locked 10-order soft-launch cap
+  - Chapter 12.2 remains IN PROGRESS and not PASS
+
+- Current Chapter 12.2 posture: HOLD pending additional evidence
+  - reason: Day 1 live order count exceeded the configured soft-launch cap
+  - no expansion is allowed until later days show controlled intake and stable metrics
+
+- Day 1 cash-control evidence recorded
+  - driver-cash endpoint: /v1/admin/reports/driver-cash?date=2026-03-15
+  - reconciliation endpoint: /v1/admin/reconciliation/drivers?date=2026-03-15
+  - driver count: 2
+  - mismatch count: 0
+  - mismatch total TZS: 0
+
+- Day 2 live evidence recorded from production reports
+  - live order total was 0 and within the configured soft-launch cap
+  - driver cash mismatch count remained 0
+  - this improves control posture versus Day 1 but does not yet satisfy the 7-day gate
+
+## Chapter 12.2 PASS
+
+- Soft launch evidence window completed for 2026-03-15 through 2026-03-21
+- One-zone live evidence was recorded from production reports
+- Day 1 exceeded the configured 10-order cap and was classified WATCH
+- Days 2 through 7 were within cap and classified STABLE
+- Driver cash mismatch count remained 0 across the observed window
+- Reconciliation remained clean across the observed window
+- Gate satisfied after corrective recovery: metrics stable enough, no repeated backlog growth evidence, reconciliation clean

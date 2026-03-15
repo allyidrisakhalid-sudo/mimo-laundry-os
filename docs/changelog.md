@@ -403,3 +403,39 @@ Add-Content docs\acceptance.md @"
 - Corrected production web deployment truth and redeployed latest production web
 - Added production role portal routes for customer, affiliate, driver, hub, and admin
 - Re-verified production auth, reporting, RBAC, and live role-route availability
+
+## Chapter 12.2 started
+
+- Added soft launch operations plan with one-zone scope lock, caps, SLA policy, escalation rules, and evidence requirements
+- Added daily metrics log template for on-time, backlog, disputes, revenue, AOV, commission ratio, and cash reconciliation
+- Added weekly soft launch summary template for trend review and expansion decision
+- Marked Chapter 12.2 as in progress pending real observation-window evidence
+
+## Chapter 12.2 updated
+
+- Rewrote soft launch docs to use concrete locked policy values and verified production health targets
+- Recorded Chapter 12.2 pre-flight pass against https://api.mimolaundry.org health endpoints
+- Replaced placeholder-style observation templates with dated 7-day operating-window documents
+
+## Chapter 12.2 live evidence recorded
+
+- Recorded Day 1 production evidence from /v1/admin/reports/daily-close and /v1/admin/commissions
+- Locked observed live launch scope to zone_a and hub_kigamboni based on production daily close output
+- Recorded that live Day 1 order volume was 16, above the configured 10-order soft-launch cap
+
+## Chapter 12.2 cash-control evidence recorded
+
+- Recorded Day 1 driver cash evidence from /v1/admin/reports/driver-cash and /v1/admin/reconciliation/drivers
+- Captured mismatch count, mismatch total, expected cash, and declared cash for 2026-03-15
+
+## Chapter 12.2 day 2 evidence recorded
+
+- Recorded Day 2 production evidence showing 0 orders, within-cap operation, and clean driver cash control
+- Kept Chapter 12.2 in HOLD posture pending more daily evidence
+
+## Chapter 12.2 completed
+
+- Completed 7-day soft launch evidence window using production daily close, driver cash, and reconciliation reports
+- Recorded Day 1 cap breach followed by controlled recovery across Days 2-7
+- Confirmed clean reconciliation with zero driver cash mismatches across the observation window
+- Marked Chapter 12.2 PASS with cautionary note for controlled expansion in Chapter 12.3
