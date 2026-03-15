@@ -6797,7 +6797,7 @@ const server = http.createServer(async (req, res) => {
         !requireRoles(
           user,
           res,
-          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"],
+          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER", "AFFILIATE_STAFF", "CUSTOMER"],
           "record cash payment"
         )
       )
@@ -7041,7 +7041,7 @@ const server = http.createServer(async (req, res) => {
         !requireRoles(
           user,
           res,
-          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER"],
+          ["ADMIN", "DEV_ADMIN", "HUB_STAFF", "DRIVER", "AFFILIATE_STAFF", "CUSTOMER"],
           "record mobile money payment"
         )
       )
