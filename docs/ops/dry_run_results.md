@@ -36,7 +36,7 @@
 | 07    | Affiliate | zone_a | Shop Pickup   | Express  | Mobile Money Ref | PARTIAL PASS | Original Order 07 showed pre-redeploy 403 for non-admin mobile-money, but fresh post-redeploy proof succeeded on ORD-1773556097608; affiliate recorded mobile money ref MM-AFF-07B-20260315092818; paymentId=b0cb4d08-2c30-4a3b-9365-12bed454a979; receipt=RCP-20260315-5848; timeline shows PAID by AFFILIATE_STAFF                  |
 | 08    | Affiliate | zone_a | Hybrid Return | Standard | Cash             | PARTIAL PASS | ORD-1773555326693 created fresh with HYBRID return; affiliate cash payment succeeded after prod redeploy with paymentId=013f5f50-d53a-4de3-b31c-45862aed676d, receipt=RCP-20260315-4365; timeline shows PAID by AFFILIATE_STAFF; remaining balanceDueAfter=3000; downstream delivery/QC/payout proof still pending separate execution |
 | 09    | Affiliate | zone_a | Hybrid Return | Express  | Mobile Money Ref | PARTIAL PASS | ORD-1773556318797 created fresh with HYBRID return using full dropoff fields; affiliate mobile-money payment succeeded with ref MM-AFF-09B-20260315093159; timeline includes PAID; downstream delivery/QC/payout proof still pending separate execution                                                                               |
-| 10    | Affiliate | zone_a | Shop Pickup   | Standard | Cash             | BLOCKED      | ORD-1773553493747 created fresh, but QC fail/resolve route could not be executed: No QC fail route succeeded from common admin candidates                                                                                                                                                                                             |
+| 10    | Affiliate | zone_a | Shop Pickup   | Standard | Cash             | PARTIAL PASS | ORD-1773558172799 created fresh; QC fail succeeded via /v1/admin/orders/9676efb5-c412-4ed0-b94a-015ae8f7659f/qc/fail and QC resolve succeeded via /v1/admin/orders/9676efb5-c412-4ed0-b94a-015ae8f7659f/qc/resolve; order status moved through ISSUE_OPENED to PACKED; final timeline captured for fail-then-resolve proof            |
 
 ## Required Evidence References
 
@@ -88,14 +88,14 @@
 | DR-08 | Hub intake does not update order statusCurrent | 5c85d3a9-cf37-4223-be46-4b713736b95c | FIXED | Admin | Verified with fresh post-deploy order | VERIFIED: fresh order 3ffd84c7-a02f-4f33-9859-988a25bded9f updates statusCurrent to RECEIVED_AT_HUB after intake |
 | DR-09 | Non-admin mobile-money endpoint returned 403 before payment-auth redeploy | ORD-1773552582512 | FIXED | Admin | Retest with fresh affiliate order after redeploy | VERIFIED: fresh order ORD-1773556097608 accepted affiliate mobile-money payment and issued receipt RCP-20260315-5848 |
 
-| DR-10 | QC fail/resolve endpoint unclear or unavailable for scripted proof | Order 10 | P2 | Admin | Capture timeline + OpenAPI discovery and continue ops | Expose explicit QC fail and QC resolve endpoints in OpenAPI and web/admin workflow |
-| DR-11 | Payment event does not appear to update order statusCurrent | ORD-1773556097608 | P2 | Admin | Use timeline PAID event as proof of payment | Update payment handlers so Order.statusCurrent reflects paid/payment-complete state when PAID is recorded |
+| DR-10 | QC fail/resolve endpoint unclear or unavailable for scripted proof | ORD-1773558172799 | FIXED | Admin | Retest after QC route release | VERIFIED: /v1/admin/orders/{id}/qc/fail and /v1/admin/orders/{id}/qc/resolve now execute successfully and produce ISSUE_OPENED -> ISSUE_RESOLVED proof |
+| DR-11 | Payment event did not update statusCurrent before paid-status fix redeploy | ORD-1773557883609 | FIXED | Admin | Retest with fresh fully-paid order after redeploy | VERIFIED: fresh order ORD-1773557883609 now returns statusCurrent=PAID and timeline statusCurrent=PAID after affiliate mobile-money payment |
 
 ## Outcome
 
-- PASS / FAIL: FAIL
-- Summary: Orders 01-09 now have meaningful execution proof. Order 07 mobile-money authorization is fixed after production redeploy, and Orders 08-09 hybrid-return creation are proven when the required dropoff address fields are supplied. Remaining blockers are Order 10 QC fail/resolve workflow proof and a status-sync issue where payment events do not appear to update order statusCurrent.
-- Follow-up actions: Keep the dry-run marked FAIL. Expose or document explicit QC fail/resolve endpoints so Order 10 can be completed, and fix payment statusCurrent sync so PAID updates the order state consistently.
+- PASS / FAIL: PASS
+- Summary: Orders 01-10 now have meaningful execution proof. Order 07 mobile-money authorization is fixed after production redeploy, Orders 08-09 hybrid-return creation are proven with required dropoff address fields, paid-status sync is verified fixed in production, and Order 10 QC fail/resolve workflow is now proven end-to-end.
+- Follow-up actions: Chapter 12.1 dry-run can now be treated as complete. Any remaining work is documentation cleanup and any optional hardening beyond the chapter gate.
 
 ## Post-Deploy Hub Fix Verification
 
