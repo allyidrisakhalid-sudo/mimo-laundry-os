@@ -35,7 +35,7 @@
 | 06    | Affiliate | zone_a | Shop Pickup   | Standard | Cash             | PARTIAL PASS | ORD-1773552498224 created fresh from affiliate surface; affiliate create path now succeeds; downstream payment/QC/payout proofs still pending separate execution                                                                                                                                                                      |
 | 07    | Affiliate | zone_a | Shop Pickup   | Express  | Mobile Money Ref | PARTIAL PASS | Original Order 07 showed pre-redeploy 403 for non-admin mobile-money, but fresh post-redeploy proof succeeded on ORD-1773556097608; affiliate recorded mobile money ref MM-AFF-07B-20260315092818; paymentId=b0cb4d08-2c30-4a3b-9365-12bed454a979; receipt=RCP-20260315-5848; timeline shows PAID by AFFILIATE_STAFF                  |
 | 08    | Affiliate | zone_a | Hybrid Return | Standard | Cash             | PARTIAL PASS | ORD-1773555326693 created fresh with HYBRID return; affiliate cash payment succeeded after prod redeploy with paymentId=013f5f50-d53a-4de3-b31c-45862aed676d, receipt=RCP-20260315-4365; timeline shows PAID by AFFILIATE_STAFF; remaining balanceDueAfter=3000; downstream delivery/QC/payout proof still pending separate execution |
-| 09    | Affiliate | zone_a | Hybrid Return | Express  | Mobile Money Ref | BLOCKED      | Affiliate hybrid-return express create failed during fresh rerun: The remote server returned an error: (400) Bad Request.                                                                                                                                                                                                             |
+| 09    | Affiliate | zone_a | Hybrid Return | Express  | Mobile Money Ref | PARTIAL PASS | ORD-1773556318797 created fresh with HYBRID return using full dropoff fields; affiliate mobile-money payment succeeded with ref MM-AFF-09B-20260315093159; timeline includes PAID; downstream delivery/QC/payout proof still pending separate execution                                                                               |
 | 10    | Affiliate | zone_a | Shop Pickup   | Standard | Cash             | BLOCKED      | ORD-1773553493747 created fresh, but QC fail/resolve route could not be executed: No QC fail route succeeded from common admin candidates                                                                                                                                                                                             |
 
 ## Required Evidence References
@@ -94,8 +94,8 @@
 ## Outcome
 
 - PASS / FAIL: FAIL
-- Summary: Orders 01-08 now have meaningful execution proof. Order 07 mobile-money authorization is fixed after production redeploy and Order 08 hybrid-return creation is also proven when the required dropoff address fields are supplied. Remaining blockers are Order 09 hybrid express return, Order 10 QC fail/resolve workflow proof, and a status-sync issue where payment events do not appear to update order statusCurrent.
-- Follow-up actions: Continue with Order 09 using the full required HYBRID dropoff address fields, complete Order 10 once explicit QC fail/resolve endpoints are available, and log/fix the payment statusCurrent sync defect separately.
+- Summary: Orders 01-09 now have meaningful execution proof. Order 07 mobile-money authorization is fixed after production redeploy, and Orders 08-09 hybrid-return creation are proven when the required dropoff address fields are supplied. Remaining blockers are Order 10 QC fail/resolve workflow proof and a status-sync issue where payment events do not appear to update order statusCurrent.
+- Follow-up actions: Keep the dry-run marked FAIL. Expose or document explicit QC fail/resolve endpoints so Order 10 can be completed, and fix payment statusCurrent sync so PAID updates the order state consistently.
 
 ## Post-Deploy Hub Fix Verification
 
