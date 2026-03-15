@@ -7958,6 +7958,134 @@ const server = http.createServer(async (req, res) => {
         },
       });
     }
+
+    const adminQcFailOrderId = pathParam(url.pathname, /^\/v1\/admin\/orders\/([^/]+)\/qc\/fail$/);
+    if (method === "POST" && adminQcFailOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN", "HUB_STAFF"], "record qc fail")) return;
+
+      const order = await fetchOrderById(adminQcFailOrderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const body = await readJsonBody(req);
+      const reason = String(body.reason ?? "").trim();
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (!reason) {
+        return sendError(res, 400, "VALIDATION_ERROR", "reason is required");
+      }
+
+      const eventId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "OrderEvent" (
+          "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+        )
+        VALUES ($1, $2, 'ISSUE_OPENED', NOW(), $3, $4, $5, $6::jsonb, NOW())
+        `,
+        [
+          eventId,
+          adminQcFailOrderId,
+          user.id,
+          user.role,
+          notes ?? "QC issue recorded",
+          JSON.stringify({
+            actionCode: "QC_FAIL_RECORDED",
+            reason,
+          }),
+        ]
+      );
+
+      await pool.query(
+        `
+        UPDATE "Order"
+        SET "statusCurrent" = 'ISSUE_OPENED',
+            "updatedAt" = NOW()
+        WHERE "id" = $1
+        `,
+        [adminQcFailOrderId]
+      );
+
+      return sendJson(res, 200, {
+        data: {
+          orderId: adminQcFailOrderId,
+          statusCurrent: "ISSUE_OPENED",
+          action: "QC_FAIL_RECORDED",
+          reason,
+        },
+      });
+    }
+
+    const adminQcResolveOrderId = pathParam(
+      url.pathname,
+      /^\/v1\/admin\/orders\/([^/]+)\/qc\/resolve$/
+    );
+    if (method === "POST" && adminQcResolveOrderId) {
+      const user = await requireAuth(req, res);
+      if (!user) return;
+      if (!requireRoles(user, res, ["ADMIN", "DEV_ADMIN", "HUB_STAFF"], "resolve qc fail")) return;
+
+      const order = await fetchOrderById(adminQcResolveOrderId);
+      if (!order) {
+        return sendError(res, 404, "ORDER_NOT_FOUND", "Order was not found");
+      }
+
+      const body = await readJsonBody(req);
+      const resolution = String(body.resolution ?? "").trim();
+      const notes =
+        body.notes === null || body.notes === undefined ? null : String(body.notes).trim() || null;
+
+      if (!resolution) {
+        return sendError(res, 400, "VALIDATION_ERROR", "resolution is required");
+      }
+
+      const eventId = crypto.randomUUID();
+
+      await pool.query(
+        `
+        INSERT INTO "OrderEvent" (
+          "id", "orderId", "eventType", "occurredAt", "actorUserId", "actorRole", "notes", "payloadJson", "createdAt"
+        )
+        VALUES ($1, $2, 'ISSUE_RESOLVED', NOW(), $3, $4, $5, $6::jsonb, NOW())
+        `,
+        [
+          eventId,
+          adminQcResolveOrderId,
+          user.id,
+          user.role,
+          notes ?? "QC issue resolved",
+          JSON.stringify({
+            actionCode: "QC_RESOLVE_RECORDED",
+            resolution,
+          }),
+        ]
+      );
+
+      await pool.query(
+        `
+        UPDATE "Order"
+        SET "statusCurrent" = 'PACKED',
+            "updatedAt" = NOW()
+        WHERE "id" = $1
+        `,
+        [adminQcResolveOrderId]
+      );
+
+      return sendJson(res, 200, {
+        data: {
+          orderId: adminQcResolveOrderId,
+          statusCurrent: "PACKED",
+          action: "QC_RESOLVE_RECORDED",
+          resolution,
+        },
+      });
+    }
+
     const adminIntakeOrderId = pathParam(url.pathname, /^\/v1\/admin\/orders\/([^/]+)\/intake$/);
     if (method === "POST" && adminIntakeOrderId) {
       const user = await requireAuth(req, res);
