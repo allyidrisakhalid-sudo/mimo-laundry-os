@@ -862,21 +862,6 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Reconciliation remained clean across the observed window
 - Gate satisfied after corrective recovery: metrics stable enough, no repeated backlog growth evidence, reconciliation clean
 
-## Chapter 12.3 IN PROGRESS
-
-- Chapter 12.2 PASS confirmed and committed before starting Chapter 12.3
-- Full launch must prove configuration-only expansion for hubs, affiliates, and drivers
-- PASS may only be recorded after evidence shows no code changes are required for operational expansion
-
-## Chapter 12.3 PASS
-
-- Chapter 12.2 PASS was confirmed before expansion validation
-- Affiliate, driver, and hub expansion was proven to be configuration-driven
-- Source evidence showed zone- and isActive-based entity selection
-- Production reporting endpoints remained operational during validation
-- No application code changes were required to support operational expansion
-- Gate satisfied: adding a hub, affiliate, or driver requires admin/data configuration only
-
 ## Chapter 12.2 REOPENED FOR STRICT GAP CLOSURE
 
 - Previous 12.2 closure captured useful operating evidence but did not fully satisfy the strict chapter gate.
@@ -896,3 +881,26 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - No current admin/config route was discovered to enforce one-zone-only activation in the live system.
 - Strict Chapter 12.2 closure therefore requires scope correction or future platform changes.
 - Operational evidence remains useful, but it does not satisfy the pasted rule set exactly.
+
+## Chapter 12.3 PASS
+
+- Chapter 12.2 PASS was confirmed before expansion validation.
+- Configuration-only onboarding succeeded for:
+  - Zone C
+  - Temeke Hub
+  - Temeke Affiliate
+  - Hub Staff User C
+  - Affiliate Staff User C
+  - Driver User C
+- Zone-filtered affiliate lookup worked for Zone C.
+- A real Zone C affiliate order was created successfully and auto-assigned to hub_temeke.
+- Cross-shop access returned FORBIDDEN.
+- Driver task visibility worked for the Zone C assigned stop.
+- Cross-zone assignment rejection returned ZONE_ASSIGNMENT_MISMATCH.
+- Timeline showed ORDER_CREATED, HUB_ASSIGNED, PAYMENT_DUE, PACKED, PAID, and DELIVERED.
+- Invoice proof succeeded with grand total 4000.
+- Receipt proof succeeded through successful cash payment response and issued receipt RCP-20260315-7432.
+- Commission proof succeeded with earned affiliate commission 480.
+- Daily close reflected Zone C, Temeke Hub, SHOP_DROP activity with delivered order and cash total 4000.
+- Gate satisfied:
+  - adding a hub/affiliate/driver does not require code changes only admin configuration.

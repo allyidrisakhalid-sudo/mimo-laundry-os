@@ -440,18 +440,6 @@ Add-Content docs\acceptance.md @"
 - Confirmed clean reconciliation with zero driver cash mismatches across the observation window
 - Marked Chapter 12.2 PASS with cautionary note for controlled expansion in Chapter 12.3
 
-## Chapter 12.3 started
-
-- Began full launch validation focused on configuration-only expansion for hubs, affiliates, and drivers
-- Added Chapter 12.3 planning and validation docs
-
-## Chapter 12.3 completed
-
-- Proved full-launch expansion is configuration-driven for hubs, affiliates, and drivers
-- Recorded source evidence for zone-bound affiliate selection, driver-zone trip assignment, and active hub lookup
-- Confirmed production reporting endpoints remained operational during validation
-- Marked Chapter 12.3 PASS
-
 ## Chapter 12.2 strict gap finding
 
 - Live affiliate availability probe showed active shops in both zone_a and zone_b
@@ -464,7 +452,17 @@ Add-Content docs\acceptance.md @"
 - Strict Chapter 12.2 resolution requires scope correction because live production behavior is multi-zone
 - Retained previous operational evidence while marking strict rules as not fully satisfied
 
-## Chapter 12.3 baseline reconciliation
+## Chapter 12.3 completed
 
-- Aligned Chapter 12.3 wording with the Chapter 12.2 strict scope-correction baseline
-- Clarified that full-launch validation reflects the real live multi-zone system
+- Added docs/ops/full_launch_expansion_playbook.md
+- Added docs/ops/onboarding_checklists.md
+- Added docs/ops/expansion_validation_results.md
+- Proved configuration-only onboarding for a new launch batch in Zone C
+- Added Zone C, Temeke Hub, Temeke Affiliate, scoped hub staff, scoped affiliate staff, and scoped driver without code changes
+- Verified zone-filtered affiliate selection for Zone C
+- Verified real Zone C affiliate order creation with automatic hub assignment to hub_temeke
+- Verified cross-shop access returned FORBIDDEN
+- Verified driver task visibility for the assigned Zone C stop
+- Verified cross-zone trip assignment rejection with ZONE_ASSIGNMENT_MISMATCH
+- Verified timeline, invoice, payment, receipt issuance, commission earning, and daily close reporting for the new zone batch
+- Chapter 12.3 gate satisfied: adding a hub, affiliate, or driver requires configuration only
