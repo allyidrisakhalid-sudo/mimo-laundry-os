@@ -22,3 +22,5 @@ secrets/
 packages/sdk/dist/
 
 backups/
+
+.vercel/
