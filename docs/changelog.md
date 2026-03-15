@@ -463,3 +463,8 @@ Add-Content docs\acceptance.md @"
 - No existing live admin/config route was discovered for one-zone-only activation enforcement
 - Strict Chapter 12.2 resolution requires scope correction because live production behavior is multi-zone
 - Retained previous operational evidence while marking strict rules as not fully satisfied
+
+## Chapter 12.3 baseline reconciliation
+
+- Aligned Chapter 12.3 wording with the Chapter 12.2 strict scope-correction baseline
+- Clarified that full-launch validation reflects the real live multi-zone system

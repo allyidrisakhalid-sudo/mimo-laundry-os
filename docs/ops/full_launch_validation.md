@@ -6,8 +6,9 @@ Prove that operational expansion is configuration-driven and does not require so
 
 ## Pre-flight
 
-- Chapter 12.2 status: PASS
+- Chapter 12.2 baseline: operational evidence completed; strict one-zone scope correction recorded
 - Proof commit: 27c725b
+- Scope correction commit: 331c4ce
 - Chapter 12.3 started only after Chapter 12.2 was committed and locked
 
 ## Source-based configuration evidence
@@ -65,3 +66,9 @@ The following live production endpoints succeeded during Chapter 12.3 validation
 - Adding a driver is configuration-driven
 - Reports remain operational after configuration-based validation
 - Chapter 12.3 gate is satisfied
+
+## Baseline interpretation
+
+This chapter validates full-launch behavior against the real live system baseline.
+It does not assert that the pasted one-zone-only Chapter 12.2 rule was strictly satisfied.
+That strict mismatch was recorded separately in docs/ops/chapter_12_2_scope_correction.md.

@@ -6,9 +6,10 @@ Expand from soft launch into controlled full launch using configuration and oper
 
 ## Chapter 12.2 prerequisite
 
-- Chapter 12.2 status: PASS
+- Chapter 12.2 baseline: operational evidence completed; strict one-zone scope correction recorded
 - Proof commit: 27c725b
-- Expansion allowed only after soft-launch evidence was committed
+- Scope correction commit: 331c4ce
+- Expansion validation is interpreted against the real multi-zone live system baseline, with Chapter 12.2 scope correction recorded
 
 ## Expansion principle
 
