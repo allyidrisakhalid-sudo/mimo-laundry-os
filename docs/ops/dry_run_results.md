@@ -84,11 +84,20 @@
 | DR-04 | Affiliate order creation failed with current visible form defaults | 06 | P2 | Admin | Check channel-specific affiliate flow options before retry | Expose valid affiliate create-order path clearly in web shell |
 | DR-05 | Affiliate shop order creation fails with valid affiliate form inputs | 06 | P1 | Admin | Continue dry-run with customer path first while defect is isolated | Inspect affiliate order create API validation, shop-zone mapping, and affiliate account/shop linkage |
 | DR-06 | Deployed web has role routes but lacks executable operational actions required for Chapter 12.1 | N/A | P1 | Admin | Use current shell only for limited smoke proof | Deploy full operational UI for customer, affiliate, driver, hub, and admin workflows before rerunning Chapter 12.1 |
-| DR-07 | Hub timeline page crashes after successful load | N/A | P2 | Admin | Use PowerShell/API to inspect timeline | Update hub web page to read data.timeline as well as data.events |
-| DR-08 | Hub intake does not update order statusCurrent | 5c85d3a9-cf37-4223-be46-4b713736b95c | P1 | Admin | Use timeline event as temporary proof of intake | Update /v1/admin/orders/{id}/intake to set Order.statusCurrent = RECEIVED_AT_HUB |
+| DR-07 | Hub timeline page crashes after successful load | N/A | FIXED | Admin | Patched hub page and redeployed | VERIFIED: hub web now handles data.events and data.timeline response shapes |
+| DR-08 | Hub intake does not update order statusCurrent | 5c85d3a9-cf37-4223-be46-4b713736b95c | FIXED | Admin | Verified with fresh post-deploy order | VERIFIED: fresh order 3ffd84c7-a02f-4f33-9859-988a25bded9f updates statusCurrent to RECEIVED_AT_HUB after intake |
 
 ## Outcome
 
 - PASS / FAIL: FAIL
 - Summary: Chapter 12.1 dry-run could not complete. Customer and affiliate action surfaces are now live. Hub intake works for fresh customer orders, but hub timeline UI had a response-shape bug and the API still leaves Order.statusCurrent at CREATED after successful RECEIVED_AT_HUB intake.
-- Follow-up actions: Continue dry-run with fresh orders only, patch hub timeline UI response handling, and fix intake to update Order.statusCurrent to RECEIVED_AT_HUB.
+- Follow-up actions: Continue Chapter 12.1 dry-run from the remaining orders using fresh production orders. Hub timeline and intake status defects are now verified fixed.
+
+## Post-Deploy Hub Fix Verification
+
+- Verification orderNumber: ORD-1773550759902
+- Verification orderId: 3ffd84c7-a02f-4f33-9859-988a25bded9f
+- Intake result: SUCCESS
+- Order read after intake: statusCurrent=RECEIVED_AT_HUB
+- Timeline result: RECEIVED_AT_HUB event present
+- Proof timestamp window: 2026-03-15T04:59:19.930Z to 2026-03-15T04:59:39.916Z
