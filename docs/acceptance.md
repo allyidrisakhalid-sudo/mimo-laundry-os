@@ -861,3 +861,18 @@ Gate satisfied: Daily report matches DB; reconciliation flags mismatches.
 - Driver cash mismatch count remained 0 across the observed window
 - Reconciliation remained clean across the observed window
 - Gate satisfied after corrective recovery: metrics stable enough, no repeated backlog growth evidence, reconciliation clean
+
+## Chapter 12.3 IN PROGRESS
+
+- Chapter 12.2 PASS confirmed and committed before starting Chapter 12.3
+- Full launch must prove configuration-only expansion for hubs, affiliates, and drivers
+- PASS may only be recorded after evidence shows no code changes are required for operational expansion
+
+## Chapter 12.3 PASS
+
+- Chapter 12.2 PASS was confirmed before expansion validation
+- Affiliate, driver, and hub expansion was proven to be configuration-driven
+- Source evidence showed zone- and isActive-based entity selection
+- Production reporting endpoints remained operational during validation
+- No application code changes were required to support operational expansion
+- Gate satisfied: adding a hub, affiliate, or driver requires admin/data configuration only

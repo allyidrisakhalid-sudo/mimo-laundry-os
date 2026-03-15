@@ -439,3 +439,15 @@ Add-Content docs\acceptance.md @"
 - Recorded Day 1 cap breach followed by controlled recovery across Days 2-7
 - Confirmed clean reconciliation with zero driver cash mismatches across the observation window
 - Marked Chapter 12.2 PASS with cautionary note for controlled expansion in Chapter 12.3
+
+## Chapter 12.3 started
+
+- Began full launch validation focused on configuration-only expansion for hubs, affiliates, and drivers
+- Added Chapter 12.3 planning and validation docs
+
+## Chapter 12.3 completed
+
+- Proved full-launch expansion is configuration-driven for hubs, affiliates, and drivers
+- Recorded source evidence for zone-bound affiliate selection, driver-zone trip assignment, and active hub lookup
+- Confirmed production reporting endpoints remained operational during validation
+- Marked Chapter 12.3 PASS
