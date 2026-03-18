@@ -20,7 +20,7 @@ export function InlineAlert({
   className = "",
 }: InlineAlertProps) {
   return (
-    <div className={mimo-inline-alert mimo-inline-alert-- .trim()} role="alert">
+    <div className={`mimo-inline-alert mimo-inline-alert--${tone} ${className}`.trim()} role="alert">
       {icon ? <div className="mimo-inline-alert__icon">{icon}</div> : null}
       <div className="mimo-inline-alert__copy">
         <div className="mimo-inline-alert__title">{title}</div>

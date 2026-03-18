@@ -20,7 +20,7 @@ export function Toast({
   className = "",
 }: ToastProps) {
   return (
-    <div className={mimo-toast mimo-toast-- .trim()} role="status" aria-live="polite">
+    <div className={`mimo-toast mimo-toast--${tone} ${className}`.trim()} role="status" aria-live="polite">
       <div className="mimo-toast__copy">
         <div className="mimo-toast__title">{title}</div>
         {body ? <div className="mimo-toast__body">{body}</div> : null}

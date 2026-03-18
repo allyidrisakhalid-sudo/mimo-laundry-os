@@ -157,7 +157,7 @@ export default function UIGalleryPage() {
             },
           ]}
           rows={rows.filter((row) => {
-            const haystack = ${row.id}    .toLowerCase();
+            const haystack = `${row.id} ${row.customer} ${row.channel} ${row.status} ${row.sla}`.toLowerCase();
             return haystack.includes(search.toLowerCase());
           })}
           rowKey={(row) => row.id}
@@ -242,8 +242,8 @@ export default function UIGalleryPage() {
             <PhoneInputTZ
               value={phone}
               onChange={setPhone}
-              stateTone={phone.Length -lt 9 ? "error" : "helper"}
-              stateMessage={if (False) {""}}
+              stateTone={phone.length < 9 ? "error" : "helper"}
+              stateMessage={phone.length < 9 ? "Enter all 9 local digits after +255." : "TZ phone format is ready for order submission."}
             />
           </div>
         </div>
@@ -378,4 +378,3 @@ export default function UIGalleryPage() {
     </div>
   );
 }
-

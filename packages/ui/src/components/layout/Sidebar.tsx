@@ -26,7 +26,7 @@ export function Sidebar({
   className = "",
 }: SidebarProps) {
   return (
-    <div className={mimo-sidebar .trim()}>
+    <div className={`mimo-sidebar ${className}`.trim()}>
       {brand ? <div className="mimo-sidebar__brand">{brand}</div> : null}
       {roleLabel ? <div className="mimo-sidebar__role">{roleLabel}</div> : null}
 
@@ -46,7 +46,7 @@ export function Sidebar({
             return (
               <div
                 key={item.key}
-                className={mimo-sidebar__item mimo-sidebar__item--disabled .trim()}
+                className={`mimo-sidebar__item mimo-sidebar__item--disabled ${item.active ? "mimo-sidebar__item--active" : ""}`.trim()}
                 aria-disabled="true"
               >
                 {content}
@@ -58,7 +58,7 @@ export function Sidebar({
             <a
               key={item.key}
               href={item.href}
-              className={mimo-sidebar__item .trim()}
+              className={`mimo-sidebar__item ${item.active ? "mimo-sidebar__item--active" : ""}`.trim()}
               aria-current={item.active ? "page" : undefined}
             >
               {content}

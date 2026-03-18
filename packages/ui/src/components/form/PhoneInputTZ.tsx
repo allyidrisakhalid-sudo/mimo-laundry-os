@@ -27,12 +27,12 @@ export function PhoneInputTZ({
   const normalized = value.replace(/\D/g, "").slice(0, 9);
 
   return (
-    <div className={mimo-field .trim()}>
+    <div className={`mimo-field ${className}`.trim()}>
       <label className="mimo-label" htmlFor={id}>
         {label}
       </label>
 
-      <div className={mimo-phone .trim()}>
+      <div className={`mimo-phone ${disabled ? "mimo-phone--disabled" : ""}`.trim()}>
         <span className="mimo-phone__prefix">+255</span>
         <input
           id={id}
@@ -43,15 +43,17 @@ export function PhoneInputTZ({
           onChange={(event) => onChange(event.target.value.replace(/\D/g, "").slice(0, 9))}
           placeholder="712345678"
           disabled={disabled}
-          aria-describedby={${id}-state}
+          aria-describedby={`${id}-state`}
         />
       </div>
 
-      <FieldState
-        tone={stateMessage ? stateTone : "helper"}
-        message={stateMessage ?? helperText}
-        className="mimo-field__state"
-      />
+      <div id={`${id}-state`}>
+        <FieldState
+          tone={stateMessage ? stateTone : "helper"}
+          message={stateMessage ?? helperText}
+          className="mimo-field__state"
+        />
+      </div>
     </div>
   );
 }

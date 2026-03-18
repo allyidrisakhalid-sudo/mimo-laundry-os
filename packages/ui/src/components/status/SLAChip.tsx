@@ -14,7 +14,7 @@ export function SLAChip({
   className = "",
 }: SLAChipProps) {
   return (
-    <span className={mimo-sla-chip mimo-sla-chip-- .trim()}>
+    <span className={`mimo-sla-chip mimo-sla-chip--${tone} ${className}`.trim()}>
       {label}
     </span>
   );

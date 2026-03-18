@@ -19,7 +19,7 @@ export function StatusBadge({
   className = "",
 }: StatusBadgeProps) {
   return (
-    <span className={mimo-status-badge mimo-status-badge-- .trim()}>
+    <span className={`mimo-status-badge mimo-status-badge--${tone} ${className}`.trim()}>
       {label}
     </span>
   );
