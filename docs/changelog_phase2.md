@@ -131,3 +131,13 @@
 - formalized support visibility and auditability across customer, affiliate, admin, and DevAdmin contexts
 - added implementation-grade EN/SW support copy baseline for issue creation, queue handling, status messaging, and refund or credit outcomes
 - formalized the end-to-end support and trust layer to reduce chaos while preserving order truth, ledger truth, and auditability
+
+## P2.14  Cloudflare setup for mimolaundry.org
+- locked Cloudflare production host model for mimolaundry.org and api.mimolaundry.org
+- locked DNS structure with apex web, API subdomain, and WWW redirect
+- locked SSL/TLS to Full (strict)
+- locked public-page-only caching rules
+- locked redirect and security-header model
+- deferred HSTS until stable verification
+- locked Cloudflare operator runbook
+- formalized domain, SSL, and routing polish for secure production delivery

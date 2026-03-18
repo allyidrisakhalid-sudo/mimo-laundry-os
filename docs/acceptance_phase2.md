@@ -443,3 +443,34 @@
   1. implement support issue creation, triage/resolution flow, messaging templates, and refund/credit UX exactly from these specs so common support cases are handled end-to-end with clear visibility and audit trail
 
 - Gate Result: P2.13 PASS
+
+## P2.14  Cloudflare Setup for mimolaundry.org
+
+- Scope:
+  - lock the production domain and edge-delivery setup so mimolaundry.org and api.mimolaundry.org resolve correctly, TLS is strict and safe, public caching is controlled, redirects are clean, and the web and API are reachable securely through a stable Cloudflare configuration
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/cloudflare_setup_spec.md
+  - [x] /docs/phase2/ux/cloudflare_cache_and_security_spec.md
+  - [x] /docs/phase2/ux/domain_routing_and_tls_spec.md
+  - [x] /docs/phase2/ops/cloudflare_runbook.md
+  - [x] /docs/changelog_phase2.md updated with P2.14
+  - [x] /docs/acceptance_phase2.md updated with P2.14
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.13 artifacts still exist and prior PASS state remains intact
+  - domain routing and TLS spec locks one production apex for web, one API subdomain, one WWW redirect, explicit DNS rules, redirect rules, Full (strict) TLS, and routing verification model
+  - Cloudflare cache and security spec locks public-page-only cache scope, excludes /app/* and blanket API caching, defines canonical redirects, and defers HSTS until verified stability
+  - Cloudflare setup spec locks the role of Cloudflare, one production zone, public host exposure summary, cache/security summary, and deployment safety rules
+  - Cloudflare runbook locks required settings, change order, verification checklist, rollback guidance, and evidence capture requirements
+  - changelog and acceptance logs updated to capture P2.14 completion evidence
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The Cloudflare production delivery model is now locked as one minimal, secure, and explicit edge setup for Mimo. The specs preserve the approved Phase 2 architecture by keeping mimolaundry.org as the canonical public web host, api.mimolaundry.org as the explicit API host, and www.mimolaundry.org as a permanent redirect only. TLS is locked to Full (strict), caching is limited to safe public routes, app and API correctness are protected, redirects stay canonical, and HSTS is intentionally deferred until stable verification is complete.
+
+- Follow-up actions:
+  1. implement the Cloudflare DNS, TLS, caching, redirect, and security settings exactly from these specs so web and API are reachable securely on the production domain before enabling HSTS
+
+- Gate Result: P2.14 PASS
