@@ -100,3 +100,14 @@
 - locked the EN/SW affiliate portal copy baseline
 - formalized an independent fast affiliate operations model with no cross-shop visibility
 
+
+## P2.11 completed
+- locked admin HQ structure as a five-screen command center for daily business control
+- locked ops dashboard with KPI row, action-queue model, global issues list, pressure summary, and finance signal support
+- locked platform-wide orders oversight with practical filters, attribution visibility, and safe quick actions
+- locked network management inside admin operations for zones, hubs, affiliates, and drivers
+- locked pricing plans UI with versioned create, stage, review, and activate workflow
+- locked finance UI for payments, refunds, payouts, and daily close
+- locked read-only audit and failed-jobs visibility inside admin finance/control context
+- locked EN/SW admin HQ copy baseline
+- formalized the daily business command-center model for admin with no hunting

@@ -346,3 +346,35 @@
 
 - Gate Result: P2.10 PASS
 
+
+## P2.11 Admin HQ (Ops + Finance Clarity)
+
+- Scope:
+  - lock the admin portal as the daily business command center where admin can run operations, oversee platform-wide orders, manage network structure, control pricing versions, review finance, and inspect read-only audit/failed-job visibility without hunting
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/admin_hq_spec.md
+  - [x] /docs/phase2/ux/admin_network_and_pricing_spec.md
+  - [x] /docs/phase2/ux/admin_finance_and_controls_spec.md
+  - [x] /docs/phase2/copy/admin_hq_copy_en_sw.md
+  - [x] /docs/changelog_phase2.md updated with P2.11
+  - [x] /docs/acceptance_phase2.md updated with P2.11
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.10 artifacts still exist and prior PASS state remains intact
+  - admin HQ spec defines locked principles, dashboard, orders oversight, order detail, operations control summary, and admin state rules
+  - admin network and pricing spec defines the operations control surface plus network management rules for zones, hubs, affiliates, and drivers
+  - pricing plans UI is locked as a versioned create / stage / activate workflow with explicit effective-date visibility
+  - admin finance and controls spec defines finance summary, payments/refunds, payouts, daily close, and read-only audit/failed-job visibility
+  - admin copy file provides implementation-grade EN/SW copy for dashboard, orders, network, pricing, finance, and state feedback
+  - the combined admin model keeps daily business control readable, minimal, and action-oriented without report-museum or configuration-maze drift
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The admin portal is now locked as a disciplined command center where the admin can see what matters first, move from urgent queue to platform-wide order truth, manage network and pricing from one operations workspace, and run finance review and daily close from one clear business surface. The specs preserve the approved Midnight Silk direction while keeping technical oversight visible but contained.
+
+- Follow-up actions:
+  1. implement the admin HQ exactly from these specs so admin can run operations and finance daily from one clear command center without hunting
+
+- Gate Result: P2.11 PASS
