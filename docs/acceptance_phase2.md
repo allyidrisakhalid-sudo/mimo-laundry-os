@@ -212,3 +212,37 @@
 - Follow-up actions:
   - implement first-run onboarding, complete-setup prompts, and role help entry points exactly from these specs so new users can self-start without instructions
 - Gate Result: P2.6 PASS
+
+## P2.7 Customer Portal (World-Class Minimal)
+
+- Scope:
+  - define the customer portal as a premium minimal system for daily use
+  - lock customer home, order wizard, order detail, and profile behavior
+  - define customer-specific state rules and mobile behavior rules
+  - produce implementation-grade EN/SW copy for customer portal surfaces
+
+- Required outputs checklist:
+  - [x] docs/phase2/ux/customer_portal_spec.md
+  - [x] docs/phase2/ux/customer_order_wizard_spec.md
+  - [x] docs/phase2/ux/customer_mobile_behavior_spec.md
+  - [x] docs/phase2/copy/customer_portal_copy_en_sw.md
+  - [x] docs/changelog_phase2.md updated with P2.7
+  - [x] docs/acceptance_phase2.md updated with P2.7
+
+- Evidence list:
+  - pre-flight retest completed for P2.0 through P2.6 artifacts and PASS state
+  - customer portal spec created with principles, home, wizard summary, order detail, profile, and customer state rules
+  - customer order wizard spec created with route model, step structure, step-by-step rules, review rules, validation, and mobile rules
+  - customer mobile behavior spec created with bottom-tab behavior and page-specific mobile rules
+  - customer EN/SW copy baseline created for home, wizard, detail, profile, and customer states
+  - changelog and acceptance records updated for P2.7
+
+- PASS / FAIL: PASS
+- Gate Result: P2.7 PASS
+
+- Summary:
+  - The customer portal is now locked as a coherent minimal product model across web and mobile. Home prioritizes the active order and next action, the order wizard supports Door/Shop/Hybrid with clear tier and schedule steps, order detail centralizes status/payment/support truth, and profile stays lightweight and useful. Bilingual customer copy is implementation-ready and aligned with the Midnight Silk direction.
+
+- Follow-up actions:
+  1. implement the customer portal exactly from these specs so customers can create orders, track them, pay, and raise issues smoothly on web and mobile
+

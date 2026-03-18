@@ -57,3 +57,14 @@
 - Locked role help entry points so every role has a clear contextual support path without redundant help pages
 - Locked EN/SW onboarding, setup prompt, help entry, and completion feedback copy baseline
 - Formalized a self-start onboarding model that avoids training dependency, tutorial overload, and duplicate support content
+
+## P2.7 completed
+- locked customer portal structure across /app/customer, /app/customer/orders, /app/customer/orders/[id], and /app/customer/profile
+- locked customer home with active-order-first model, clear next action, compact recent orders, and secondary support entry
+- locked new order wizard for Door, Shop, and Hybrid with tier and schedule through one deterministic premium flow
+- locked order detail as the single customer truth surface for timeline, invoice/payment, and support
+- locked customer profile as a minimal utility page for account basics, saved addresses, receipts/documents, and language
+- locked mobile behavior for the customer portal including bottom tabs, home, wizard, order detail, and profile rules
+- locked EN/SW customer portal copy baseline for home, order creation, order detail, profile, and customer states
+- formalized the customer daily-use model for web and mobile in a premium, minimal, role-correct system
+
