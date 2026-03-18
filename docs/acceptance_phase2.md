@@ -507,3 +507,34 @@
   1. execute these role-based journey tests on real target devices exactly from this plan and do not claim launch readiness until every role completes its workflow with acceptable clarity and evidence
 
 - Gate Result: P2.15 PASS
+
+## P2.16  Performance + UX polish pass
+
+- Scope:
+  - final cross-product polish pass covering speed, responsiveness, empty/error/loading states, EN/SW copy consistency, and spacing/icon/alignment cleanup across public, auth, support, and all role portals
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/performance_and_polish_audit.md
+  - [x] /docs/phase2/ux/state_and_copy_consistency_audit.md
+  - [x] /docs/phase2/ux/final_ui_cleanup_spec.md
+  - [x] /docs/phase2/ops/final_polish_runbook.md
+  - [x] /docs/changelog_phase2.md updated with P2.16
+  - [x] /docs/acceptance_phase2.md updated with P2.16
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.15 artifacts still exist and prior PASS state remains intact
+  - performance and polish audit defines product-wide speed, responsiveness, role-context performance criteria, and strict friction severity handling
+  - state and copy consistency audit defines empty, error, loading, and EN/SW copy alignment rules across all roles
+  - final UI cleanup spec defines spacing, icon, alignment, surface, and visual consistency discipline under Midnight Silk
+  - final polish runbook defines audit order, evidence capture, issue logging, re-test rules, and final pass summary rules
+  - the world-class minimal launch gate is explicitly tied to visible polish quality, not vague aesthetics
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The final Phase 2 polish framework is now locked as a strict launch-readiness discipline across the full Mimo experience. Speed, responsiveness, state quality, bilingual copy consistency, and visual cleanup standards are now explicitly defined so no role, device class, or core flow can be declared launch-ready without meeting one coherent world-class minimal bar.
+
+- Follow-up actions:
+  1. execute this final polish pass exactly from these specs and do not claim launch-ready quality until speed, states, copy, and visual cleanup all meet the world-class minimal bar across roles and devices
+
+- Gate Result: P2.16 PASS

@@ -149,3 +149,11 @@
 - locked launch validation runbook
 - formalized customer, driver, hub, affiliate, admin, and DevAdmin real-world journey criteria
 - established the device-ready end-to-end workflow validation model for launch
+
+## P2.16  Performance + UX polish pass
+- locked performance and responsiveness audit across public, auth, support, and all role portals
+- locked empty, error, and loading state audit as a launch-quality trust requirement
+- locked EN/SW copy consistency audit across all public and role-based copy surfaces
+- locked final spacing, icon, alignment, and surface cleanup rules under Midnight Silk discipline
+- locked final polish runbook for evidence capture, issue logging, re-test, and honest pass judgment
+- formalized the cross-role world-class minimal quality gate for final launch readiness
