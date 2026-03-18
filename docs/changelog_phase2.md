@@ -177,3 +177,12 @@
 - added a real ui gallery proof route at /ui-gallery in the web app with realistic Mimo states
 - stabilized shared exports from the UI package for downstream screen implementation
 - the UI system is now ready for real page implementation without custom hacks
+
+## P2.3  Marketing Website (Implementation)
+- installed the Phase 2 public implementation baseline
+- implemented real public routes for home, track, partners, help, and legal pages
+- added or normalized shared public header, footer, and support CTA system
+- wired EN/SW public copy into the implementation layer
+- implemented legal pages as minimal readable public documents
+- public website is now structurally ready for SEO/searchability implementation
+

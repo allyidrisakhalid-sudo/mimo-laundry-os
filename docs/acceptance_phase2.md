@@ -620,3 +620,43 @@
   1. begin P2.3 and later screen implementation only after the shared component library and gallery are confirmed as the default source for layout, form, state, status, and feedback patterns
 
 - Gate Result: P2.2 PASS
+
+## P2.3  Marketing Website (Implementation)
+
+- Scope:
+  - convert the locked public Phase 2 experience into real public route implementation
+  - install shared public header/footer/support primitives
+  - wire public EN/SW copy into a translation-ready implementation layer
+  - keep public route purpose non-duplicative and ready for SEO work
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/public_site_spec.md
+  - [x] /docs/phase2/ux/public_copy_map.md
+  - [x] /docs/phase2/ux/seo_and_content_intent.md
+  - [x] /docs/phase2/ux/legal_pages_minimal_spec.md
+  - [x] /docs/phase2/implementation/p2_public_implementation_baseline.md
+  - [x] real public routes for / /track /partners /help /terms /privacy /refund-policy
+  - [x] shared public header/footer/support CTA system
+  - [x] EN/SW public copy source
+  - [x] docs/changelog_phase2.md updated
+  - [x] docs/acceptance_phase2.md updated
+
+- Verification notes:
+  - P2.2 implementation artifacts remain present
+  - public route ownership is now structurally separated by purpose
+  - shared public navigation/footer/support patterns now exist as reusable code
+  - legal pages are minimal and readable
+  - public implementation layer is ready for SEO/searchability follow-up
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved Phase 2 public experience is now installed as a real implementation layer with concrete public routes, shared public layout primitives, a reusable WhatsApp support pattern, and EN/SW copy structure. The public website is now positioned for SEO/searchability implementation without route-purpose drift.
+
+- Follow-up actions:
+  1. begin P2.4 implementation only after the real public routes, shared public layout, and public EN/SW copy layer are confirmed as stable and non-duplicative
+
+- Gate Result: P2.3 PASS
+
+
+

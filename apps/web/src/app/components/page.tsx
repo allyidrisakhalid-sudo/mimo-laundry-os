@@ -3,7 +3,6 @@
 import "@/i18n";
 import { useTranslation } from "react-i18next";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -11,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  StatusBadge,
   ToastProvider,
   useToast,
 } from "@mimo/ui";
@@ -57,7 +57,10 @@ function GalleryInner() {
           <Button
             variant="secondary"
             onClick={() =>
-              showInfo(t("componentsPage.toastInfoTitle"), t("componentsPage.toastInfoDescription"))
+              showInfo(
+                t("componentsPage.toastInfoTitle"),
+                t("componentsPage.toastInfoDescription")
+              )
             }
           >
             {t("componentsPage.showInfo")}
@@ -78,7 +81,7 @@ function GalleryInner() {
 
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">{t("componentsPage.inputs")}</h2>
-        <div className="space-y-3 max-w-md">
+        <div className="max-w-md space-y-3">
           <label className="block">
             <span>{t("componentsPage.customerName")}</span>
             <Input placeholder={t("componentsPage.enterFullName")} />
@@ -126,8 +129,8 @@ function GalleryInner() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Badge>EN/SW</Badge>
-          <Badge>{t("componentsPage.languageToggle")}</Badge>
+          <StatusBadge label="EN/SW" />
+          <StatusBadge label={t("componentsPage.languageToggle")} />
         </div>
       </section>
     </main>
@@ -141,3 +144,4 @@ export default function ComponentsPage() {
     </ToastProvider>
   );
 }
+

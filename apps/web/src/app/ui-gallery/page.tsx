@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AddressForm,
+  type AddressFormValue,
   AppShell,
   ConfirmDialog,
   EmptyState,
@@ -29,7 +30,7 @@ export default function UIGalleryPage() {
   const [page, setPage] = React.useState(1);
   const [phone, setPhone] = React.useState("712345678");
   const [dialogOpen, setDialogOpen] = React.useState(true);
-  const [address, setAddress] = React.useState({
+  const [address, setAddress] = React.useState<AddressFormValue>({
     contactName: "Asha Mushi",
     phone: "+255 712 345 678",
     area: "Masaki",

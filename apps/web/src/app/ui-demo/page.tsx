@@ -1,35 +1,33 @@
-import { tokens } from "@mimo/ui";
+import { mimoTokens } from "@mimo/ui";
 
 const colorRows = [
-  ["primary", tokens.color.primary],
-  ["primaryActive", tokens.color.primaryActive],
-  ["primarySoft", tokens.color.primarySoft],
-  ["accent", tokens.color.accent],
-  ["accentSoft", tokens.color.accentSoft],
-  ["background", tokens.color.background],
-  ["surface", tokens.color.surface],
-  ["surface2", tokens.color.surface2],
-  ["border", tokens.color.border],
-  ["textPrimary", tokens.color.textPrimary],
-  ["textSecondary", tokens.color.textSecondary],
-  ["textDisabled", tokens.color.textDisabled],
-  ["statusSuccess", tokens.color.statusSuccess],
-  ["statusWarning", tokens.color.statusWarning],
-  ["statusDanger", tokens.color.statusDanger],
-  ["statusInfo", tokens.color.statusInfo],
+  ["obsidian", mimoTokens.color.obsidian],
+  ["midnight", mimoTokens.color.midnight],
+  ["ink", mimoTokens.color.ink],
+  ["silk", mimoTokens.color.silk],
+  ["cloud", mimoTokens.color.cloud],
+  ["mist", mimoTokens.color.mist],
+  ["champagne", mimoTokens.color.champagne],
+  ["teal", mimoTokens.color.teal],
+  ["royal", mimoTokens.color.royal],
+  ["plum", mimoTokens.color.plum],
+  ["success", mimoTokens.color.success],
+  ["warning", mimoTokens.color.warning],
+  ["error", mimoTokens.color.error],
+  ["info", mimoTokens.color.info]
 ] as const;
 
-const spacingRows = Object.entries(tokens.spacing);
-const radiusRows = Object.entries(tokens.radius);
+const spacingRows = Object.entries(mimoTokens.spacing);
+const radiusRows = Object.entries(mimoTokens.radius);
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section style={{ marginBottom: tokens.spacing[32] }}>
+    <section style={{ marginBottom: mimoTokens.spacing[16] }}>
       <h2
         style={{
-          fontSize: tokens.typography.fontSize.h2,
-          lineHeight: tokens.typography.lineHeight.h2,
-          marginBottom: tokens.spacing[16],
+          fontSize: mimoTokens.typography.size["2xl"],
+          lineHeight: String(mimoTokens.typography.lineHeight.snug),
+          marginBottom: mimoTokens.spacing[6],
         }}
       >
         {title}
@@ -44,31 +42,33 @@ export default function UiDemoPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: tokens.color.background,
-        color: tokens.color.textPrimary,
-        fontFamily: tokens.typography.fontFamily.sans,
-        padding: tokens.spacing[24],
+        background: mimoTokens.surface.app,
+        color: mimoTokens.color.midnight,
+        fontFamily: mimoTokens.typography.family.body,
+        padding: mimoTokens.spacing[8],
       }}
     >
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <h1
           style={{
-            fontSize: tokens.typography.fontSize.h1,
-            lineHeight: tokens.typography.lineHeight.h1,
+            fontSize: mimoTokens.typography.size["4xl"],
+            lineHeight: String(mimoTokens.typography.lineHeight.tight),
+            fontFamily: mimoTokens.typography.family.heading,
             marginTop: 0,
-            marginBottom: tokens.spacing[12],
+            marginBottom: mimoTokens.spacing[4],
           }}
         >
-          Laundry OS Design Tokens
+          Mimo Design Tokens
         </h1>
+
         <p
           style={{
-            color: tokens.color.textSecondary,
+            color: mimoTokens.color.ink,
             marginTop: 0,
-            marginBottom: tokens.spacing[32],
+            marginBottom: mimoTokens.spacing[8],
           }}
         >
-          Warm and welcoming, mass-market visual baseline powered by shared semantic tokens.
+          Midnight Silk token preview aligned to the current shared package export surface.
         </p>
 
         <Section title="Color swatches">
@@ -76,17 +76,17 @@ export default function UiDemoPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: tokens.spacing[16],
+              gap: mimoTokens.spacing[4],
             }}
           >
             {colorRows.map(([name, value]) => (
               <div
                 key={name}
                 style={{
-                  background: tokens.color.surface,
-                  border: `1px solid ${tokens.color.border}`,
-                  borderRadius: tokens.radius[16],
-                  boxShadow: tokens.shadow.subtle,
+                  background: mimoTokens.surface.elevated,
+                  border: mimoTokens.border.subtle,
+                  borderRadius: mimoTokens.radius.md,
+                  boxShadow: mimoTokens.shadow.soft,
                   overflow: "hidden",
                 }}
               >
@@ -94,12 +94,12 @@ export default function UiDemoPage() {
                   style={{
                     height: 96,
                     background: value,
-                    borderBottom: `1px solid ${tokens.color.border}`,
+                    borderBottom: mimoTokens.border.subtle,
                   }}
                 />
-                <div style={{ padding: tokens.spacing[16] }}>
-                  <div style={{ fontWeight: tokens.typography.fontWeight.semibold }}>{name}</div>
-                  <div style={{ color: tokens.color.textSecondary, marginTop: tokens.spacing[8] }}>
+                <div style={{ padding: mimoTokens.spacing[4] }}>
+                  <div style={{ fontWeight: mimoTokens.typography.weight.semibold }}>{name}</div>
+                  <div style={{ color: mimoTokens.color.ink, marginTop: mimoTokens.spacing[2] }}>
                     {value}
                   </div>
                 </div>
@@ -111,71 +111,52 @@ export default function UiDemoPage() {
         <Section title="Typography scale">
           <div
             style={{
-              background: tokens.color.surface,
-              border: `1px solid ${tokens.color.border}`,
-              borderRadius: tokens.radius[16],
-              boxShadow: tokens.shadow.subtle,
-              padding: tokens.spacing[24],
+              background: mimoTokens.surface.elevated,
+              border: mimoTokens.border.subtle,
+              borderRadius: mimoTokens.radius.md,
+              boxShadow: mimoTokens.shadow.soft,
+              padding: mimoTokens.spacing[6],
             }}
           >
             <div
               style={{
-                fontSize: tokens.typography.fontSize.h1,
-                lineHeight: tokens.typography.lineHeight.h1,
-                fontWeight: tokens.typography.fontWeight.bold,
-                marginBottom: tokens.spacing[12],
+                fontSize: mimoTokens.typography.size["4xl"],
+                lineHeight: String(mimoTokens.typography.lineHeight.tight),
+                fontWeight: mimoTokens.typography.weight.bold,
+                fontFamily: mimoTokens.typography.family.heading,
+                marginBottom: mimoTokens.spacing[3],
               }}
             >
-              H1 Fast, trusted laundry for every household
+              Heading display
             </div>
             <div
               style={{
-                fontSize: tokens.typography.fontSize.h2,
-                lineHeight: tokens.typography.lineHeight.h2,
-                fontWeight: tokens.typography.fontWeight.semibold,
-                marginBottom: tokens.spacing[12],
+                fontSize: mimoTokens.typography.size["3xl"],
+                lineHeight: String(mimoTokens.typography.lineHeight.snug),
+                fontWeight: mimoTokens.typography.weight.semibold,
+                fontFamily: mimoTokens.typography.family.heading,
+                marginBottom: mimoTokens.spacing[3],
               }}
             >
-              H2 Clear status, simple actions, human warmth
+              Section heading
             </div>
             <div
               style={{
-                fontSize: tokens.typography.fontSize.h3,
-                lineHeight: tokens.typography.lineHeight.h3,
-                fontWeight: tokens.typography.fontWeight.semibold,
-                marginBottom: tokens.spacing[12],
+                fontSize: mimoTokens.typography.size.base,
+                lineHeight: String(mimoTokens.typography.lineHeight.normal),
+                marginBottom: mimoTokens.spacing[3],
               }}
             >
-              H3 Designed for busy customers, affiliates, hubs, and drivers
+              Body text for operational clarity, readable UI, and calm customer-facing surfaces.
             </div>
             <div
               style={{
-                fontSize: tokens.typography.fontSize.body,
-                lineHeight: tokens.typography.lineHeight.body,
-                marginBottom: tokens.spacing[12],
+                fontSize: mimoTokens.typography.size.sm,
+                lineHeight: String(mimoTokens.typography.lineHeight.normal),
+                color: mimoTokens.color.ink,
               }}
             >
-              Body Laundry OS provides end-to-end visibility across zones, hubs, drivers,
-              affiliates, and customers.
-            </div>
-            <div
-              style={{
-                fontSize: tokens.typography.fontSize.small,
-                lineHeight: tokens.typography.lineHeight.small,
-                color: tokens.color.textSecondary,
-                marginBottom: tokens.spacing[8],
-              }}
-            >
-              Small Secondary information, helper text, and supporting labels.
-            </div>
-            <div
-              style={{
-                fontSize: tokens.typography.fontSize.caption,
-                lineHeight: tokens.typography.lineHeight.caption,
-                color: tokens.color.textDisabled,
-              }}
-            >
-              Caption Metadata, timestamps, and subtle descriptors.
+              Supporting text and metadata.
             </div>
           </div>
         </Section>
@@ -183,64 +164,64 @@ export default function UiDemoPage() {
         <Section title="Spacing scale">
           <div
             style={{
-              background: tokens.color.surface,
-              border: `1px solid ${tokens.color.border}`,
-              borderRadius: tokens.radius[16],
-              boxShadow: tokens.shadow.subtle,
-              padding: tokens.spacing[24],
+              background: mimoTokens.surface.elevated,
+              border: mimoTokens.border.subtle,
+              borderRadius: mimoTokens.radius.md,
+              boxShadow: mimoTokens.shadow.soft,
+              padding: mimoTokens.spacing[6],
             }}
           >
-            <div style={{ display: "grid", gap: tokens.spacing[12] }}>
+            <div style={{ display: "grid", gap: mimoTokens.spacing[3] }}>
               {spacingRows.map(([name, value]) => (
                 <div
                   key={name}
-                  style={{ display: "flex", alignItems: "center", gap: tokens.spacing[16] }}
+                  style={{ display: "flex", alignItems: "center", gap: mimoTokens.spacing[4] }}
                 >
-                  <div style={{ width: 56, color: tokens.color.textSecondary }}>{name}</div>
+                  <div style={{ width: 56, color: mimoTokens.color.ink }}>{name}</div>
                   <div
                     style={{
                       height: 16,
                       width: value,
                       minWidth: value,
-                      background: tokens.color.primary,
-                      borderRadius: tokens.radius[8],
+                      background: mimoTokens.color.teal,
+                      borderRadius: mimoTokens.radius.xs,
                     }}
                   />
-                  <div style={{ color: tokens.color.textSecondary }}>{value}</div>
+                  <div style={{ color: mimoTokens.color.ink }}>{value}</div>
                 </div>
               ))}
             </div>
           </div>
         </Section>
 
-        <Section title="Radii + surfaces">
+        <Section title="Radii">
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: tokens.spacing[16],
+              gap: mimoTokens.spacing[4],
             }}
           >
             {radiusRows.map(([name, value]) => (
               <div
                 key={name}
                 style={{
-                  background: tokens.color.surface,
-                  border: `1px solid ${tokens.color.border}`,
+                  background: mimoTokens.surface.elevated,
+                  border: mimoTokens.border.subtle,
                   borderRadius: value,
-                  boxShadow: tokens.shadow.subtle,
-                  padding: tokens.spacing[20],
+                  boxShadow: mimoTokens.shadow.soft,
+                  padding: mimoTokens.spacing[5],
                 }}
               >
                 <div
                   style={{
-                    fontWeight: tokens.typography.fontWeight.semibold,
-                    marginBottom: tokens.spacing[8],
+                    fontWeight: mimoTokens.typography.weight.semibold,
+                    marginBottom: mimoTokens.spacing[2],
                   }}
                 >
                   radius {name}
                 </div>
-                <div style={{ color: tokens.color.textSecondary }}>{value}</div>
+                <div style={{ color: mimoTokens.color.ink }}>{value}</div>
               </div>
             ))}
           </div>
