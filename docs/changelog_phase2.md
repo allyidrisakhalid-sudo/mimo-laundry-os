@@ -50,3 +50,10 @@
 - locked session and logout UX behavior for active sessions, expired sessions, forbidden access, and clean sign-out
 - locked EN/SW auth copy baseline for login, signup, validation, routing, session feedback, logout, and help fallback
 - formalized launch-ready auth access model so every role lands in the correct portal with no confusion
+
+## P2.6 completed
+- Locked minimal customer first-run onboarding inside the customer portal with a strict two-screen maximum
+- Locked operator setup prompt model for driver, hub staff, affiliate staff, and affiliate admin as dashboard-native card prompts
+- Locked role help entry points so every role has a clear contextual support path without redundant help pages
+- Locked EN/SW onboarding, setup prompt, help entry, and completion feedback copy baseline
+- Formalized a self-start onboarding model that avoids training dependency, tutorial overload, and duplicate support content

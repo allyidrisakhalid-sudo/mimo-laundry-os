@@ -186,3 +186,29 @@
 
 - Follow-up actions:
   1. implement login, signup, role routing, and session/logout behavior exactly from these specs so every role lands in the correct portal with no confusion
+
+## P2.6 First-Run Onboarding (Minimal)
+
+- Scope:
+  - Define a minimal first-run onboarding model that lets new users self-start quickly inside the correct portal without training-heavy flows, duplicate pages, or role confusion.
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/first_run_onboarding_spec.md
+  - [x] /docs/phase2/ux/role_setup_prompts_spec.md
+  - [x] /docs/phase2/copy/onboarding_copy_en_sw.md
+  - [x] /docs/phase2/ux/help_entry_points_spec.md
+  - [x] /docs/changelog_phase2.md updated with P2.6
+  - [x] /docs/acceptance_phase2.md updated with P2.6
+- Evidence list:
+  - Pre-flight retest confirmed P2.0 through P2.5 required artifacts still exist
+  - Pre-flight retest confirmed changelog includes P2.0 through P2.5
+  - Pre-flight retest confirmed acceptance includes P2.0 PASS through P2.5 PASS
+  - Customer onboarding spec locked to 2 screens only and avoids tutorial maze patterns
+  - Operator onboarding spec locked to prompt-based setup cards inside portal dashboards
+  - Help entry points spec locked for customer, driver, hub, affiliate, admin, and dev contexts
+  - EN/SW onboarding copy baseline defined for first-run, setup prompts, help entry, and completion states
+- PASS / FAIL: PASS
+- Summary:
+  - P2.6 is locked. New users can self-start through minimal role-correct onboarding, concise setup prompts, and clear contextual help entry points without needing training flows or redundant pages.
+- Follow-up actions:
+  - implement first-run onboarding, complete-setup prompts, and role help entry points exactly from these specs so new users can self-start without instructions
+- Gate Result: P2.6 PASS
