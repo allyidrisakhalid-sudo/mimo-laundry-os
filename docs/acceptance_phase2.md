@@ -278,3 +278,38 @@
   1. implement the driver portal exactly from these specs so drivers can complete a full day of work with minimal taps and no confusion
 
 - Gate Result: P2.8 PASS
+
+## P2.9 Hub Portal (Tablet/Web Ops)
+
+- Scope:
+  - defined the hub portal as a minimal four-screen operational system for dashboard routing, scanner-first intake, clean processing/QC flow, focused order detail, and zone-filtered dispatch batching
+  - locked tablet/web behavior for repeated operational use
+  - added implementation-grade EN/SW copy for hub workflows and states
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/hub_portal_spec.md
+  - [x] /docs/phase2/ux/hub_processing_and_dispatch_spec.md
+  - [x] /docs/phase2/ux/hub_tablet_behavior_spec.md
+  - [x] /docs/phase2/copy/hub_portal_copy_en_sw.md
+  - [x] /docs/changelog_phase2.md updated with P2.9
+  - [x] /docs/acceptance_phase2.md updated with P2.9
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.8 required artifacts still exist
+  - pre-flight retest confirmed docs/changelog_phase2.md includes P2.0 through P2.8
+  - pre-flight retest confirmed docs/acceptance_phase2.md includes P2.0 PASS through P2.8 PASS
+  - hub portal spec locks dashboard, intake, order detail/QC summary, state rules, and portal principles
+  - hub processing and dispatch spec locks the board model, QC flow, dispatch batching, and driver assignment filter rules
+  - hub tablet behavior spec locks tablet/web behavior for dashboard, intake, processing, QC/detail, and dispatch
+  - hub copy file provides implementation-grade EN/SW strings for dashboard, intake, processing, QC, dispatch, and key states
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The hub portal is now locked as a coherent tablet/web operational workspace where hub staff can route from dashboard into scanner-first intake, move work through a clean stage-based processing board, make fast QC pass/fail decisions, and complete zone-filtered dispatch assignment without admin assistance. The specs preserve the approved Midnight Silk direction while keeping the portal minimal, operationally sharp, and ready for implementation.
+
+- Follow-up actions:
+  1. implement the hub portal exactly from these specs so hub staff can run intake, processing, QC, and dispatch end-to-end without admin assistance
+
+- Gate Result: P2.9 PASS
+

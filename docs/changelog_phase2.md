@@ -78,3 +78,14 @@
 - locked mobile behavior for the driver portal with one-hand usability, route clarity, and no desktop carryover clutter
 - locked EN/SW driver portal copy baseline for today, task detail, cash, retry, profile, and help states
 - formalized a full-day driver execution model optimized for minimal taps, low confusion, and calm recovery under weak connectivity
+
+## P2.9 completed
+- locked hub portal structure across dashboard, intake, processing, and order detail surfaces
+- locked intake screen with scanner-first operation model for receiving work quickly and accurately
+- locked processing board with clean operational stage columns and clear issue flag visibility
+- locked QC decision model with explicit pass/fail and issue-open flow
+- locked dispatch batching with zone-filtered driver assignment rules
+- locked tablet/web behavior for repeated hub operations
+- locked EN/SW hub portal copy baseline
+- formalized an end-to-end intake  processing  dispatch operational model for hub staff without admin dependence
+
