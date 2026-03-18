@@ -1,120 +1,25 @@
-# Public Sitemap
+# Public Sitemap  Phase 2 Blueprint Lock (P2.0)
 
-## Objective
+System: Mimo Laundry OS  
+Rule: Public entry must stay minimal, search-friendly, and non-duplicative.
 
-This document defines the public-facing pages for `mimolaundry.org`. The public site must remain minimal, searchable, and conversion-focused. It must not duplicate portal functionality.
+## Locked Public Sitemap
 
-## Global Rules
+| Route | Page Name | Purpose | Primary CTA | SEO Intent | What It Must NOT Include | Core Sections |
+|---|---|---|---|---|---|---|
+| / | Home | Establish Mimo as a premium, trustworthy laundry platform and route visitors to the correct next step fast. | Start now. | Branded and service-intent discovery for premium laundry, pickup/delivery, and shop/partner entry. | full help center duplication; full tracking interface; full partner application form; duplicated login/signup form bodies; a separate detailed pricing page pitch | 1. hero<br>2. trust/service proof<br>3. how it works<br>4. service/pricing snapshot<br>5. role entry/partner entry<br>6. final CTA/footer |
+| /track | Track Order | Give customers one direct page to check order status without entering the full app first. | View order status. | Order tracking intent and branded return visits. | marketing hero duplication; account dashboard content; support article library; general signup persuasion blocks | 1. track form<br>2. result state<br>3. timeline/status explanation<br>4. help escalation entry<br>5. login shortcut if needed |
+| /partners | Partners | Convert interested shop partners into qualified affiliate leads. | Apply to partner with Mimo. | B2B laundry partnership and affiliate/shop onboarding discovery. | customer marketing duplication; full help center; order tracking; general account dashboard content | 1. partner hero<br>2. value proposition<br>3. how partnership works<br>4. requirements/fit<br>5. application CTA<br>6. FAQ/footer note |
+| /help | Help | Give customers and partners one clear support and FAQ destination. | Get help now. | Help, FAQ, support, refund, delay, and service-policy discovery. | full landing-page marketing; tracking engine; signup persuasion blocks; duplicate policy content across many separate pages in P2.0 | 1. help hero/search prompt<br>2. top FAQs<br>3. issue categories<br>4. policy summaries<br>5. contact/escalation CTA |
+| /login | Login | Authenticate an existing user and route them automatically to the correct portal. | Log in. | Branded login intent only. | full signup page content; marketing sections; help article duplication; role chooser after login if role can be resolved automatically | 1. login panel<br>2. auth method options<br>3. forgot password/help link<br>4. language toggle<br>5. signup link |
+| /signup | Sign Up | Create a new account for the correct user path with minimum friction. | Create account. | Branded account creation intent only. | full login duplication; large marketing content blocks; public help-center duplication; multi-role confusion | 1. signup panel<br>2. account type framing if required by product logic<br>3. auth inputs<br>4. terms/privacy acknowledgment<br>5. login link |
 
-* Public site is limited to:
+## Public Redundancy Guard
 
-  * `/`
-  * `/track`
-  * `/partners`
-  * `/help`
-  * `/login`
-  * `/signup`
-  * `/pricing` optional only
-* If `/pricing` exists, it must remove pricing duplication from `/`
-* No public page may recreate app portal dashboards or internal workflows
-* Public content must guide users toward the correct action quickly
+- Pricing lives inside / only as a service/pricing snapshot section.
+- Support lives inside /help only.
+- Tracking lives inside /track only.
+- Login lives inside /login only.
+- Partner conversion lives inside /partners only.
 
-## Public Page Map
-
-### 1. `/`
-
-* Purpose: Explain what Mimo is, who it serves, and direct visitors to the right next step
-* Primary CTA: Start your order or track your laundry
-* SEO intent: Laundry service in Tanzania / Dar es Salaam, pickup and delivery laundry, professional laundry operations
-* Must NOT include:
-
-  * full FAQ library from `/help`
-  * full tracking experience from `/track`
-  * partner application workflow from `/partners`
-  * dense pricing tables if `/pricing` exists
-  * portal-like dashboards
-
-### 2. `/track`
-
-* Purpose: Let customers quickly find the status of an order without entering the full portal first
-* Primary CTA: Track order
-* SEO intent: Track laundry order, laundry order status, order tracking
-* Must NOT include:
-
-  * full order history
-  * account settings
-  * help center duplication
-  * support article library
-
-### 3. `/partners`
-
-* Purpose: Explain the affiliate/partner opportunity and drive qualified partner interest
-* Primary CTA: Apply to partner with Mimo
-* SEO intent: Laundry business partnership, laundry affiliate, shop partner program
-* Must NOT include:
-
-  * customer order flow
-  * public help content duplication
-  * full admin/affiliate portal previews
-  * operational dashboards
-
-### 4. `/help`
-
-* Purpose: Answer the most important customer and partner questions with simple, structured guidance
-* Primary CTA: Get help or contact support
-* SEO intent: Laundry help, delivery help, payment help, pickup help
-* Must NOT include:
-
-  * live tracking interface
-  * partner application form duplication
-  * login/signup duplication
-  * large marketing homepage sections
-
-### 5. `/login`
-
-* Purpose: Let any existing user sign in and be routed automatically to the correct portal
-* Primary CTA: Log in
-* SEO intent: Low SEO priority; utility page for returning users
-* Must NOT include:
-
-  * marketing homepage duplication
-  * multi-step onboarding content
-  * public FAQ overload
-  * role chooser if automatic routing exists
-
-### 6. `/signup`
-
-* Purpose: Let a new eligible user create an account with the correct onboarding path
-* Primary CTA: Create account
-* SEO intent: Sign up for laundry service / create Mimo account
-* Must NOT include:
-
-  * full login duplication
-  * dense partner sales content
-  * portal functionality
-  * long-form help content
-
-### 7. `/pricing` (optional)
-
-* Purpose: Present simple service pricing and delivery fee logic without clutter
-* Primary CTA: Start your order
-* SEO intent: Laundry pricing, laundry cost, pickup and delivery pricing
-* Must NOT include:
-
-  * duplicated hero or feature sections from `/`
-  * support FAQ duplication from `/help`
-  * account creation flow
-  * tracking functionality
-
-## Public UX Rules
-
-* Homepage introduces value and routes users
-* Track page solves tracking fast
-* Partners page converts affiliate interest
-* Help page resolves uncertainty
-* Login and signup are friction-light
-* Pricing is optional and must reduce duplication, not add more
-
-## Design Lock
-
-The public site must remain under the page cap. New public pages are not allowed unless they replace an existing page or are approved as a change request.
+No dedicated /pricing page exists in P2.0, and no other public page should duplicate these purposes.

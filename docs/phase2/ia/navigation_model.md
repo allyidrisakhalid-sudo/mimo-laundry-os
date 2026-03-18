@@ -1,216 +1,108 @@
-# Navigation Model
+# Navigation Model  Phase 2 Blueprint Lock (P2.0)
+
+System: Mimo Laundry OS  
+Rule: Navigation must be minimal, role-correct, and operationally obvious.
+
+## A) Web App Navigation Model
+
+### Global Header Inside /app/*
 
-## Objective
+The global header must contain exactly:
+- Mimo logo (left)
+- Current portal label
+- Language toggle (EN/SW)
+- Notifications entry if supported by existing product
+- Profile/account menu (right)
 
-This document defines navigation patterns for web and mobile in Phase 2. Navigation must be role-based, minimal, and dead-link free.
+### Header Rules
 
-## Global Rules
+- No marketing links inside /app/*.
+- No role switcher unless the user truly has multiple roles in product logic.
+- No duplicated sidebar actions in the header.
+- Keep header utility-only.
 
-* Navigation must only show what the role can access
-* No dead links
-* No hidden future menu items
-* No duplicate destinations under different labels
-* The current page must always be visually clear
-* Primary action visibility must remain strong even when navigation is minimal
+## Role Sidebars
 
----
+### CUSTOMER Sidebar
+- Home
+- Orders
+- Profile
 
-## Web Navigation Model (`/app/*`)
+### DRIVER Sidebar
+- Today
+- Tasks
+- Profile
 
-### Header (all portals)
+### HUB_STAFF Sidebar
+- Dashboard
+- Intake
+- Processing
 
-The app header must contain only:
+### AFFILIATE_STAFF Sidebar
+- Dashboard
+- New Order
+- Orders
 
-* Mimo logo
-* current workspace or portal label if needed
-* language toggle (EN/SW)
-* notification entry only if useful for that role
-* profile menu
-* logout
+### AFFILIATE_ADMIN Sidebar
+- Dashboard
+- New Order
+- Orders
+- Finance
 
-The app header must NOT contain:
+### ADMIN Sidebar
+- Dashboard
+- Orders
+- Operations
+- Finance
 
-* marketing navigation
-* duplicate sidebar items
-* more than one prominent CTA
-* unrelated shortcuts
+### DEV_ADMIN Sidebar
+- Home
+- Diagnostics
+- Tools
+- Activity
 
-### Sidebar Principles
+## Sidebar Rules
 
-* Sidebar is the main app navigation for web
-* Sidebar items must be role-specific
-* Maximum of 46 primary items for most roles
-* Secondary utility items may appear grouped at the bottom
-* Icons must be consistent and minimal
-* Labels must be short and literal
+- Show only what the role can actually use.
+- No dead links.
+- No disabled placeholder items.
+- Active route must be visually obvious.
+- Sidebar labels must match i18n keys later.
+- Sidebar order must reflect daily usage priority, top to bottom.
 
----
+## B) Mobile Navigation Model
 
-## Sidebar by Role
+Mobile bottom tabs exist only for CUSTOMER and DRIVER.
 
-### CUSTOMER sidebar
+### CUSTOMER Mobile Tabs
+- Home
+- Orders
+- Profile
 
-* Home
-* Orders
-* New Order
-* Profile
+### DRIVER Mobile Tabs
+- Today
+- Tasks
+- Profile
 
-Do not include:
+### Mobile Rules
 
-* Track as separate item if order detail already handles it well
-* Support as full nav item unless necessary; prefer contextual entry
+- 3 tabs only for both customer and driver.
+- Labels short and clear.
+- Current tab strongly visible.
+- No hidden critical action behind More.
+- Primary work must be reachable in one tap from a tab root.
 
-### DRIVER sidebar
+Do not include Cash as a separate tab in P2.0. Cash summary remains inside Driver Today or Task Detail, not top-level nav.
 
-* Today
-* Tasks
-* Cash
-* Profile
+## C) Navigation Behavior Rules
 
-Do not include:
+- Login routes user automatically to their portal home.
+- Direct forbidden route access returns 403 state, not redirect loop.
+- Sidebar collapses cleanly on smaller desktop widths.
+- Mobile uses bottom tabs only where defined.
+- Detail pages do not appear as permanent sidebar items.
+- Breadcrumbs appear only where needed on web admin-like views, not everywhere.
 
-* All orders
-* Admin tools
-* Hub views
+## Navigation Minimality Check
 
-### HUB_STAFF sidebar
-
-* Dashboard
-* Intake
-* Processing
-* Dispatch
-* Exceptions
-
-Do not include:
-
-* Customer/account sections
-* finance-heavy global tools
-* developer controls
-
-### AFFILIATE_STAFF sidebar
-
-* Dashboard
-* New Order
-* Orders
-
-Do not include:
-
-* Staff management
-* payouts
-* cross-shop analytics
-
-### AFFILIATE_ADMIN sidebar
-
-* Dashboard
-* Orders
-* Staff
-* Payouts
-* Performance
-
-Do not include:
-
-* system-wide admin tools
-* developer tools
-
-### ADMIN sidebar
-
-* Dashboard
-* Orders
-* Operations
-* Finance
-* Exceptions
-* Settings
-
-Do not include:
-
-* developer tools unless role is dev admin
-
-### DEV_ADMIN sidebar
-
-* Dashboard
-* Feature Flags
-* Logs & Jobs
-* Audit
-
-Do not include:
-
-* business-facing duplicate navigation already covered elsewhere unless required for support workflows
-
----
-
-## Mobile Navigation Model
-
-### General Mobile Rules
-
-* Only customer and driver receive bottom-tab navigation in Phase 2
-* Bottom tabs must stay between 3 and 5 items
-* Labels must be short
-* The most frequent action must be reachable in one tap
-* Deep details should open within the tab flow, not create more tabs
-
-### Customer bottom tabs
-
-* Home
-* Orders
-* Profile
-
-Optional:
-
-* If order creation is very frequent and deserves direct access, allow:
-
-  * Home
-  * Orders
-  * New
-  * Profile
-
-Preferred default:
-
-* Keep `New Order` as a prominent action inside Home rather than a permanent tab
-
-### Driver bottom tabs
-
-* Today
-* Tasks
-* Cash
-* Profile
-
-Do not add:
-
-* notifications tab
-* settings tab separate from profile
-* duplicate home/today concepts
-
----
-
-## Navigation States
-
-Every navigation system must support:
-
-* default
-* active/current
-* hover/focus on web
-* disabled only if truly necessary
-* no placeholder states for future destinations
-
-## Routing Rule
-
-After login, users are routed automatically to their portal home:
-
-* CUSTOMER  `/app/customer`
-* DRIVER  `/app/driver`
-* HUB_STAFF  `/app/hub`
-* AFFILIATE_STAFF`/`AFFILIATE_ADMIN  `/app/affiliate`
-* ADMIN  `/app/admin`
-* DEV_ADMIN  `/app/dev`
-
-## 403 Rule
-
-If a user manually enters a forbidden route:
-
-* return 403 page or guarded forbidden state
-* do not silently redirect to avoid masking authorization errors
-* log according to security/audit rules if required
-
-## Design Lock
-
-Navigation is standardized in this document. Pages may not create their own side navigation patterns outside this model.
+Every navigation item maps to a real page, and no role sees irrelevant destinations.
