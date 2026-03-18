@@ -246,3 +246,35 @@
 - Follow-up actions:
   1. implement the customer portal exactly from these specs so customers can create orders, track them, pay, and raise issues smoothly on web and mobile
 
+
+## P2.8 Driver Portal (Mobile-first Usability)
+
+- Scope:
+  - locked the driver portal experience for a minimal mobile-first execution flow covering Today, Tasks, Stop Detail, Profile, cash handling, poor-network resilience, and EN/SW copy
+
+- Required outputs checklist:
+  - [x] docs/phase2/ux/driver_portal_spec.md
+  - [x] docs/phase2/ux/driver_offline_resilience_spec.md
+  - [x] docs/phase2/ux/driver_mobile_behavior_spec.md
+  - [x] docs/phase2/copy/driver_portal_copy_en_sw.md
+  - [x] docs/changelog_phase2.md updated with P2.8 entry
+  - [x] docs/acceptance_phase2.md updated with P2.8 section
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.7 required files still exist
+  - pre-flight retest confirmed docs/changelog_phase2.md includes P2.0 through P2.7
+  - pre-flight retest confirmed docs/acceptance_phase2.md includes P2.0 PASS through P2.7 PASS
+  - driver portal spec created with locked principles, Today spec, Tasks list summary, Stop Detail spec, cash and reconciliation spec, state rules, and lock statement
+  - offline resilience spec created with locked principles, connectivity states, offline rules, retry rules, sync recovery, and resilience copy rules
+  - driver mobile behavior spec created with locked principles, bottom tabs, Today, Tasks, Stop Detail, Profile, and network/performance rules
+  - driver portal EN/SW copy created for Today, task detail, cash, offline/retry, and profile/help flows
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The driver portal is now locked as a coherent mobile-first execution tool where the driver can understand todays work immediately, complete stop proofs with minimal taps, handle cash prompts clearly, and recover calmly under weak network conditions. The specs keep the portal sharp and minimal while preserving route clarity, accountability, and launch-safe resilience behavior.
+
+- Follow-up actions:
+  1. implement the driver portal exactly from these specs so drivers can complete a full day of work with minimal taps and no confusion
+
+- Gate Result: P2.8 PASS

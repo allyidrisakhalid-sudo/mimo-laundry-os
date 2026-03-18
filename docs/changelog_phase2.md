@@ -68,3 +68,13 @@
 - locked EN/SW customer portal copy baseline for home, order creation, order detail, profile, and customer states
 - formalized the customer daily-use model for web and mobile in a premium, minimal, role-correct system
 
+
+## P2.8 completed
+- locked the driver portal as a minimal 4-screen mobile-first system across Today, Tasks, Stop Detail, and Profile
+- locked the Today screen with a next-task-first execution model, grouped tasks, compact cash visibility, and concise alerts
+- locked stop detail with a proof-first action pattern using large dominant actions and minimal supporting detail
+- locked cash collection prompts and end-of-day reconciliation UX as practical operational flows without finance-dashboard sprawl
+- locked basic offline and poor-network resilience UX with clear sending, retry, failed, and synced behavior
+- locked mobile behavior for the driver portal with one-hand usability, route clarity, and no desktop carryover clutter
+- locked EN/SW driver portal copy baseline for today, task detail, cash, retry, profile, and help states
+- formalized a full-day driver execution model optimized for minimal taps, low confusion, and calm recovery under weak connectivity
