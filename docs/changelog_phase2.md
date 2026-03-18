@@ -89,3 +89,14 @@
 - locked EN/SW hub portal copy baseline
 - formalized an end-to-end intake  processing  dispatch operational model for hub staff without admin dependence
 
+
+## P2.10 completed
+- locked the affiliate portal structure for /app/affiliate, /app/affiliate/orders/new, /app/affiliate/orders, /app/affiliate/orders/[id], and /app/affiliate/finance
+- locked a fast walk-in order creation flow optimized for busy shop counter use
+- locked the own-shop orders list with strict scope behavior and no cross-shop visibility
+- locked the shop pickup workflow inside the affiliate order/detail model without detached permanent pages
+- locked a simple affiliate earnings and payout summary for affiliate admin only
+- locked tablet/web behavior for fast, repeated shop operations
+- locked the EN/SW affiliate portal copy baseline
+- formalized an independent fast affiliate operations model with no cross-shop visibility
+

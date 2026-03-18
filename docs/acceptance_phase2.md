@@ -313,3 +313,36 @@
 
 - Gate Result: P2.9 PASS
 
+
+## P2.10 Affiliate Portal (Fast Shop Operations)
+
+- Scope:
+  - define the affiliate portal as a fast, low-friction workspace for affiliate staff and affiliate admin
+  - lock walk-in order creation, own-shop orders visibility, pickup workflow, and simple finance visibility
+  - preserve strict role scope so no affiliate can see any other shops data
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/affiliate_portal_spec.md
+  - [x] /docs/phase2/ux/affiliate_finance_and_pickup_spec.md
+  - [x] /docs/phase2/ux/affiliate_tablet_web_behavior_spec.md
+  - [x] /docs/phase2/copy/affiliate_portal_copy_en_sw.md
+  - [x] /docs/changelog_phase2.md updated with P2.10
+  - [x] /docs/acceptance_phase2.md updated with P2.10
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.9 artifacts still exist and prior PASS state remains intact
+  - affiliate portal spec defines principles, dashboard, fast walk-in order creation, scoped orders list, order detail, and affiliate scope/state rules
+  - affiliate finance and pickup spec defines shop pickup workflow and simple affiliate-admin finance summary
+  - affiliate tablet/web behavior spec defines fast counter-ready behavior for dashboard, order creation, orders, pickup, and finance
+  - affiliate portal copy file defines implementation-grade EN/SW copy for dashboard, order creation, orders, pickup, finance, and state feedback
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The affiliate portal is now locked as a coherent shop workspace where affiliate staff and affiliate admin can create walk-in orders quickly, manage only their own shops orders, handle pickup and handoff clearly, and review earnings and payouts simply without seeing any other shops data. The specs keep the experience minimal, practical, and fast while preserving the approved Midnight Silk direction and strict role-scoped visibility.
+
+- Follow-up actions:
+  1. implement the affiliate portal exactly from these specs so affiliates can operate independently and fast without seeing any other shops data
+
+- Gate Result: P2.10 PASS
+
