@@ -160,3 +160,11 @@
 - locked final polish runbook for evidence capture, issue logging, re-test, and honest pass judgment
 - formalized the cross-role world-class minimal quality gate for final launch readiness
 
+## P2.1  Brand Kit V1 for Mimo
+- Phase 2 brand implementation baseline installed
+- verified brand kit for implementation use
+- created or normalized the shared token/theme source in code
+- locked icon family to Lucide for implementation use
+- locked imagery rules for implementation use
+- visual system is now ready for component-library execution
+

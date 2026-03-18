@@ -1,121 +1,78 @@
 :root {
-  --mimo-color-primary: #0F766E;
-  --mimo-color-primary-active: #115E59;
-  --mimo-color-primary-soft: #CCFBF1;
-  --mimo-color-accent: #F97316;
-  --mimo-color-accent-soft: #FFEDD5;
-  --mimo-color-background: #F8FAFC;
-  --mimo-color-surface: #FFFFFF;
-  --mimo-color-surface-2: #F1F5F9;
-  --mimo-color-border: #E2E8F0;
-  --mimo-color-text-primary: #0F172A;
-  --mimo-color-text-secondary: #475569;
-  --mimo-color-text-disabled: #94A3B8;
-  --mimo-color-status-success: #16A34A;
-  --mimo-color-status-warning: #F59E0B;
-  --mimo-color-status-danger: #DC2626;
-  --mimo-color-status-info: #2563EB;
-  --mimo-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mimo-font-size-h1: 2.25rem;
-  --mimo-font-size-h2: 1.875rem;
-  --mimo-font-size-h3: 1.5rem;
-  --mimo-font-size-body: 1rem;
-  --mimo-font-size-small: 0.875rem;
-  --mimo-font-size-caption: 0.75rem;
-  --mimo-line-height-h1: 2.75rem;
-  --mimo-line-height-h2: 2.25rem;
-  --mimo-line-height-h3: 2rem;
-  --mimo-line-height-body: 1.5rem;
-  --mimo-line-height-small: 1.25rem;
-  --mimo-line-height-caption: 1rem;
-  --mimo-space-4: 4px;
-  --mimo-space-8: 8px;
-  --mimo-space-12: 12px;
-  --mimo-space-16: 16px;
-  --mimo-space-20: 20px;
-  --mimo-space-24: 24px;
-  --mimo-space-32: 32px;
-  --mimo-space-40: 40px;
-  --mimo-space-48: 48px;
-  --mimo-space-64: 64px;
-  --mimo-radius-8: 8px;
-  --mimo-radius-12: 12px;
-  --mimo-radius-16: 16px;
-  --mimo-radius-20: 20px;
-  --mimo-shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06);
-}
+  --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+  --color-obsidian: #0B1020;
+  --color-midnight: #121A2F;
+  --color-ink: #1C2740;
 
-html {
-  -webkit-text-size-adjust: 100%;
+  --color-silk: #F8F7F4;
+  --color-cloud: #F1EFEA;
+  --color-mist: #E7E3DB;
+
+  --color-champagne: #D6B36A;
+  --color-teal: #3AB8B2;
+  --color-royal: #6F8CFF;
+  --color-plum: #7B61A8;
+
+  --color-success: #24A36A;
+  --color-warning: #E6A23C;
+  --color-error: #D95C75;
+  --color-info: #4E8DFF;
+
+  --gradient-hero: linear-gradient(135deg, #0B1020 0%, #121A2F 58%, #1C2740 100%);
+  --gradient-accent: linear-gradient(135deg, #3AB8B2 0%, #6F8CFF 100%);
+  --gradient-premium: linear-gradient(135deg, #D6B36A 0%, #7B61A8 100%);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 8px 24px rgba(11, 16, 32, 0.08);
+  --shadow-medium: 0 14px 36px rgba(11, 16, 32, 0.12);
+  --shadow-elevated: 0 20px 50px rgba(11, 16, 32, 0.16);
+
+  --border-subtle: 1px solid rgba(18, 26, 47, 0.10);
+  --border-strong: 1px solid rgba(18, 26, 47, 0.18);
+  --border-accent: 1px solid rgba(58, 184, 178, 0.35);
+
+  --motion-fast: 120ms ease;
+  --motion-standard: 180ms ease;
+  --motion-calm: 240ms ease;
+
+  --surface-app: #F8F7F4;
+  --surface-elevated: #FFFFFF;
+  --surface-muted: #F1EFEA;
+  --surface-dark: #121A2F;
 }
 
 html,
 body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
+  background: var(--surface-app);
+  color: var(--color-ink);
+  font-family: var(--font-body);
 }
 
-body {
-  background: var(--mimo-color-background);
-  color: var(--mimo-color-text-primary);
-  font-family: var(--mimo-font-sans);
-  font-size: var(--mimo-font-size-body);
-  line-height: var(--mimo-line-height-body);
-  text-rendering: optimizeLegibility;
-}
-
-a {
-  color: var(--mimo-color-primary);
-  text-decoration: none;
-}
-
-a:hover {
-  color: var(--mimo-color-primary-active);
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-:focus-visible {
-  outline: 3px solid var(--mimo-color-accent);
-  outline-offset: 2px;
-}
-
-img,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-.mimo-focus-ring {
-  outline: none;
-}
-
-.mimo-focus-ring:focus-visible {
-  box-shadow:
-    0 0 0 2px var(--mimo-color-background),
-    0 0 0 4px var(--mimo-color-primary);
-}
-
-.mimo-section-title {
-  color: var(--mimo-color-text);
-}
-
-.mimo-muted {
-  color: var(--mimo-color-text-muted);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--color-midnight);
 }

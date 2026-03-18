@@ -546,3 +546,39 @@
 
 - Gate Result: P2.16 PASS
 
+## P2.1  Brand Kit V1 for Mimo
+
+- Scope:
+  - verify the approved P2.1 brand docs remain the source of truth
+  - install the brand implementation baseline control layer
+  - create or normalize the shared code-side token and theme source
+  - lock fonts, icons, and imagery direction for real implementation use
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/brand_kit_v1.md
+  - [x] /docs/phase2/ux/design_tokens_v1.md
+  - [x] /docs/phase2/ux/icon_system_rules.md
+  - [x] /docs/phase2/ux/imagery_rules.md
+  - [x] /docs/phase2/implementation/p2_brand_implementation_baseline.md
+  - [x] real code-side token/theme file(s) in the shared UI layer
+  - [x] /docs/acceptance_phase2.md updated
+  - [x] /docs/changelog_phase2.md updated
+
+- Verification notes:
+  - P2.0 implementation remains valid and committed before P2.1 work
+  - all required P2.1 docs exist
+  - shared code-side brand/token source is identifiable and reusable
+  - font choices are locked for implementation use
+  - icon family is locked to Lucide only
+  - imagery direction is locked for later public and product surfaces
+  - no visual-system ambiguity remains before component implementation begins
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved Phase 2 brand system is now installed as a real implementation control layer. Shared tokens, font rules, icon rules, and imagery direction are locked into reusable documentation and code-side sources so later component and page work can build on one trusted visual baseline without design drift.
+
+- Follow-up actions:
+  1. begin P2.2 implementation only after the shared brand/token/icon layer is confirmed as the real source for all component and page styling
+
+- Gate Result: P2.1 PASS
