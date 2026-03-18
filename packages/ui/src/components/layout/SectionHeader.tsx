@@ -14,7 +14,7 @@ export function SectionHeader({
   className = "",
 }: SectionHeaderProps) {
   return (
-    <div className={mimo-section-header .trim()}>
+    <div className={`mimo-section-header ${className}`.trim()}>
       <div className="mimo-section-header__body">
         <h2 className="mimo-section-header__title">{title}</h2>
         {description ? <p className="mimo-section-header__description">{description}</p> : null}

@@ -19,7 +19,7 @@ export function WizardSteps({
   className = "",
 }: WizardStepsProps) {
   return (
-    <ol className={mimo-wizard  .trim()}>
+    <ol className={`mimo-wizard ${compact ? "mimo-wizard--compact" : ""} ${className}`.trim()}>
       {steps.map((step, index) => {
         const stepIndex = index + 1;
         const isComplete = stepIndex < currentStep;
@@ -28,7 +28,7 @@ export function WizardSteps({
         return (
           <li
             key={step.key}
-            className={mimo-wizard__step  .trim()}
+            className={`mimo-wizard__step ${isComplete ? "mimo-wizard__step--complete" : ""} ${isCurrent ? "mimo-wizard__step--current" : ""}`.trim()}
           >
             <span className="mimo-wizard__marker">{isComplete ? "" : stepIndex}</span>
             <span className="mimo-wizard__label">{step.label}</span>

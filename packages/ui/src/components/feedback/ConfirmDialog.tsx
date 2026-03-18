@@ -34,7 +34,7 @@ export function ConfirmDialog({
           </button>
           <button
             type="button"
-            className={mimo-button .trim()}
+            className={danger ? "mimo-button mimo-button--danger" : "mimo-button mimo-button--primary"}
             onClick={onConfirm}
           >
             {confirmLabel}

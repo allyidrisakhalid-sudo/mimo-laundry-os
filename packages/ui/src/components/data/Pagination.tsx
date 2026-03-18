@@ -19,7 +19,7 @@ export function Pagination({
   const isNextDisabled = page >= totalPages;
 
   return (
-    <div className={mimo-pagination .trim()}>
+    <div className={`mimo-pagination ${className}`.trim()}>
       <button
         type="button"
         className="mimo-button mimo-button--ghost"

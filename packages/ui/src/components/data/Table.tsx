@@ -28,15 +28,15 @@ export function Table<T>({
   className = "",
 }: TableProps<T>) {
   if (loading) {
-    return <div className={mimo-table-wrap .trim()}>{loadingState}</div>;
+    return <div className={`mimo-table-wrap ${className}`.trim()}>{loadingState}</div>;
   }
 
   if (!rows.length) {
-    return <div className={mimo-table-wrap .trim()}>{emptyState}</div>;
+    return <div className={`mimo-table-wrap ${className}`.trim()}>{emptyState}</div>;
   }
 
   return (
-    <div className={mimo-table-wrap .trim()}>
+    <div className={`mimo-table-wrap ${className}`.trim()}>
       <table className="mimo-table">
         <thead>
           <tr>

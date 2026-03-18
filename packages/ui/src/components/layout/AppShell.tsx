@@ -16,7 +16,7 @@ export function AppShell({
   className = "",
 }: AppShellProps) {
   return (
-    <div className={mimo-shell .trim()}>
+    <div className={`mimo-shell ${className}`.trim()}>
       {sidebar ? <aside className="mimo-shell__sidebar">{sidebar}</aside> : null}
       <div className="mimo-shell__surface">
         {topbar ? <div className="mimo-shell__topbar">{topbar}</div> : null}

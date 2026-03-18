@@ -19,11 +19,11 @@ export function Timeline({
   className = "",
 }: TimelineProps) {
   return (
-    <ol className={mimo-timeline .trim()}>
+    <ol className={`mimo-timeline ${className}`.trim()}>
       {items.map((item) => (
         <li
           key={item.key}
-          className={mimo-timeline__item .trim()}
+          className={`mimo-timeline__item ${item.isLatest ? "mimo-timeline__item--latest" : ""}`.trim()}
         >
           <div className="mimo-timeline__rail">
             <span className="mimo-timeline__dot" />

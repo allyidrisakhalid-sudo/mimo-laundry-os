@@ -16,7 +16,7 @@ export function PageHeader({
   className = "",
 }: PageHeaderProps) {
   return (
-    <section className={mimo-page-header .trim()}>
+    <section className={`mimo-page-header ${className}`.trim()}>
       <div className="mimo-page-header__body">
         {eyebrow ? <div className="mimo-page-header__eyebrow">{eyebrow}</div> : null}
         <h1 className="mimo-page-header__title">{title}</h1>

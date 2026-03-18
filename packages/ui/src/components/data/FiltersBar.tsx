@@ -18,7 +18,7 @@ export function FiltersBar({
   className = "",
 }: FiltersBarProps) {
   return (
-    <div className={mimo-filters .trim()}>
+    <div className={`mimo-filters ${className}`.trim()}>
       <div className="mimo-filters__search">
         <label className="mimo-visually-hidden" htmlFor="mimo-filters-search">
           {searchPlaceholder}

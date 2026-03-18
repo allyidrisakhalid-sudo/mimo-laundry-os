@@ -18,7 +18,7 @@ export function Topbar({
   className = "",
 }: TopbarProps) {
   return (
-    <header className={mimo-topbar .trim()}>
+    <header className={`mimo-topbar ${className}`.trim()}>
       <div className="mimo-topbar__left">
         {title ? <div className="mimo-topbar__title">{title}</div> : null}
         {context ? <div className="mimo-topbar__context">{context}</div> : null}

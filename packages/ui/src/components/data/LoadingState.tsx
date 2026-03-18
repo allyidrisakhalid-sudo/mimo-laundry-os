@@ -12,7 +12,7 @@ export function LoadingState({
   const items = Array.from({ length: lines });
 
   return (
-    <div className={mimo-loading-state .trim()} aria-busy="true" aria-live="polite">
+    <div className={`mimo-loading-state ${className}`.trim()} aria-busy="true" aria-live="polite">
       {items.map((_, index) => (
         <div
           key={index}

@@ -29,7 +29,7 @@ export function AddressForm({
   };
 
   return (
-    <div className={mimo-address-form .trim()}>
+    <div className={`mimo-address-form ${className}`.trim()}>
       <div className="mimo-address-form__grid">
         <div className="mimo-field">
           <label className="mimo-label" htmlFor="address-contact-name">
