@@ -42,3 +42,11 @@
 - defined location-page guardrails with no current location/zone page sprawl in P2.4
 - locked public performance and Lighthouse baseline rules for mobile-first searchability discipline
 - formalized the technical searchability foundation for implementation without duplication, spam, or indexing risk
+
+## P2.5 completed
+- locked unified login experience as the single clean bilingual entry for all supported existing roles
+- locked minimal customer-only signup flow with no public staff or admin self-registration
+- locked deterministic role-based post-login router mapped exactly to approved Phase 2 portals
+- locked session and logout UX behavior for active sessions, expired sessions, forbidden access, and clean sign-out
+- locked EN/SW auth copy baseline for login, signup, validation, routing, session feedback, logout, and help fallback
+- formalized launch-ready auth access model so every role lands in the correct portal with no confusion

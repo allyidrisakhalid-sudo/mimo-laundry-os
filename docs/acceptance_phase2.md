@@ -151,3 +151,38 @@
   1. implement metadata, sitemap, robots, structured data, and baseline performance checks exactly from these specs before expanding public search footprint
 
 
+
+## P2.5 Unified Auth UX (Signup/Login) + Role Routing
+
+- Scope:
+  - lock a clean bilingual login experience for all supported existing users
+  - lock a minimal customer-only signup flow
+  - lock deterministic role routing to the correct Phase 2 portal for every supported role
+  - lock stable session handling and clean logout behavior
+  - lock implementation-grade EN/SW auth copy
+
+- Required outputs checklist:
+  - [x] docs/phase2/ux/auth_ux_spec.md
+  - [x] docs/phase2/ux/role_routing_spec.md
+  - [x] docs/phase2/ux/session_and_logout_spec.md
+  - [x] docs/phase2/copy/auth_copy_en_sw.md
+  - [x] docs/changelog_phase2.md updated
+  - [x] docs/acceptance_phase2.md updated
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.4 artifacts still exist
+  - pre-flight retest confirmed changelog entries for P2.0 through P2.4
+  - pre-flight retest confirmed acceptance PASS markers for P2.0 through P2.4
+  - auth UX spec created and locked
+  - role routing spec created and locked
+  - session and logout spec created and locked
+  - EN/SW auth copy baseline created and locked
+
+- PASS / FAIL: PASS
+- Gate Result: P2.5 PASS
+
+- Summary:
+  - Unified auth is now specified as one clean login entry for all supported existing users, one minimal customer-only signup path, exact role-based routing to approved Phase 2 portals, and stable session/logout behavior with calm feedback states and no role confusion.
+
+- Follow-up actions:
+  1. implement login, signup, role routing, and session/logout behavior exactly from these specs so every role lands in the correct portal with no confusion
