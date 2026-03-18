@@ -1,11 +1,13 @@
 
-## P2.0 completed
-- Locked role portals and role-to-portal permission map
-- Locked minimal screen map by role with complete start-to-finish journeys
-- Locked public sitemap for /, /track, /partners, /help, /login, and /signup
-- Locked web and mobile navigation model
-- Locked standard dashboard template across customer, driver, hub, affiliate, and admin
-- Locked EN/SW implementation-grade copy baseline for Phase 2 i18n
+## P2.0  Experience blueprint implementation baseline
+
+- Phase 2 implementation baseline installed
+- IA docs verified and normalized
+- route/portal map locked for implementation
+- public sitemap locked for implementation
+- navigation model locked for implementation
+- dashboard model locked for implementation
+- EN/SW copy baseline verified for implementation use
 
 ## P2.1 completed
 - Locked Phase 2 brand tone and messaging for Mimo under the Midnight Silk direction
@@ -157,3 +159,4 @@
 - locked final spacing, icon, alignment, and surface cleanup rules under Midnight Silk discipline
 - locked final polish runbook for evidence capture, issue logging, re-test, and honest pass judgment
 - formalized the cross-role world-class minimal quality gate for final launch readiness
+

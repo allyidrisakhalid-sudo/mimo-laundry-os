@@ -1,110 +1,314 @@
-# Screen Map by Role  Phase 2 Blueprint Lock (P2.0)
+# Screen Map by Role  Mimo Phase 2
 
-System: Mimo Laundry OS  
-Direction: Midnight Silk  
-Rule: Every screen has one clear purpose and one primary action. No duplicate page purpose is allowed.
+## 1) Purpose
 
----
+This file locks the minimal implementation-safe screen map for each role. Each role is limited to 3-7 screens so implementation stays focused, reusable, and free of route drift.
 
-## CUSTOMER
+## 2) Customer Screen Map
 
-**Journey summary:** Start from one calm home, create or resume an order, inspect one order in full detail, then manage profile and preferences.
+### 1. Customer Home
+- route: /app/customer
+- purpose: show current account state, active order status, and next best action
+- primary action: start a new order
+- key data shown:
+  - active order summary
+  - latest order timeline snapshot
+  - saved addresses/basic account info
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Customer Home | /app/customer | Give the customer one calm starting point with order status, next step, and quick access to core actions. | Start a new order or continue tracking an active one. | - active order summary<br>- latest status/timeline snapshot<br>- quick CTA to create order<br>- quick CTA to track recent order<br>- support/help entry |
-| Orders | /app/customer/orders | Show the customers full order history and active orders in one clean list. | Open a specific order. | - order number<br>- service channel/tier<br>- current status<br>- balance/payment state<br>- created/updated time |
-| Order Detail | /app/customer/orders/[id] | Show complete order truth for one order without making the user search elsewhere. | Track status and complete the next relevant customer action. | - order summary<br>- timeline/events<br>- pickup/delivery details<br>- invoice/payment summary<br>- issue/help state if present |
-| Profile | /app/customer/profile | Let the customer manage own account, language, and personal preferences. | Update account settings. | - account identity<br>- phone/contact details<br>- saved preferences<br>- language setting<br>- saved addresses if exposed here |
+### 2. New Order
+- route: /app/customer/new-order
+- purpose: create a door, shop, or hybrid order
+- primary action: submit order
+- key data shown:
+  - service channel
+  - tier
+  - pickup/drop preferences
+  - address/shop selection
+  - order summary before submit
 
----
+### 3. Track Order
+- route: /app/customer/orders/[orderId]
+- purpose: show full customer-visible order progress
+- primary action: view live status and resolve next customer action if needed
+- key data shown:
+  - order status
+  - timeline
+  - bag/order identifiers
+  - issue/refund/help prompts if applicable
 
-## DRIVER
+### 4. Order History
+- route: /app/customer/orders
+- purpose: let customer review past and current orders
+- primary action: open selected order
+- key data shown:
+  - order list
+  - dates
+  - totals/status
+  - channel/tier summary
 
-**Journey summary:** Start from todays command view, open assigned work, complete proof on task detail, then update availability and profile as needed.
+### 5. Account
+- route: /app/customer/account
+- purpose: manage profile basics for ongoing use
+- primary action: save account details
+- key data shown:
+  - customer profile
+  - phone
+  - language
+  - saved addresses
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Driver Today | /app/driver | Give the driver a sharp daily command view. | Start the next assigned task. | - availability state<br>- assigned tasks count<br>- next stop<br>- cash summary<br>- alerts/exceptions |
-| Tasks | /app/driver/tasks | Show all assigned tasks in a sequence-friendly list. | Open a task. | - task type<br>- stop/customer/shop<br>- status<br>- assigned time<br>- proof/cash requirement marker |
-| Task Detail | /app/driver/tasks/[id] | Let the driver complete pickup/delivery correctly with proof. | Complete the task step now. | - stop details<br>- bags/order reference<br>- proof requirements<br>- OTP/photo/signature needs<br>- cash collection instructions if applicable |
-| Profile | /app/driver/profile | Let the driver manage own availability and account info. | Update availability/profile. | - driver identity<br>- phone/contact<br>- availability<br>- assigned zone summary<br>- session/account controls |
+## 3) Driver Screen Map
 
----
+### 1. Driver Today
+- route: /app/driver
+- purpose: show today's workload and next assigned stop
+- primary action: start next stop
+- key data shown:
+  - assigned stops count
+  - urgent tasks
+  - cash/proof reminders
+  - route/day summary
 
-## HUB_STAFF
+### 2. Tasks List
+- route: /app/driver/tasks
+- purpose: list active assigned tasks
+- primary action: open assigned stop
+- key data shown:
+  - stop list
+  - task type
+  - status
+  - customer/shop name
+  - zone cue
 
-**Journey summary:** Start from hub command view, open intake work, move orders through processing, then complete order-specific operational updates inside hub scope.
+### 3. Stop Detail
+- route: /app/driver/tasks/[taskId]
+- purpose: execute one stop correctly
+- primary action: confirm pickup or delivery proof
+- key data shown:
+  - stop instructions
+  - bags/order info
+  - OTP/photo/signature proof area
+  - payment/cash prompt if applicable
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Hub Dashboard | /app/hub | Show what the hub must act on now. | Open the next queue requiring action. | - intake count<br>- processing count<br>- dispatch-ready count<br>- exceptions needing attention<br>- hub SLA alerts |
-| Intake Queue | /app/hub/intake | Manage orders that need intake confirmation and receiving. | Open an intake item. | - order reference<br>- source/channel<br>- arrival state<br>- intake priority<br>- assigned hub/zone |
-| Processing Board | /app/hub/processing | Move work through processing and QC stages. | Advance an order to the next valid stage. | - order reference<br>- current stage<br>- notes/exceptions<br>- priority/SLA marker<br>- dispatch readiness |
-| Order Detail | /app/hub/orders/[id] | Review and update one order within hub scope. | Complete the next operational update for this order. | - intake details<br>- timeline<br>- weight/notes/photos if supported<br>- QC/exception state<br>- dispatch readiness |
+### 4. Driver Account
+- route: /app/driver/account
+- purpose: show driver profile and simple work settings
+- primary action: update availability or basic profile data
+- key data shown:
+  - driver profile
+  - status/availability
+  - home zone
+  - support info
 
----
+## 4) Hub Staff Screen Map
 
-## AFFILIATE_STAFF
+### 1. Hub Dashboard
+- route: /app/hub
+- purpose: show hub workload and urgent operational queues
+- primary action: open the next operational queue
+- key data shown:
+  - intake count
+  - processing count
+  - qc blockers
+  - dispatch-ready count
 
-**Journey summary:** Start from the shop dashboard, create a new shop order, monitor shop-only orders, then operate one order through handoff and return readiness.
+### 2. Intake
+- route: /app/hub/intake
+- purpose: receive incoming bags/orders into hub flow
+- primary action: complete intake
+- key data shown:
+  - intake queue
+  - scan/code input
+  - weight
+  - notes/photos
+  - linked order details
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Affiliate Dashboard | /app/affiliate | Give the shop a simple command center for todays activity. | Create a new shop order. | - todays orders<br>- ready-for-pickup/return items<br>- pending customer pickups<br>- active issues<br>- quick action shortcuts |
-| Create Order | /app/affiliate/orders/new | Capture a walk-in or shop-originated customer order cleanly. | Submit a new order. | - customer identity inputs<br>- service selection<br>- pickup/return path<br>- order source confirmation<br>- price/summary block if supported |
-| Shop Orders | /app/affiliate/orders | List all orders belonging to this shop only. | Open a shop order. | - order reference<br>- customer name/phone<br>- service type<br>- status<br>- handoff/pickup readiness |
-| Order Detail | /app/affiliate/orders/[id] | Operate one shop-owned order from capture to return. | Perform the next valid shop action. | - order summary<br>- timeline<br>- customer details<br>- handoff state<br>- ready-for-pickup/return status |
+### 3. Processing Board
+- route: /app/hub/processing
+- purpose: move work through production stages
+- primary action: advance selected order
+- key data shown:
+  - stage columns or filtered stage list
+  - SLA/tier urgency
+  - order tags
+  - blockers
 
----
+### 4. QC / Order Detail
+- route: /app/hub/orders/[orderId]
+- purpose: review one order for qc, exception handling, and dispatch readiness
+- primary action: pass qc or flag exception
+- key data shown:
+  - order detail
+  - bag detail
+  - notes/photos
+  - exception state
+  - dispatch readiness
 
-## AFFILIATE_ADMIN
+### 5. Dispatch
+- route: /app/hub/dispatch
+- purpose: assign ready orders into outbound work
+- primary action: assign to driver batch
+- key data shown:
+  - dispatch-ready queue
+  - zone
+  - driver options
+  - batch summary
 
-**Journey summary:** Start from the affiliate home, manage todays shop flow, create and inspect orders, then review commissions and payout visibility in one place.
+## 5) Affiliate Screen Map
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Affiliate Dashboard | /app/affiliate | Provide shop-level operations and business overview in one home. | Resolve todays highest-priority operational or payout item. | - todays orders<br>- ready items<br>- active issues<br>- commission summary<br>- payout status snapshot |
-| Create Order | /app/affiliate/orders/new | Capture a new shop order. | Submit a new order. | - customer identity inputs<br>- service selection<br>- return path<br>- source confirmation<br>- summary/pricing block |
-| Shop Orders | /app/affiliate/orders | List all affiliate-owned orders. | Open an order. | - order reference<br>- customer details<br>- service type<br>- status<br>- readiness/handoff marker |
-| Order Detail | /app/affiliate/orders/[id] | Manage one affiliate order completely. | Perform the next valid affiliate action. | - order summary<br>- timeline<br>- customer/shop details<br>- handoff status<br>- issue state |
-| Commissions & Payouts | /app/affiliate/finance | Show commissions earned and payout history without needing admin access. | Review current payout state. | - earned commissions<br>- pending payout amount<br>- payout history<br>- period summary<br>- reconciliation/status notes if present |
+### 1. Affiliate Dashboard
+- route: /app/affiliate
+- purpose: show shop workload and shop-specific next actions
+- primary action: create a walk-in order or open active queue
+- key data shown:
+  - active shop orders
+  - ready for pickup
+  - pending dropoff/pickup actions
+  - finance summary for admin-capable users
 
----
+### 2. New Walk-In Order
+- route: /app/affiliate/new-order
+- purpose: create a shop-scoped customer order
+- primary action: submit order
+- key data shown:
+  - customer basics
+  - service selection
+  - tier
+  - bag/order intake summary
+  - quoted totals if available
 
-## ADMIN
+### 3. Shop Orders
+- route: /app/affiliate/orders
+- purpose: review only this shop's orders
+- primary action: open selected order
+- key data shown:
+  - shop-scoped order list
+  - statuses
+  - due states
+  - pickup/return mode
 
-**Journey summary:** Start from the platform overview, inspect global orders, resolve one order deeply, monitor operations pressure, and review finance and reconciliation confidence.
+### 4. Shop Order Detail
+- route: /app/affiliate/orders/[orderId]
+- purpose: manage one shop-scoped order
+- primary action: complete the next shop step
+- key data shown:
+  - order status
+  - customer/shop handoff info
+  - pickup/drop workflow
+  - timeline snapshot
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Admin Dashboard | /app/admin | Give global operational control and top-level business visibility. | Open the highest-priority queue or exception. | - total active orders<br>- delayed/exceptions count<br>- todays delivered/paid summary<br>- payout/reconciliation alerts<br>- quick oversight KPIs |
-| Orders Oversight | /app/admin/orders | Let admin search, filter, and inspect platform-wide orders. | Open an order. | - order reference<br>- source/channel<br>- zone/hub/affiliate attribution<br>- current status<br>- payment/balance state |
-| Order Detail | /app/admin/orders/[id] | Give admin complete cross-functional truth for one order. | Resolve the next issue or confirm the current state. | - full order summary<br>- timeline/events<br>- routing attribution<br>- pricing/payment summary<br>- exceptions/audit-relevant state |
-| Operations Control | /app/admin/operations | Monitor hubs, affiliates, drivers, and queues without fragmenting oversight. | Open the area needing intervention. | - by-hub workload<br>- by-zone workload<br>- affiliate performance snapshot<br>- driver assignment pressure<br>- SLA or backlog indicators |
-| Finance & Reconciliation | /app/admin/finance | Review financial control items required for daily business confidence. | Open the item needing reconciliation or payout action. | - collections summary<br>- unpaid balances<br>- commissions/payout state<br>- reconciliation flags<br>- daily close markers |
+### 5. Affiliate Summary
+- route: /app/affiliate/summary
+- purpose: show shop-level summary for affiliate-admin usage without adding a separate portal
+- primary action: review shop performance and payout-related summary
+- key data shown:
+  - order counts
+  - sales/commission summary
+  - payout period summary
 
----
+## 6) Admin Screen Map
 
-## DEV_ADMIN
+### 1. Admin Dashboard
+- route: /app/admin
+- purpose: run the business from one operations overview
+- primary action: open the highest-priority queue
+- key data shown:
+  - business KPIs
+  - urgent queue
+  - orders overview
+  - finance exceptions
 
-**Journey summary:** Start from the internal support home, inspect diagnostics, open support tools, and review logged activity for full accountability.
+### 2. Orders Oversight
+- route: /app/admin/orders
+- purpose: inspect and control platform-wide order truth
+- primary action: open and resolve selected order
+- key data shown:
+  - global order list
+  - filters
+  - statuses
+  - SLA/exception flags
 
-| Screen Name | Route | Purpose | Primary Action | Key Data Shown |
-|---|---|---|---|---|
-| Dev Home | /app/dev | Provide system support entry for diagnostic and controlled internal tools. | Open the required support tool. | - system status snapshot<br>- recent support/admin tools<br>- warning notices<br>- environment indicators<br>- recent diagnostic activity |
-| Diagnostics | /app/dev/diagnostics | Inspect system health and internal runtime support data. | Run or review a diagnostic check. | - health summaries<br>- queue/runtime indicators<br>- recent failures<br>- support markers<br>- environment metadata |
-| Support Tools | /app/dev/tools | Access controlled operational support utilities in one place. | Open a support action safely. | - tool list<br>- access warnings<br>- audit notice<br>- destructive/non-destructive labels<br>- recent usage summary |
-| Audit & Activity | /app/dev/activity | Review developer/admin support actions for accountability. | Inspect a logged support event. | - actor<br>- action<br>- time<br>- target/system area<br>- result/status |
+### 3. Network and Pricing
+- route: /app/admin/network
+- purpose: manage hubs, zones, shops, drivers, and pricing controls from one admin surface
+- primary action: update configuration safely
+- key data shown:
+  - hub/shop/driver summaries
+  - zone mapping
+  - pricing plan summary
+  - control states
 
----
+### 4. Finance and Controls
+- route: /app/admin/finance
+- purpose: review reconciliation, payouts, and operational finance health
+- primary action: complete the next finance review action
+- key data shown:
+  - payments summary
+  - payout summary
+  - reconciliation flags
+  - daily close status
 
-## Redundancy Check
+### 5. Support Queue
+- route: /app/admin/support
+- purpose: resolve customer and operational issues from one queue
+- primary action: open and resolve selected case
+- key data shown:
+  - issue queue
+  - refund/delay/dispute states
+  - linked orders
+  - SLA priority
 
-- CUSTOMER: Each screen has a unique purpose. Home is the entry point, Orders is the list, Order Detail is the single-order truth view, and Profile is account management. No duplicate page exists.
-- DRIVER: Each screen has a unique purpose. Today is the command center, Tasks is the assignment list, Task Detail is execution with proof, and Profile is personal settings. No duplicate page exists.
-- HUB_STAFF: Each screen has a unique purpose. Dashboard summarizes, Intake handles receiving, Processing advances work, and Order Detail handles one order inside hub scope. No duplicate page exists.
-- AFFILIATE_STAFF: Each screen has a unique purpose. Dashboard summarizes shop activity, Create Order captures new business, Shop Orders lists owned orders, and Order Detail handles one order. No duplicate page exists.
-- AFFILIATE_ADMIN: Each screen has a unique purpose. Dashboard summarizes operations and business state, Create Order captures new business, Shop Orders lists owned orders, Order Detail handles one order, and Finance covers commissions/payouts only. No duplicate page exists.
-- ADMIN: Each screen has a unique purpose. Dashboard prioritizes platform action, Orders Oversight lists/searches all orders, Order Detail is single-order truth, Operations Control monitors operational pressure, and Finance & Reconciliation handles money-control work. No duplicate page exists.
-- DEV_ADMIN: Each screen has a unique purpose. Home is entry, Diagnostics inspects health, Tools handles controlled support utilities, and Activity provides accountability. No duplicate page exists.
+## 7) Dev Admin Screen Map
+
+### 1. Dev Dashboard
+- route: /app/dev
+- purpose: monitor platform health and engineering operations
+- primary action: open the most urgent system issue
+- key data shown:
+  - service health
+  - failed jobs
+  - alert summary
+  - recent activity
+
+### 2. Failed Jobs
+- route: /app/dev/jobs
+- purpose: inspect and retry operational failures safely
+- primary action: retry or inspect failed job
+- key data shown:
+  - failed job list
+  - job type
+  - retry status
+  - failure details
+
+### 3. Feature Flags
+- route: /app/dev/flags
+- purpose: manage rollout states safely
+- primary action: change a flag with auditability
+- key data shown:
+  - flag name
+  - current state
+  - environment
+  - last modified info
+
+### 4. Overrides
+- route: /app/dev/overrides
+- purpose: perform controlled emergency platform actions
+- primary action: execute documented override with reason
+- key data shown:
+  - override types
+  - reason input
+  - impacted entity
+  - confirmation requirements
+
+### 5. Activity Log
+- route: /app/dev/activity
+- purpose: review technical platform activity in one place
+- primary action: inspect recent system activity
+- key data shown:
+  - deployment/system activity
+  - actor/system source
+  - timestamps
+  - event summaries
+
+## 8) Screen Map Lock Rule
+
+All roles remain bounded to the routes above for implementation start. No extra screens may be added for convenience before later approval.

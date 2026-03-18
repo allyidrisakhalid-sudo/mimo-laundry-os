@@ -1,177 +1,337 @@
-# Copy Baseline EN/SW  Phase 2 Blueprint Lock (P2.0)
+# Copy Baseline EN/SW  Mimo Phase 2
 
-System: Mimo Laundry OS  
-Purpose: Implementation-grade i18n reference for Phase 2 UI.  
-Direction: Midnight Silk
+## 1) Purpose
 
-## 1) Tone and Style Rules
+This file is the root bilingual copy baseline for Phase 2 implementation. It provides the shared wording model that later role-specific copy files must follow.
 
-- warm
-- welcoming
-- simple
-- premium
-- calm
-- direct
-- no slang
-- no robotic enterprise phrasing
-- short sentences
-- easy to translate cleanly into Swahili
+## 2) Copy Rules
 
----
+- no hardcoded user-facing strings in implementation
+- all UI wording must move toward EN/SW i18n-key usage
+- wording must stay short, clear, calm, and operationally precise
+- role terminology must remain consistent across screens
+- English and Swahili meaning must remain aligned
 
-## 2) Common UI Labels
+## 3) Common Labels
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| common.ok | OK | Sawa | Short universal confirmation. |
-| common.cancel | Cancel | Ghairi | Cancel an action or close a flow. |
-| common.save | Save | Hifadhi | Save changes to a form or setting. |
-| common.continue | Continue | Endelea | Move to the next step in a flow. |
-| common.back | Back | Rudi | Return to the previous view. |
-| common.close | Close | Funga | Close a panel, modal, or drawer. |
-| common.search | Search | Tafuta | Search lists, help, or records. |
-| common.filter | Filter | Chuja | Refine a list or results set. |
-| common.clear | Clear | Ondoa | Clear filters, search, or inputs. |
-| common.retry | Retry | Jaribu tena | Retry a failed action. |
-| common.viewAll | View all | Tazama yote | Open the full list view. |
-| common.status | Status | Hali | Label for status/state fields. |
-| common.actions | Actions | Hatua | Label for available actions. |
-| common.loading | Loading | Inapakia | Short loading state label. |
-| common.noResults | No results | Hakuna matokeo | Empty result state after search/filter. |
+### common.save
+- EN: Save
+- SW: Hifadhi
 
----
+### common.cancel
+- EN: Cancel
+- SW: Ghairi
 
-## 3) Auth Labels
+### common.continue
+- EN: Continue
+- SW: Endelea
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| auth.login.title | Welcome back | Karibu tena | Login page title. |
-| auth.login.subtitle | Sign in to continue with Mimo. | Ingia ili uendelee na Mimo. | Short login helper text. |
-| auth.signup.title | Create your account | Fungua akaunti yako | Signup page title. |
-| auth.signup.subtitle | Start with Mimo in a few simple steps. | Anza na Mimo kwa hatua chache rahisi. | Short signup helper text. |
-| auth.phone | Phone number | Namba ya simu | Phone input label. |
-| auth.password | Password | Nenosiri | Password input label. |
-| auth.forgotPassword | Forgot password? | Umesahau nenosiri? | Password recovery entry. |
-| auth.createAccount | Create account | Fungua akaunti | Signup CTA label. |
-| auth.signIn | Sign in | Ingia | Login CTA label. |
-| auth.signOut | Sign out | Toka | Sign-out menu action. |
-| auth.resetPassword | Reset password | Weka upya nenosiri | Password reset action. |
-| auth.routeByRole | Well take you to the right workspace. | Tutakupeleka kwenye sehemu sahihi ya kazi. | Helper text after successful auth or in auth flow notes. |
+### common.back
+- EN: Back
+- SW: Rudi
 
----
+### common.search
+- EN: Search
+- SW: Tafuta
 
-## 4) Navigation Labels
+### common.filter
+- EN: Filter
+- SW: Chuja
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| nav.home | Home | Nyumbani | Customer home or public home label where applicable. |
-| nav.orders | Orders | Oda | Order list navigation label. |
-| nav.profile | Profile | Wasifu | Profile/settings navigation label. |
-| nav.today | Today | Leo | Driver daily home label. |
-| nav.tasks | Tasks | Kazi | Driver task list label. |
-| nav.dashboard | Dashboard | Dashibodi | Role home for operational portals. |
-| nav.intake | Intake | Mapokezi | Hub receiving/intake queue label. |
-| nav.processing | Processing | Uchakataji | Hub processing board label. |
-| nav.newOrder | New Order | Oda Mpya | Affiliate order creation entry. |
-| nav.finance | Finance | Fedha | Finance and payout navigation label. |
-| nav.operations | Operations | Operesheni | Admin operations overview label. |
-| nav.diagnostics | Diagnostics | Uchunguzi | Dev diagnostic area label. |
-| nav.tools | Tools | Zana | Dev support tools label. |
-| nav.activity | Activity | Shughuli | Dev audit/activity label. |
-| nav.help | Help | Msaada | Help/support entry label. |
-| nav.track | Track | Fuatilia | Order tracking entry label. |
+### common.status
+- EN: Status
+- SW: Hali
 
----
+### common.date
+- EN: Date
+- SW: Tarehe
 
-## 5) Order Status Labels
+### common.total
+- EN: Total
+- SW: Jumla
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| status.order.new | New | Mpya | Order has been created. |
-| status.order.confirmed | Confirmed | Imethibitishwa | Order has been confirmed. |
-| status.order.assigned | Assigned | Imepewa | Order/task has been assigned. |
-| status.order.pickedUp | Picked up | Imekusanywa | Laundry has been collected from customer or shop. |
-| status.order.atHub | At hub | Ipo hubu | Order is at the processing hub. |
-| status.order.processing | Processing | Inachakatwa | Order is in wash/process flow. |
-| status.order.ready | Ready | Tayari | Order is ready for pickup or delivery. |
-| status.order.outForDelivery | Out for delivery | Iko njiani kupelekwa | Order is on the way to the customer or return point. |
-| status.order.delivered | Delivered | Imefikishwa | Order has reached the customer or return destination. |
-| status.order.paid | Paid | Imelipwa | Payment has been completed. |
-| status.order.cancelled | Cancelled | Imeghairiwa | Order has been cancelled. |
+### common.zone
+- EN: Zone
+- SW: Eneo
 
----
+### common.phone
+- EN: Phone number
+- SW: Namba ya simu
 
-## 6) Issue / Exception Labels
+## 4) Auth Labels
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| status.issue.none | No issue | Hakuna tatizo | No active issue on the order. |
-| status.issue.delay | Delay | Ucheleweshaji | Order is delayed or at risk of delay. |
-| status.issue.damage | Damage | Uharibifu | Damage has been reported. |
-| status.issue.missingItem | Missing item | Kitu kimepotea | An item is missing from the order. |
-| status.issue.refundRequested | Refund requested | Marejesho yameombwa | Refund workflow has been requested. |
-| status.issue.actionNeeded | Action needed | Hatua inahitajika | User or operator must act. |
-| status.issue.resolved | Resolved | Limetatuliwa | Issue has been resolved. |
+### auth.login.title
+- EN: Log in
+- SW: Ingia
 
----
+### auth.login.emailOrPhone
+- EN: Email or phone number
+- SW: Barua pepe au namba ya simu
 
-## 7) Primary CTAs by Role
+### auth.login.password
+- EN: Password
+- SW: Nenosiri
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| cta.customer.newOrder | Start new order | Anza oda mpya | Main customer order creation CTA. |
-| cta.customer.trackOrder | Track order | Fuatilia oda | Customer tracking CTA. |
-| cta.customer.viewOrder | View order | Tazama oda | Open one order detail view. |
-| cta.driver.startNextTask | Start next task | Anza kazi inayofuata | Driver daily primary CTA. |
-| cta.driver.completeTask | Complete task | Kamilisha kazi | Driver proof/execution CTA. |
-| cta.hub.openNextQueue | Open next queue | Fungua foleni inayofuata | Hub next-action CTA. |
-| cta.hub.advanceStage | Move to next stage | Hamisha hatua inayofuata | Hub processing progression CTA. |
-| cta.affiliate.createOrder | Create order | Fungua oda | Affiliate primary new-order CTA. |
-| cta.affiliate.openOrder | Open order | Fungua oda | Affiliate list-to-detail CTA. |
-| cta.affiliate.reviewPayouts | Review payouts | Kagua malipo | Affiliate admin finance CTA. |
-| cta.admin.reviewIssues | Review issues | Kagua matatizo | Admin issue queue CTA. |
-| cta.admin.openOperations | Open operations | Fungua operesheni | Admin operations CTA. |
-| cta.dev.runDiagnostic | Run diagnostic | Endesha uchunguzi | Dev diagnostic CTA. |
-| cta.dev.openTool | Open tool | Fungua zana | Dev support tool CTA. |
+### auth.login.submit
+- EN: Log in
+- SW: Ingia
 
----
+### auth.signup.title
+- EN: Create account
+- SW: Fungua akaunti
 
-## 8) Empty States
+### auth.signup.submit
+- EN: Create account
+- SW: Fungua akaunti
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| empty.customer.orders | No orders yet. Your next order will appear here. | Bado hakuna oda. Oda yako inayofuata itaonekana hapa. | Customer orders empty state. |
-| empty.driver.tasks | No tasks assigned right now. New work will appear here. | Hakuna kazi ulizopewa kwa sasa. Kazi mpya zitaonekana hapa. | Driver tasks empty state. |
-| empty.hub.intake | Nothing is waiting in intake right now. | Hakuna kinachosubiri mapokezi kwa sasa. | Hub intake empty state. |
-| empty.affiliate.orders | No shop orders yet. New customer orders will appear here. | Bado hakuna oda za duka. Oda mpya za wateja zitaonekana hapa. | Affiliate orders empty state. |
-| empty.admin.orders | No orders match this view right now. | Hakuna oda zinazolingana na mwonekano huu kwa sasa. | Admin orders/filter empty state. |
-| empty.search.noResults | No results found. Try a different search or filter. | Hakuna matokeo yaliyopatikana. Jaribu utafutaji au uchujaji mwingine. | Search empty state across product. |
+### auth.forgotPassword
+- EN: Forgot password?
+- SW: Umesahau nenosiri?
 
----
+## 5) Navigation Labels
 
-## 9) 403 / 404 / System Feedback
+### nav.home
+- EN: Home
+- SW: Nyumbani
 
-| key | EN | SW | usage note |
-|---|---|---|---|
-| feedback.403.title | Access denied | Huna ruhusa | 403 page title. |
-| feedback.403.body | You do not have permission to view this page. | Huna ruhusa ya kuona ukurasa huu. | 403 page body copy. |
-| feedback.404.title | Page not found | Ukurasa haujapatikana | 404 page title. |
-| feedback.404.body | We could not find the page you were looking for. | Hatujaweza kupata ukurasa uliokuwa unatafuta. | 404 page body copy. |
-| feedback.error.generic | Something went wrong. Please try again. | Kuna hitilafu. Tafadhali jaribu tena. | Generic error state. |
-| feedback.success.saved | Saved successfully. | Imehifadhiwa kikamilifu. | Save success feedback. |
-| feedback.success.updated | Updated successfully. | Imesasishwa kikamilifu. | Update success feedback. |
+### nav.orders
+- EN: Orders
+- SW: Oda
 
----
+### nav.account
+- EN: Account
+- SW: Akaunti
 
-## 10) Notes for i18n Implementation
+### nav.today
+- EN: Today
+- SW: Leo
 
-- All user-facing copy must map to stable i18n keys.
-- Sidebar and tab labels must use the navigation keys above.
-- Role-specific dashboard CTAs must use the CTA keys above.
-- Order and issue states must remain aligned with Phase 1 operational terminology.
-- Swahili copy should remain natural, short, and easy to scan on mobile.
-- Avoid raw text inside components, forms, badges, alerts, and empty states.
+### nav.tasks
+- EN: Tasks
+- SW: Kazi
 
-## Hardcoded String Rule
+### nav.intake
+- EN: Intake
+- SW: Mapokezi
 
-All future UI text must reference i18n keys. No raw display copy should be introduced directly in UI components.
+### nav.processing
+- EN: Processing
+- SW: Uchakataji
+
+### nav.dispatch
+- EN: Dispatch
+- SW: Usafirishaji
+
+### nav.newOrder
+- EN: New order
+- SW: Oda mpya
+
+### nav.summary
+- EN: Summary
+- SW: Muhtasari
+
+### nav.network
+- EN: Network
+- SW: Mtandao
+
+### nav.finance
+- EN: Finance
+- SW: Fedha
+
+### nav.support
+- EN: Support
+- SW: Msaada
+
+### nav.jobs
+- EN: Jobs
+- SW: Kazi za mfumo
+
+### nav.flags
+- EN: Flags
+- SW: Bendera
+
+### nav.overrides
+- EN: Overrides
+- SW: Udhibiti maalum
+
+### nav.activity
+- EN: Activity
+- SW: Shughuli
+
+## 6) Order Statuses
+
+### order.status.draft
+- EN: Draft
+- SW: Rasimu
+
+### order.status.created
+- EN: Order created
+- SW: Oda imeundwa
+
+### order.status.scheduledPickup
+- EN: Pickup scheduled
+- SW: Ukusanyaji umepangwa
+
+### order.status.pickedUp
+- EN: Picked up
+- SW: Imekusanywa
+
+### order.status.atHub
+- EN: At hub
+- SW: Iko kwenye hub
+
+### order.status.processing
+- EN: Processing
+- SW: Inachakatwa
+
+### order.status.qc
+- EN: Quality check
+- SW: Ukaguzi wa ubora
+
+### order.status.ready
+- EN: Ready
+- SW: Tayari
+
+### order.status.outForDelivery
+- EN: Out for delivery
+- SW: Inapelekwa
+
+### order.status.delivered
+- EN: Delivered
+- SW: Imefikishwa
+
+### order.status.completed
+- EN: Completed
+- SW: Imekamilika
+
+### order.status.cancelled
+- EN: Cancelled
+- SW: Imeghairiwa
+
+## 7) Issue Statuses
+
+### issue.status.open
+- EN: Open
+- SW: Wazi
+
+### issue.status.inReview
+- EN: In review
+- SW: Inapitiwa
+
+### issue.status.waitingCustomer
+- EN: Waiting for customer
+- SW: Inamsubiri mteja
+
+### issue.status.waitingOps
+- EN: Waiting for operations
+- SW: Inasubiri operesheni
+
+### issue.status.resolved
+- EN: Resolved
+- SW: Imetatuliwa
+
+### issue.status.closed
+- EN: Closed
+- SW: Imefungwa
+
+## 8) Role CTAs
+
+### cta.customer.startOrder
+- EN: Start order
+- SW: Anza oda
+
+### cta.customer.trackOrder
+- EN: Track order
+- SW: Fuatilia oda
+
+### cta.driver.startNextStop
+- EN: Start next stop
+- SW: Anza kituo kinachofuata
+
+### cta.driver.confirmProof
+- EN: Confirm proof
+- SW: Thibitisha ushahidi
+
+### cta.hub.completeIntake
+- EN: Complete intake
+- SW: Kamilisha mapokezi
+
+### cta.hub.advanceOrder
+- EN: Advance order
+- SW: Endesha oda mbele
+
+### cta.hub.assignDispatch
+- EN: Assign dispatch
+- SW: Panga usafirishaji
+
+### cta.affiliate.createWalkInOrder
+- EN: Create walk-in order
+- SW: Tengeneza oda ya dukani
+
+### cta.affiliate.completeShopStep
+- EN: Complete next shop step
+- SW: Kamilisha hatua inayofuata ya duka
+
+### cta.admin.openPriorityQueue
+- EN: Open priority queue
+- SW: Fungua foleni ya kipaumbele
+
+### cta.admin.reviewFinance
+- EN: Review finance
+- SW: Pitia fedha
+
+### cta.dev.openUrgentIssue
+- EN: Open urgent issue
+- SW: Fungua tatizo la dharura
+
+### cta.dev.retryJob
+- EN: Retry job
+- SW: Rudia kazi ya mfumo
+
+## 9) Empty States
+
+### empty.orders.none
+- EN: No orders yet
+- SW: Bado hakuna oda
+
+### empty.tasks.none
+- EN: No tasks assigned
+- SW: Hakuna kazi ulizopewa
+
+### empty.queue.clear
+- EN: Nothing needs action right now
+- SW: Hakuna kinachohitaji hatua kwa sasa
+
+### empty.search.noResults
+- EN: No results found
+- SW: Hakuna matokeo yaliyopatikana
+
+## 10) System Feedback
+
+### feedback.loading
+- EN: Loading
+- SW: Inapakia
+
+### feedback.saving
+- EN: Saving
+- SW: Inahifadhi
+
+### feedback.success.saved
+- EN: Saved successfully
+- SW: Imehifadhiwa kwa mafanikio
+
+### feedback.error.generic
+- EN: Something went wrong
+- SW: Kitu kimeenda vibaya
+
+### feedback.error.forbidden
+- EN: You do not have access to this page
+- SW: Huna ruhusa ya kuona ukurasa huu
+
+### feedback.retry
+- EN: Try again
+- SW: Jaribu tena
+
+## 11) Baseline Lock Statement
+
+This copy baseline is approved for implementation start and must be used as the root wording source before role-specific copy expansion.

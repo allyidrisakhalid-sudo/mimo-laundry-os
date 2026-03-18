@@ -1,8 +1,10 @@
 
-## P2.0 PASS
+## P2.0  Experience blueprint implementation baseline
 
 - Scope:
-  - Lock the complete Phase 2 experience blueprint for public entry and all required roles without writing code.
+  - install the Phase 2 implementation control layer into the repo
+  - verify and normalize IA baseline docs
+  - lock routes, portals, navigation, dashboard model, and bilingual copy direction for implementation start
 
 - Required outputs checklist:
   - [x] /docs/phase2/ia/role_to_portal_map.md
@@ -11,24 +13,29 @@
   - [x] /docs/phase2/ia/navigation_model.md
   - [x] /docs/phase2/ia/dashboard_layout_spec.md
   - [x] /docs/phase2/copy/copy_baseline_en_sw.md
-  - [x] /docs/changelog_phase2.md
-  - [x] /docs/acceptance_phase2.md
+  - [x] /docs/phase2/implementation/p2_implementation_baseline.md
+  - [x] /docs/changelog_phase2.md updated with P2.0
+  - [x] /docs/acceptance_phase2.md updated with P2.0
 
-- Evidence list:
-  - Role portals locked with explicit allowed/forbidden scope
-  - Screen map locked with 37 screens per role and unique screen purpose
-  - Public sitemap locked to exactly 6 pages with no dedicated pricing page
-  - Navigation model locked for web header, role sidebar, and customer/driver mobile tabs
-  - Dashboard layout template locked across customer, driver, hub, affiliate, and admin
-  - EN/SW copy baseline locked with implementation-ready i18n keys
+- Verification notes:
+  - all required baseline docs exist
+  - every role has one locked portal route
+  - every role has a bounded screen map with purpose, primary action, and key data
+  - public route model is minimal and implementation-safe
+  - navigation model is code-ready and role-correct
+  - dashboard structure is standardized and reusable
+  - copy baseline is sufficient to start real UI implementation
+  - changelog includes the implementation P2.0 entry
 
 - PASS / FAIL: PASS
 
 - Summary:
-  - Phase 2 blueprint is locked. Role portals, screen boundaries, public entry, navigation, dashboards, and baseline EN/SW copy are defined clearly enough to guide implementation without UX drift.
+  - The Phase 2 implementation baseline is now installed as the control layer for product build work. Role portals, public routes, navigation patterns, dashboard structure, and bilingual copy direction are now locked into repo documentation so later implementation chapters can execute without IA or wording drift.
 
 - Follow-up actions:
-  - none; blueprint lock complete and ready for P2.1 implementation
+  1. begin P2.1 implementation only after this baseline is confirmed as the single source of truth for brand, IA, routes, navigation, dashboard structure, and bilingual copy direction
+
+- Gate Result: P2.0 PASS
 
 ## P2.1 PASS
 
@@ -538,3 +545,4 @@
   1. execute this final polish pass exactly from these specs and do not claim launch-ready quality until speed, states, copy, and visual cleanup all meet the world-class minimal bar across roles and devices
 
 - Gate Result: P2.16 PASS
+

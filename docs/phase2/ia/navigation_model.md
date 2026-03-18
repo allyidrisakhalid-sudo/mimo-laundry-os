@@ -1,108 +1,109 @@
-# Navigation Model  Phase 2 Blueprint Lock (P2.0)
+# Navigation Model  Mimo Phase 2
 
-System: Mimo Laundry OS  
-Rule: Navigation must be minimal, role-correct, and operationally obvious.
+## 1) Purpose
 
-## A) Web App Navigation Model
+This file locks the navigation patterns that implementation must follow across public and portal surfaces.
 
-### Global Header Inside /app/*
+## 2) Public Web Header Rules
 
-The global header must contain exactly:
-- Mimo logo (left)
-- Current portal label
-- Language toggle (EN/SW)
-- Notifications entry if supported by existing product
-- Profile/account menu (right)
+The public website uses a simple header model.
 
-### Header Rules
+Required header items:
+- logo / home
+- track
+- partners
+- help
+- login
+- signup
 
-- No marketing links inside /app/*.
-- No role switcher unless the user truly has multiple roles in product logic.
-- No duplicated sidebar actions in the header.
-- Keep header utility-only.
+Rules:
+- do not overload the header with secondary/legal items
+- legal links belong in the footer
+- header must point only to live top-level public pages
+- no dead links
+- no duplicate nav items for the same destination
 
-## Role Sidebars
+## 3) Role Sidebar Rules
 
-### CUSTOMER Sidebar
-- Home
-- Orders
-- Profile
+Portal web/tablet layouts use a role sidebar as the primary in-app navigation pattern.
 
-### DRIVER Sidebar
-- Today
-- Tasks
-- Profile
+Rules:
+- sidebar items must reflect only the signed-in role's allowed sections
+- forbidden actions must not appear in sidebar navigation
+- detail pages do not become permanent sidebar items
+- the sidebar must remain stable and predictable per role
+- role portals must not link laterally to other role portals
 
-### HUB_STAFF Sidebar
-- Dashboard
-- Intake
-- Processing
+Expected sidebar behavior by portal:
+- /app/customer:
+  - customer home
+  - orders
+  - account
+- /app/driver:
+  - today
+  - tasks
+  - account
+- /app/hub:
+  - dashboard
+  - intake
+  - processing
+  - dispatch
+- /app/affiliate:
+  - dashboard
+  - new order
+  - orders
+  - summary
+- /app/admin:
+  - dashboard
+  - orders
+  - network
+  - finance
+  - support
+- /app/dev:
+  - dashboard
+  - jobs
+  - flags
+  - overrides
+  - activity
 
-### AFFILIATE_STAFF Sidebar
-- Dashboard
-- New Order
-- Orders
+## 4) Customer and Driver Mobile Bottom Tabs
 
-### AFFILIATE_ADMIN Sidebar
-- Dashboard
-- New Order
-- Orders
-- Finance
+Only customer and driver mobile experiences use bottom tabs.
 
-### ADMIN Sidebar
-- Dashboard
-- Orders
-- Operations
-- Finance
+### Customer mobile tabs
+- home
+- orders
+- account
 
-### DEV_ADMIN Sidebar
-- Home
-- Diagnostics
-- Tools
-- Activity
+### Driver mobile tabs
+- today
+- tasks
+- account
 
-## Sidebar Rules
+Rules:
+- bottom tabs must mirror real top-level role structure
+- bottom tabs must not include detail pages
+- detail flows open from a list/dashboard and return back into the tab structure
+- no extra mobile nav system should be invented for these roles
 
-- Show only what the role can actually use.
-- No dead links.
-- No disabled placeholder items.
-- Active route must be visually obvious.
-- Sidebar labels must match i18n keys later.
-- Sidebar order must reflect daily usage priority, top to bottom.
+## 5) Detail Page Navigation Rule
 
-## B) Mobile Navigation Model
+Detail pages are reachable from list, queue, table, or dashboard surfaces but are not promoted as permanent navigation destinations.
 
-Mobile bottom tabs exist only for CUSTOMER and DRIVER.
+Examples:
+- order detail
+- stop detail
+- qc/detail
+- individual support case
 
-### CUSTOMER Mobile Tabs
-- Home
-- Orders
-- Profile
+## 6) Forbidden Navigation Patterns
 
-### DRIVER Mobile Tabs
-- Today
-- Tasks
-- Profile
+- no role sees links for forbidden actions
+- no alternate nav system replaces sidebar/tabs without explicit later approval
+- no dead menu items
+- no duplicate entry points for the same permanent destination
+- no detail page promoted as a permanent nav item
 
-### Mobile Rules
+## 7) Implementation Lock Statement
 
-- 3 tabs only for both customer and driver.
-- Labels short and clear.
-- Current tab strongly visible.
-- No hidden critical action behind More.
-- Primary work must be reachable in one tap from a tab root.
-
-Do not include Cash as a separate tab in P2.0. Cash summary remains inside Driver Today or Task Detail, not top-level nav.
-
-## C) Navigation Behavior Rules
-
-- Login routes user automatically to their portal home.
-- Direct forbidden route access returns 403 state, not redirect loop.
-- Sidebar collapses cleanly on smaller desktop widths.
-- Mobile uses bottom tabs only where defined.
-- Detail pages do not appear as permanent sidebar items.
-- Breadcrumbs appear only where needed on web admin-like views, not everywhere.
-
-## Navigation Minimality Check
-
-Every navigation item maps to a real page, and no role sees irrelevant destinations.
+Header, role sidebar, and customer/driver bottom tabs are the source-of-truth navigation systems for Phase 2 implementation.

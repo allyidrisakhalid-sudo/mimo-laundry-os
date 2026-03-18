@@ -1,139 +1,153 @@
-# Dashboard Layout Spec  Phase 2 Blueprint Lock (P2.0)
+# Dashboard Layout Spec  Mimo Phase 2
 
-System: Mimo Laundry OS  
-Rule: Every dashboard follows one structural logic so the product feels calm, premium, and operationally consistent.
+## 1) Purpose
 
-## Global Dashboard Template
+This file standardizes the dashboard build template for Phase 2 so each role dashboard feels like one product system and can be implemented with reusable structure.
 
-1. Header band  
-2. KPI row  
-3. Action queue  
-4. Main table/list  
-5. Secondary support panel only if the role truly needs it  
+## 2) Standard Dashboard Structure
 
-## Global Rules
+Every dashboard should follow this order unless a role-specific spec explicitly narrows it:
 
-- KPI row: 36 cards max.
-- Action queue: mandatory.
-- Table/list: mandatory.
-- No charts unless a chart directly drives a same-day decision.
-- Every dashboard must answer:
-  - What happened?
-  - What needs attention now?
-  - What do I do next?
-- The page must expose one dominant daily action first.
+1. header band
+2. KPI row
+3. action queue
+4. main list/table
+5. optional secondary support panel only if truly needed
 
----
+## 3) Header Band
 
-## A) Customer Home
+Purpose:
+- orient the user instantly
+- show role/context title
+- reinforce the current work period or system state
 
-**Header band**
-- welcome/state summary
+Typical contents:
+- page title
+- short subtitle or today's context
+- one dominant page-level action if needed
 
-**KPI row**
-- active orders
-- ready for action
-- unpaid balance or payment state
+## 4) KPI Row
 
-**Action queue**
-- continue active order / track order / resolve payment if needed
+Purpose:
+- summarize the state that matters immediately
 
-**Main list**
-- recent orders
+Rules:
+- keep KPI count limited and readable
+- prefer operationally meaningful numbers
+- do not turn the dashboard into an analytics report
+- no chart-heavy drift
 
-**Secondary panel**
-- help/support shortcut
+## 5) Action Queue
 
----
+Purpose:
+- show the next obvious actions the role should take
 
-## B) Driver Today
+Rules:
+- action queue must be visible above the full table/list
+- queue items should represent urgency, blockers, or immediately actionable work
+- every dashboard must show the next obvious action
 
-**Header band**
-- today summary + availability
+## 6) Main List / Table
 
-**KPI row**
-- assigned tasks
-- pending proofs
-- cash to reconcile
+Purpose:
+- provide the fuller working surface after the summary and urgency layers
 
-**Action queue**
-- next stop first
+Rules:
+- this is the primary operational body of the dashboard
+- use list or table based on role/device need
+- support filtering only where necessary
+- avoid clutter and duplicate panels
 
-**Main list**
-- today task list in execution order
+## 7) Optional Secondary Support Panel
 
-**Secondary panel**
-- alerts/exceptions
+Purpose:
+- provide truly secondary but useful context only when needed
 
----
+Allowed examples:
+- brief tips
+- finance mini-summary
+- SLA reminder
+- support shortcut
 
-## C) Hub Dashboard
+Rules:
+- optional only
+- must not compete with the main list/table
+- must not become a chart-heavy side analytics area
 
-**Header band**
-- hub operational summary
+## 8) Role Dashboard Standardization
 
-**KPI row**
-- intake waiting
-- in processing
-- dispatch ready
-- exceptions
+### Customer Home
+- header band:
+  - account greeting / active-order context
+- KPI row:
+  - active order count
+  - recent orders
+  - pending action state if present
+- action queue:
+  - continue active order action or start new order
+- main list/table:
+  - active/recent orders list
+- secondary panel:
+  - optional help/account reminder only if needed
 
-**Action queue**
-- next queue needing action
+### Driver Today
+- header band:
+  - today's work summary
+- KPI row:
+  - assigned stops
+  - urgent stops
+  - proof/cash reminders
+- action queue:
+  - next stop
+- main list/table:
+  - assigned tasks/stops list
+- secondary panel:
+  - optional driver status/support panel
 
-**Main list**
-- active operational queue
+### Hub Dashboard
+- header band:
+  - hub operational status
+- KPI row:
+  - intake
+  - processing
+  - qc blockers
+  - dispatch-ready
+- action queue:
+  - urgent work queue
+- main list/table:
+  - current workload list/board entry view
+- secondary panel:
+  - optional SLA warning/support info
 
-**Secondary panel**
-- SLA alerts
+### Affiliate Dashboard
+- header band:
+  - shop operational summary
+- KPI row:
+  - active shop orders
+  - ready for pickup
+  - pending actions
+  - finance cue if applicable
+- action queue:
+  - next shop action
+- main list/table:
+  - shop-scoped orders list
+- secondary panel:
+  - optional payout/summary panel for admin-capable view
 
----
+### Admin Dashboard
+- header band:
+  - business command center context
+- KPI row:
+  - core business KPIs
+  - urgent issues
+  - finance/reconciliation cue
+- action queue:
+  - highest-priority operational queue
+- main list/table:
+  - platform-wide queue/list
+- secondary panel:
+  - optional finance or support summary if needed
 
-## D) Affiliate Dashboard
+## 9) Implementation Lock Statement
 
-**Header band**
-- shop summary
-
-**KPI row**
-- today orders
-- ready for pickup/return
-- active issues
-- commission/payout snapshot for admin-capable affiliate views
-
-**Action queue**
-- create order / release ready item / resolve issue
-
-**Main list**
-- shop orders needing attention
-
-**Secondary panel**
-- customer/shop pickup readiness
-
----
-
-## E) Admin Dashboard
-
-**Header band**
-- platform summary
-
-**KPI row**
-- active orders
-- delayed/exceptions
-- delivered today
-- paid today
-- reconciliation/payout flags
-
-**Action queue**
-- highest-priority platform issues
-
-**Main list**
-- global orders/issues queue
-
-**Secondary panel**
-- by-zone/by-hub pressure summary
-
----
-
-## Dashboard Consistency Rules
-
-All dashboards use the same structural logic, with role-specific data only.
+This standardized dashboard structure becomes the implementation template for Phase 2 dashboards. Chart-heavy deviation is not allowed in this baseline.
