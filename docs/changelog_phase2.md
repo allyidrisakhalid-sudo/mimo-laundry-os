@@ -111,3 +111,14 @@
 - locked read-only audit and failed-jobs visibility inside admin finance/control context
 - locked EN/SW admin HQ copy baseline
 - formalized the daily business command-center model for admin with no hunting
+
+## P2.12  DevAdmin Console (Safety Controls)
+- locked DevAdmin console structure across /app/dev, /app/dev/diagnostics, /app/dev/tools, and /app/dev/activity
+- locked health and monitoring view to support diagnosis before action
+- locked failed jobs viewer with safe retry flow inside the tools surface
+- locked feature flags manager as a controlled rollout tool
+- locked audited override workflow with reason-required controls
+- locked activity visibility for accountability across support and override actions
+- locked EN/SW DevAdmin copy baseline for diagnostics, tools, overrides, activity, and state feedback
+- formalized a safe internal-controls model without manual DB dependency for supported scenarios
+

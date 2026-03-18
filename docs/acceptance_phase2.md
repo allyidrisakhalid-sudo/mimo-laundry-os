@@ -378,3 +378,35 @@
   1. implement the admin HQ exactly from these specs so admin can run operations and finance daily from one clear command center without hunting
 
 - Gate Result: P2.11 PASS
+
+## P2.12  DevAdmin Console (Safety Controls)
+
+- Scope:
+  - Define the DevAdmin console as a controlled internal operations surface for health inspection, diagnostics, failed jobs review, feature flag control, audited override workflows, and readable activity visibility.
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/devadmin_console_spec.md
+  - [x] /docs/phase2/ux/devadmin_safety_controls_spec.md
+  - [x] /docs/phase2/ux/devadmin_override_workflow_spec.md
+  - [x] /docs/phase2/copy/devadmin_console_copy_en_sw.md
+  - [x] /docs/changelog_phase2.md updated with P2.12
+  - [x] /docs/acceptance_phase2.md updated with P2.12
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.11 artifacts still exist and prior PASS state remains intact
+  - devadmin_console_spec defines principles, dev home, diagnostics, tools summary, activity summary, state rules, and lock statement
+  - devadmin_safety_controls_spec defines failed jobs viewer, safe retry model, feature flags manager, and safety guardrails
+  - devadmin_override_workflow_spec defines override principles, reason-required workflow, auditability, and safe outcome handling
+  - devadmin_console_copy_en_sw provides implementation-grade EN/SW copy for diagnostics, jobs, flags, overrides, activity, and state feedback
+  - the DevAdmin model supports diagnosis and safe control without touching the database manually for supported scenarios
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The DevAdmin console is now locked as a coherent internal safety surface where DevAdmin can review health before acting, inspect and retry failed jobs deliberately, manage feature flags with clarity, apply approved overrides through reason-required audited workflows, and inspect readable activity history for accountability. The specs preserve the approved Midnight Silk direction while replacing routine manual database dependency with controlled productized tools for supported scenarios.
+
+- Follow-up actions:
+  1. implement the DevAdmin console exactly from these specs so DevAdmin can diagnose issues and apply safe controls without touching the database manually
+
+- Gate Result: P2.12 PASS
+
