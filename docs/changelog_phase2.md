@@ -33,3 +33,12 @@
 - locked minimal legal page specs for /terms, /privacy, and /refund-policy
 - locked public SEO and content intent with route ownership and duplication guards
 - defined a public mobile-first trust-to-convert flow for fast first-time understanding and next-step action
+
+## P2.4 completed
+- locked metadata and canonical URL rules for all required public and legal routes on https://mimolaundry.org
+- locked OpenGraph and Twitter/X social preview system under one Midnight Silk branded asset family
+- locked sitemap and robots strategy with public-route inclusion only and /app/* exclusion
+- locked LocalBusiness and WebSite structured data strategy with strict truthfulness guardrails
+- defined location-page guardrails with no current location/zone page sprawl in P2.4
+- locked public performance and Lighthouse baseline rules for mobile-first searchability discipline
+- formalized the technical searchability foundation for implementation without duplication, spam, or indexing risk

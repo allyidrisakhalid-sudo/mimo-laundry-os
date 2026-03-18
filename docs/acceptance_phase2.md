@@ -122,3 +122,29 @@
 - Follow-up actions:
   1. implement the public site exactly from these specs and keep all public text, layout, and CTA behavior aligned to the approved public experience model
 
+
+## P2.4 SEO + Searchability Foundation
+- Scope:
+  - lock the technical searchability foundation for mimolaundry.org so the public site is discoverable, indexable, correctly described in search/social surfaces, and performance-safe on mobile
+- Required outputs checklist:
+  - [x] docs/phase2/ux/seo_foundation_spec.md
+  - [x] docs/phase2/ux/metadata_map.md
+  - [x] docs/phase2/ux/structured_data_spec.md
+  - [x] docs/phase2/ux/performance_baseline_spec.md
+  - [x] docs/changelog_phase2.md updated
+  - [x] docs/acceptance_phase2.md updated
+- Evidence list:
+  - pre-flight retest confirmed P2.0, P2.1, P2.2, and P2.3 required artifacts still exist
+  - pre-flight retest confirmed docs/changelog_phase2.md includes P2.0, P2.1, P2.2, and P2.3
+  - pre-flight retest confirmed docs/acceptance_phase2.md includes P2.0 PASS, P2.1 PASS, P2.2 PASS, and P2.3 PASS
+  - seo_foundation_spec.md defines canonical, metadata, OpenGraph, Twitter/X, sitemap, robots, structured data, optional location-page guardrails, and performance/Lighthouse rules
+  - metadata_map.md covers all required public and legal routes with canonical ownership and OG intent
+  - structured_data_spec.md locks LocalBusiness and WebSite schema strategy with truthfulness guardrails
+  - performance_baseline_spec.md locks public-route Core Web Vitals and Lighthouse baseline discipline
+  - production host is consistently defined as https://mimolaundry.org
+  - sitemap rules exclude /app/* and private/authenticated states
+  - robots rules support discovery of true public pages without accidental blocking
+- PASS / FAIL: PASS
+- Summary: P2.4 locked the minimal, premium, truthful SEO/searchability system for the public Mimo site. Canonicals, metadata ownership, OG/Twitter preview logic, sitemap/robots rules, structured data, location-page guardrails, and public performance expectations are now specified clearly enough for implementation without public page sprawl or indexing confusion.
+- Follow-up actions:
+  1. implement metadata, sitemap, robots, structured data, and baseline performance checks exactly from these specs before expanding public search footprint
