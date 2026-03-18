@@ -141,3 +141,11 @@
 - deferred HSTS until stable verification
 - locked Cloudflare operator runbook
 - formalized domain, SSL, and routing polish for secure production delivery
+
+## P2.15  Role-based journey tests (device-ready)
+- locked role-based launch journey test plan
+- locked target-device validation matrix
+- locked strict role acceptance checklist
+- locked launch validation runbook
+- formalized customer, driver, hub, affiliate, admin, and DevAdmin real-world journey criteria
+- established the device-ready end-to-end workflow validation model for launch

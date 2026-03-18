@@ -474,3 +474,36 @@
   1. implement the Cloudflare DNS, TLS, caching, redirect, and security settings exactly from these specs so web and API are reachable securely on the production domain before enabling HSTS
 
 - Gate Result: P2.14 PASS
+
+## P2.15  Role-Based Journey Tests (Device-ready)
+
+- Scope:
+  - locked the role-based journey validation model for customer, driver, hub staff, affiliate staff, affiliate admin, admin, and DevAdmin
+  - locked target-device expectations and pass criteria for each role
+  - locked strict end-to-end acceptance criteria and operator runbook for launch validation execution
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/role_journey_test_plan.md
+  - [x] /docs/phase2/ux/device_validation_matrix.md
+  - [x] /docs/phase2/ux/role_journey_acceptance_checklist.md
+  - [x] /docs/phase2/ops/launch_validation_runbook.md
+  - [x] /docs/changelog_phase2.md updated with P2.15
+  - [x] /docs/acceptance_phase2.md updated with P2.15
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.14 artifacts still exist and prior PASS state remains intact
+  - role journey test plan defines locked validation principles plus end-to-end customer, driver, hub, affiliate, admin, and DevAdmin journeys
+  - device validation matrix defines target-device mapping, usability expectations, device-specific pass criteria, and evidence rules
+  - role journey acceptance checklist defines per-role hard-gate checks and global pass/fail rules
+  - launch validation runbook defines role/device requirements, test order, evidence capture, failure logging, re-test rules, and final summary rules
+  - validation model is explicitly evidence-based and strict enough to fail blocked, confusing, or mis-routed workflows
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The Phase 2 launch-validation framework is now locked as a strict, device-ready, role-based system for proving real workflow readiness before sign-off. Every core role now has a defined start point, intended device context, preconditions, end-to-end journey steps, success/failure criteria, and required evidence. This keeps launch validation grounded in operational reality rather than screen-by-screen assumption.
+
+- Follow-up actions:
+  1. execute these role-based journey tests on real target devices exactly from this plan and do not claim launch readiness until every role completes its workflow with acceptable clarity and evidence
+
+- Gate Result: P2.15 PASS
