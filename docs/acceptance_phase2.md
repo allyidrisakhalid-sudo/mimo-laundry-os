@@ -46,3 +46,43 @@
 ## Acceptance Statement
 
 P2.0 is accepted. The Phase 2 experience blueprint is now locked. No implementation may drift from these IA, navigation, dashboard, and copy constraints without an explicit change request.
+
+## P2.1 — Brand Kit v1 for Mimo
+
+* Status: PASS
+* Date: 2026-03-18
+* Evidence:
+
+  * `/docs/phase2/brand/brand_kit_v1.md`
+  * `/docs/phase2/brand/tokens_v1.md`
+  * `/docs/phase2/brand/icons_v1.md`
+  * `/docs/phase2/brand/imagery_rules_v1.md`
+
+## Gate Check Results
+
+### 1) Brand kit contains promise, taglines, 5-second statement, tone rules, message pillars, and EN/SW CTAs
+
+* PASS
+
+### 2) Tokens are fully defined and locked
+
+* PASS
+
+### 3) A single icon system with usage rules is locked
+
+* PASS
+
+### 4) Imagery rules define direction, do/don't, and placement rules
+
+* PASS
+
+### 5) Brand system aligns with P2.0 minimal, role-based blueprint
+
+* PASS
+
+## Acceptance Statement
+
+P2.1 is accepted. The Mimo Phase 2 brand system is now locked and must be used as the visual and tonal foundation for all future UI chapters.
+
+
+
