@@ -202,3 +202,28 @@
 ## 6) Support Copy Lock Statement
 
 The support copy system is locked to a short, respectful, bilingual model that keeps support visible inside order context, gives admin clear operational language for triage and resolution, and preserves financially accurate refund and credit wording. All messages are implementation-ready for calm customer trust, premium readability, and EN/SW parity.
+
+### support.help.contact
+- EN: Contact support
+- SW: Wasiliana na msaada
+- usage note: helper action where support contact option is allowed
+
+### support.help.whatsApp
+- EN: Continue on WhatsApp
+- SW: Endelea kupitia WhatsApp
+- usage note: optional support contact action aligned to the same case state
+
+### support.help.returnToOrder
+- EN: Back to order
+- SW: Rudi kwenye oda
+- usage note: action back to order detail after support interaction
+
+### support.state.retry
+- EN: Try again
+- SW: Jaribu tena
+- usage note: retry action for temporary support loading or submission failure state
+
+### support.state.issueNeedsReview
+- EN: This issue needs review
+- SW: Tatizo hili linahitaji mapitio
+- usage note: helper line for visible open support state
