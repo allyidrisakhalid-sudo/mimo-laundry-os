@@ -92,3 +92,32 @@
 
 - Follow-up actions:
   1. implement the approved component gallery and use this library as the only source for Phase 2 screens
+
+## P2.3 PASS
+
+- Scope:
+  - locked the full public experience model for mimolaundry.org covering home, track, partners, help, legal pages, public CTA behavior, and public SEO/content intent
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/public_site_spec.md
+  - [x] /docs/phase2/ux/public_copy_map.md
+  - [x] /docs/phase2/ux/seo_and_content_intent.md
+  - [x] /docs/phase2/ux/legal_pages_minimal_spec.md
+  - [x] /docs/changelog_phase2.md updated with P2.3
+  - [x] /docs/acceptance_phase2.md updated with P2.3 PASS
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0, P2.1, and P2.2 required artifacts still exist
+  - pre-flight retest confirmed changelog and acceptance records still include P2.0 PASS, P2.1 PASS, and P2.2 PASS
+  - public site spec defines the locked public experience principles, global public header, home, track, partners, help, contact/WhatsApp, footer/legal, and public performance/mobile rules
+  - public copy map defines route-by-route copy intent and CTA ownership across public and legal routes
+  - SEO and content intent defines route intent, metadata rules, duplication guards, and mobile search behavior
+  - legal pages minimal spec defines /terms, /privacy, and /refund-policy as minimal readable policy routes
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - P2.3 successfully locked the full public website structure for Phase 2 as a minimal, premium, mobile-first experience. Route purpose ownership is explicit, duplicate public page behavior is prohibited, support and WhatsApp placement is controlled, legal surfaces are intentionally minimal, and the public journey is designed to build trust and push the next correct action in under 60 seconds.
+
+- Follow-up actions:
+  1. implement the public site exactly from these specs and keep all public text, layout, and CTA behavior aligned to the approved public experience model

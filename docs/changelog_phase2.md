@@ -23,3 +23,13 @@
 - locked shared component state rules across interactive, data, form, permission, and responsive behavior
 - added component usage matrix proving full current Phase 2 screen coverage without custom structural hacks
 - added component gallery specification to verify implementation quality and visual coherence
+
+## P2.3 completed
+- locked the public landing experience for mimolaundry.org with a mobile-first Midnight Silk structure
+- locked the public /track page as the direct order-status utility route
+- locked the /partners page as the affiliate recruitment and conversion surface
+- locked the /help page and minimal policy surface model
+- locked the public contact and WhatsApp CTA system around +255788558975
+- locked minimal legal page specs for /terms, /privacy, and /refund-policy
+- locked public SEO and content intent with route ownership and duplication guards
+- defined a public mobile-first trust-to-convert flow for fast first-time understanding and next-step action
