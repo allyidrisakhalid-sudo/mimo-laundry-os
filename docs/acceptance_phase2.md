@@ -410,3 +410,36 @@
 
 - Gate Result: P2.12 PASS
 
+
+## P2.13 Support Center UX (All Roles)
+
+- Scope:
+  - build the support and trust layer so common problems can be raised, triaged, resolved, and communicated clearly across customer and admin flows
+  - keep support contextual to the real order without creating a detached support portal
+  - align refund and credit handling to ledger truth and visible auditability
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/support_center_spec.md
+  - [x] /docs/phase2/ux/admin_support_queue_spec.md
+  - [x] /docs/phase2/ux/support_messaging_and_refund_spec.md
+  - [x] /docs/phase2/copy/support_center_copy_en_sw.md
+  - [x] /docs/changelog_phase2.md updated with P2.13
+  - [x] /docs/acceptance_phase2.md updated with P2.13
+
+- Evidence list:
+  - pre-flight retest confirmed P2.0 through P2.12 artifacts still exist and prior PASS state remains intact before P2.13 work began
+  - support center spec locks support experience principles, customer issue creation, cross-role visibility, support status model, and auditability summary
+  - admin support queue spec locks queue entry model, readable triage list, case detail requirements, triage-to-resolve workflow, and audit/visibility rules
+  - support messaging and refund spec locks one consistent status template model across in-app and WhatsApp-aligned messaging plus ledger-safe refund/credit behavior
+  - support copy file provides implementation-grade EN/SW keys for issue creation, queue handling, support status messaging, refund/credit outcomes, and help feedback
+  - support model keeps customer issue creation short and contextual, keeps admin support operational instead of ticket-system heavy, and preserves auditability without customer-facing noise
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The support layer is now locked as one coherent order-linked system where customers can raise short, specific issues from order detail, admins can triage and resolve cases from an embedded operational queue, and support messaging stays calm, visible, and bilingual throughout. Refund and credit handling remains clearly distinguished, finance-safe, and aligned to ledger truth so the experience builds trust without creating support chaos.
+
+- Follow-up actions:
+  1. implement support issue creation, triage/resolution flow, messaging templates, and refund/credit UX exactly from these specs so common support cases are handled end-to-end with clear visibility and audit trail
+
+- Gate Result: P2.13 PASS

@@ -122,3 +122,12 @@
 - locked EN/SW DevAdmin copy baseline for diagnostics, tools, overrides, activity, and state feedback
 - formalized a safe internal-controls model without manual DB dependency for supported scenarios
 
+
+## P2.13 completed
+- locked customer issue creation UX for damage, missing item, delay, and refund request inside customer order context
+- locked admin support queue UX for a triage-to-resolve workflow embedded within the approved admin operations model
+- locked bilingual support status messaging templates for in-app and WhatsApp-aligned use
+- locked refund and credit UX with ledger-consistent support states and finance-safe customer visibility
+- formalized support visibility and auditability across customer, affiliate, admin, and DevAdmin contexts
+- added implementation-grade EN/SW support copy baseline for issue creation, queue handling, status messaging, and refund or credit outcomes
+- formalized the end-to-end support and trust layer to reduce chaos while preserving order truth, ledger truth, and auditability
