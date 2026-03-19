@@ -940,3 +940,53 @@
 
 - Gate Result: P2.10 PASS
 
+
+## P2.11  Admin HQ (Implementation)
+
+- Scope:
+  - install the approved Admin HQ implementation baseline
+  - implement the real admin dashboard, orders, operations, pricing, finance, and read-only oversight surfaces
+  - wire EN/SW admin copy into the active translation system
+  - preserve desktop-first command-center behavior without route drift
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/admin_hq_spec.md
+  - [x] /docs/phase2/ux/admin_network_and_pricing_spec.md
+  - [x] /docs/phase2/ux/admin_finance_and_controls_spec.md
+  - [x] /docs/phase2/copy/admin_hq_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_admin_hq_implementation_baseline.md
+  - [x] /docs/acceptance_phase2.md updated with P2.11
+  - [x] /docs/changelog_phase2.md updated with P2.11
+  - [x] real /app/admin route implementation
+  - [x] real /app/admin/orders route implementation
+  - [x] real /app/admin/orders/[id] route implementation
+  - [x] real /app/admin/operations route implementation
+  - [x] real /app/admin/finance route implementation
+  - [x] real admin dashboard with KPI + action queue behavior
+  - [x] real orders oversight filters/table/quick-open behavior
+  - [x] real operations workspace for zones/hubs/affiliates/drivers
+  - [x] real pricing plan version workflow surface
+  - [x] real finance workspace for payments/refunds/payouts/daily close
+  - [x] real read-only audit and failed-job visibility surface
+  - [x] real EN/SW admin HQ copy wired into the translation system
+
+- Verification notes:
+  - P2.10 implementation remains committed and prior PASS state still holds
+  - P2.11 source-of-truth docs exist and the admin implementation baseline is now installed
+  - real admin routes exist for dashboard, orders, order detail, operations, and finance
+  - admin dashboard now prioritizes KPI clarity, action queue visibility, global order review, pressure summary, and finance signal visibility
+  - admin orders oversight now provides visible practical filters and safe order quick-open behavior
+  - operations workspace now covers zones, hubs, affiliates, drivers, and versioned pricing in one coherent admin area
+  - finance workspace now covers payments, refunds, payouts, daily close, audit visibility, and failed-job visibility
+  - read-only oversight remains visible without mutation controls
+  - EN/SW admin copy is wired into the live i18n structure instead of leaving admin copy ad hoc in route files
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved Admin HQ model is now installed as a real Phase 2 implementation layer. Admin can work from one coherent command center across dashboard, orders, operations, pricing, finance, and read-only oversight without hunting between disconnected surfaces.
+
+- Follow-up actions:
+  1. begin P2.12 implementation only after Admin HQ is confirmed stable across dashboard, orders, operations, pricing, finance, and read-only oversight behavior
+
+- Gate Result: P2.11 PASS

@@ -262,3 +262,14 @@
 - wired EN/SW affiliate portal copy into implementation
 - affiliate portal now ready for fast independent shop operations
 
+
+## P2.11  Admin HQ implementation
+- Phase 2 Admin HQ implementation baseline installed
+- real admin dashboard implemented
+- real platform orders oversight implemented
+- real operations/network workspace implemented
+- real versioned pricing UI implemented
+- real finance workspace implemented
+- real read-only audit and failed-job visibility implemented
+- EN/SW admin HQ copy wired into implementation
+- Admin HQ now ready for daily business control without hunting
