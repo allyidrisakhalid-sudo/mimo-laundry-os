@@ -221,3 +221,12 @@
 - kept customer first-run flow to two short steps and preserved role help/setup coverage
 
 
+
+## P2.7  Customer Portal (Implementation)
+- installed the customer portal implementation baseline
+- implemented real customer home
+- implemented real customer orders list
+- implemented real customer order detail
+- implemented real customer profile
+- wired EN/SW customer portal copy into implementation
+- customer route purpose now ready for later slices

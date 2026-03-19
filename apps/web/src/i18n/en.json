@@ -1,248 +1,281 @@
 {
-  "common": {
-    "language": "Language",
-    "english": "English",
-    "swahili": "Swahili",
-    "ok": "OK",
-    "cancel": "Cancel",
-    "save": "Save",
-    "close": "Close",
-    "loading": "Loading..."
-  },
-  "nav": {
-    "home": "Home",
-    "components": "Components",
-    "settings": "Settings"
-  },
-  "auth": {
-    "welcome": "Welcome to Mimo",
-    "actions": {
-      "logout": "Logout",
-      "loadLiveData": "Load live data",
-      "liveDataPayload": "Live data payload",
-      "noDataLoaded": "No data loaded yet."
-    },
-    "session": {
-      "productionApi": "Production API",
-      "currentPhone": "Current phone",
-      "currentRole": "Current role",
-      "expectedRole": "Expected role",
-      "none": "none",
-      "notAvailable": "Browser session not available",
-      "missingTokenOrPath": "Missing token or data path",
-      "dataLoadOk": "Data load ok",
-      "dataLoadFailed": "Data load failed",
-      "loggedOut": "Logged out"
-    },
-    "login": {
-      "title": "Sign in",
-      "subtitle": "Access Laundry OS",
-      "phone": "Phone number",
-      "phonePlaceholder": "+255712345678",
-      "password": "Password",
-      "passwordPlaceholder": "Enter your password",
-      "submit": "Login",
-      "submitting": "Signing in...",
-      "success": "Login successful",
-      "error": "Login failed. Check your phone and password."
-    },
-    "signup": {
-      "title": "Create your customer account",
-      "subtitle": "Customer signup only. Staff and admin accounts are not created here.",
-      "fullName": "Full name",
-      "fullNamePlaceholder": "Enter your full name",
-      "phone": "Phone number",
-      "phonePlaceholder": "+255712345678",
-      "password": "Password",
-      "passwordPlaceholder": "Create a password",
-      "submit": "Create account",
-      "submitting": "Creating account...",
-      "success": "Account created successfully. Please sign in.",
-      "error": "Signup failed. Please try again.",
-      "customerOnlyNote": "This signup route is for customers only.",
-      "linkCta": "Create customer account",
-      "loginCta": "Back to login"
-    },
-    "forbidden": {
-      "title": "Access not allowed",
-      "subtitle": "This portal is not available for your current role.",
-      "body": "Use the correct portal for your account or sign in again with the right credentials.",
-      "goToLogin": "Go to login",
-      "goToPortal": "Go to my portal"
-    }
-  },
-  "home": {
-    "title": "Customer Home",
-    "subtitle": "Track orders, pickups, and deliveries.",
-    "dashboardTitle": "Walking skeleton home",
-    "loggedInAs": "Logged in as",
-    "apiStatusLabel": "API status",
-    "apiConnected": "Connected",
-    "apiDisconnected": "Disconnected",
-    "tokenStored": "Access token stored",
-    "logout": "Logout",
-    "apiBaseUrl": "API base URL"
-  },
-  "orders": {
-    "sectionTitle": "New order",
-    "channel": "Channel",
-    "tier": "Tier",
-    "pickupAddress": "Pickup address",
-    "dropoffAddress": "Dropoff address",
-    "affiliateShop": "Affiliate shop",
-    "submit": "Create order",
-    "success": "Order created successfully",
-    "error": "Order creation failed",
-    "door": "Door",
-    "shopDrop": "Shop drop",
-    "hybrid": "Hybrid",
-    "standard48h": "Standard 48h",
-    "express24h": "Express 24h",
-    "sameDay": "Same day",
-    "detailsTitle": "Latest created order",
-    "orderNumber": "Order number",
-    "statusCurrent": "Current status",
-    "zoneId": "Zone",
-    "hubId": "Hub",
-    "bagTagCode": "Bag tag",
-    "pickupAddressPlaceholder": "Select pickup address",
-    "dropoffAddressPlaceholder": "Select dropoff address",
-    "affiliateShopPlaceholder": "Select affiliate shop",
-    "timelineTitle": "Timeline",
-    "refreshing": "Refreshing order updates...",
-    "emptyTimeline": "No timeline events yet"
-  },
-  "componentsPage": {
-    "title": "Mimo UI Kit",
-    "subtitle": "Chapter 7.2 component library gallery.",
-    "buttons": "Buttons",
-    "inputs": "Inputs",
-    "cards": "Cards",
-    "customerName": "Customer name",
-    "enterFullName": "Enter full name",
-    "requiredForOrderCreation": "Required for order creation",
-    "phoneNumber": "Phone number",
-    "tzFormatLater": "TZ format later",
-    "password": "Password",
-    "enterPassword": "Enter password",
-    "errorExample": "Error example",
-    "invalidValue": "Invalid value",
-    "fieldRequired": "This field is required",
-    "defaultCard": "Default card",
-    "standardSurface": "Standard surface container",
-    "useForDashboards": "Use for dashboards, panels, and forms.",
-    "formatting": "Locale formatting",
-    "moneyExample": "Money example",
-    "dateExample": "Date and time example",
-    "phoneExample": "Phone example",
-    "languageToggle": "Language toggle",
-    "showSuccess": "Show success toast",
-    "showInfo": "Show info toast",
-    "showError": "Show error toast",
-    "toastSuccessTitle": "Saved successfully",
-    "toastSuccessDescription": "Your changes were stored.",
-    "toastInfoTitle": "Heads up",
-    "toastInfoDescription": "New delivery updates are available.",
-    "toastErrorTitle": "Action failed",
-    "toastErrorDescription": "Please try again."
-  },
-  "onboarding": {
-    "common": {
-      "loading": "Loading your view",
-      "continue": "Continue",
-      "finish": "Finish setup",
-      "notNow": "Not now",
-      "done": "Setup complete",
-      "incomplete": "Setup pending",
-      "language": "Language",
-      "help": "Help",
-      "whatsapp": "WhatsApp support",
-      "openHelp": "Open help"
-    },
-    "help": {
-      "label": "Need help?",
-      "profileHelp": "Get help for this screen",
-      "dashboardHelp": "See help for this dashboard",
-      "publicTitle": "Help and support",
-      "publicBody": "Find setup guidance, order help, and direct support.",
-      "orderTitle": "Order help",
-      "orderBody": "Use this help entry when you need support on a specific order.",
-      "taskTitle": "Task help",
-      "taskBody": "Use this help entry when a pickup, dropoff, or stop proof needs attention.",
-      "financeTitle": "Finance help",
-      "financeBody": "Use this help entry for payout, balance, or settlement questions.",
-      "generalTitle": "General help",
-      "generalBody": "Use this help entry when you need guidance for the current screen.",
-      "adminDevBody": "Use the help center for access, workflow, and operational guidance."
-    },
-    "customer": {
-      "firstRunTitle": "Welcome to Mimo",
-      "firstRunBody": "Complete your first setup in two short steps, then start placing orders.",
-      "stepOneTitle": "Choose your language",
-      "stepOneBody": "Pick the language you want to use right now. You can change it later.",
-      "stepTwoTitle": "Confirm your details",
-      "stepTwoBody": "Check your name and phone so your first order flow starts clearly.",
-      "nameLabel": "Full name",
-      "phoneLabel": "Phone number",
-      "startButton": "Start setup",
-      "completeButton": "Finish and open home",
-      "skipButton": "Skip for now",
-      "homeTitle": "Customer home",
-      "homeBody": "Track your active order, start a new request, and get help from one clear place.",
-      "ordersTitle": "Orders",
-      "ordersBody": "Your active and recent orders will appear here.",
-      "profileTitle": "Profile help",
-      "orderDetailTitle": "Order detail help"
-    },
-    "driver": {
-      "homeTitle": "Driver home",
-      "homeBody": "Review today's route, complete proofs, and handle cash prompts with minimal taps.",
-      "taskDetailTitle": "Task detail help",
-      "setupTitle": "Driver setup",
-      "setupBody": "Review route basics, proof rules, and cash handling before you start work.",
-      "checklist": [
-        "Confirm your phone is charged and location is on.",
-        "Review proof rules before your first stop.",
-        "Know where to get help if a stop cannot be completed."
-      ],
-      "cta": "Mark driver setup complete"
-    },
-    "hub": {
-      "dashboardTitle": "Hub dashboard",
-      "dashboardBody": "Move work through intake, processing, QC, and dispatch from one operational surface.",
-      "issueTitle": "Hub order help",
-      "setupTitle": "Hub setup",
-      "setupBody": "Review intake, stage movement, and dispatch basics before processing live work.",
-      "checklist": [
-        "Start with scanner-first intake rules.",
-        "Keep stage updates accurate and immediate.",
-        "Escalate blocked or failed items through help."
-      ],
-      "cta": "Mark hub setup complete"
-    },
-    "affiliate": {
-      "dashboardTitle": "Affiliate dashboard",
-      "dashboardBody": "Create walk-in orders fast, track shop handovers, and review simple earnings visibility.",
-      "orderDetailTitle": "Affiliate order help",
-      "financeTitle": "Affiliate finance help",
-      "staffSetupTitle": "Affiliate staff setup",
-      "staffSetupBody": "Review walk-in intake, handover rules, and customer support handoff.",
-      "adminSetupTitle": "Affiliate admin setup",
-      "adminSetupBody": "Review shop activity, pickup readiness, and payout visibility before opening.",
-      "staffChecklist": [
-        "Use the fast walk-in flow for every new shop order.",
-        "Confirm each handover clearly before release.",
-        "Use help when an order needs intervention."
-      ],
-      "adminChecklist": [
-        "Review shop order flow and pickup readiness.",
-        "Check payout and balance visibility daily.",
-        "Use help for payout or access issues."
-      ],
-      "cta": "Mark affiliate setup complete"
-    },
-    "adminDev": {
-      "title": "Operations workspace"
-    }
-  }
+    "common":  {
+                   "language":  "Language",
+                   "english":  "English",
+                   "swahili":  "Swahili",
+                   "ok":  "OK",
+                   "cancel":  "Cancel",
+                   "save":  "Save",
+                   "close":  "Close",
+                   "loading":  "Loading..."
+               },
+    "nav":  {
+                "home":  "Home",
+                "components":  "Components",
+                "settings":  "Settings"
+            },
+    "auth":  {
+                 "welcome":  "Welcome to Mimo",
+                 "actions":  {
+                                 "logout":  "Logout",
+                                 "loadLiveData":  "Load live data",
+                                 "liveDataPayload":  "Live data payload",
+                                 "noDataLoaded":  "No data loaded yet."
+                             },
+                 "session":  {
+                                 "productionApi":  "Production API",
+                                 "currentPhone":  "Current phone",
+                                 "currentRole":  "Current role",
+                                 "expectedRole":  "Expected role",
+                                 "none":  "none",
+                                 "notAvailable":  "Browser session not available",
+                                 "missingTokenOrPath":  "Missing token or data path",
+                                 "dataLoadOk":  "Data load ok",
+                                 "dataLoadFailed":  "Data load failed",
+                                 "loggedOut":  "Logged out"
+                             },
+                 "login":  {
+                               "title":  "Sign in",
+                               "subtitle":  "Access Laundry OS",
+                               "phone":  "Phone number",
+                               "phonePlaceholder":  "+255712345678",
+                               "password":  "Password",
+                               "passwordPlaceholder":  "Enter your password",
+                               "submit":  "Login",
+                               "submitting":  "Signing in...",
+                               "success":  "Login successful",
+                               "error":  "Login failed. Check your phone and password."
+                           },
+                 "signup":  {
+                                "title":  "Create your customer account",
+                                "subtitle":  "Customer signup only. Staff and admin accounts are not created here.",
+                                "fullName":  "Full name",
+                                "fullNamePlaceholder":  "Enter your full name",
+                                "phone":  "Phone number",
+                                "phonePlaceholder":  "+255712345678",
+                                "password":  "Password",
+                                "passwordPlaceholder":  "Create a password",
+                                "submit":  "Create account",
+                                "submitting":  "Creating account...",
+                                "success":  "Account created successfully. Please sign in.",
+                                "error":  "Signup failed. Please try again.",
+                                "customerOnlyNote":  "This signup route is for customers only.",
+                                "linkCta":  "Create customer account",
+                                "loginCta":  "Back to login"
+                            },
+                 "forbidden":  {
+                                   "title":  "Access not allowed",
+                                   "subtitle":  "This portal is not available for your current role.",
+                                   "body":  "Use the correct portal for your account or sign in again with the right credentials.",
+                                   "goToLogin":  "Go to login",
+                                   "goToPortal":  "Go to my portal"
+                               }
+             },
+    "home":  {
+                 "title":  "Customer Home",
+                 "subtitle":  "Track orders, pickups, and deliveries.",
+                 "dashboardTitle":  "Walking skeleton home",
+                 "loggedInAs":  "Logged in as",
+                 "apiStatusLabel":  "API status",
+                 "apiConnected":  "Connected",
+                 "apiDisconnected":  "Disconnected",
+                 "tokenStored":  "Access token stored",
+                 "logout":  "Logout",
+                 "apiBaseUrl":  "API base URL"
+             },
+    "orders":  {
+                   "sectionTitle":  "New order",
+                   "channel":  "Channel",
+                   "tier":  "Tier",
+                   "pickupAddress":  "Pickup address",
+                   "dropoffAddress":  "Dropoff address",
+                   "affiliateShop":  "Affiliate shop",
+                   "submit":  "Create order",
+                   "success":  "Order created successfully",
+                   "error":  "Order creation failed",
+                   "door":  "Door",
+                   "shopDrop":  "Shop drop",
+                   "hybrid":  "Hybrid",
+                   "standard48h":  "Standard 48h",
+                   "express24h":  "Express 24h",
+                   "sameDay":  "Same day",
+                   "detailsTitle":  "Latest created order",
+                   "orderNumber":  "Order number",
+                   "statusCurrent":  "Current status",
+                   "zoneId":  "Zone",
+                   "hubId":  "Hub",
+                   "bagTagCode":  "Bag tag",
+                   "pickupAddressPlaceholder":  "Select pickup address",
+                   "dropoffAddressPlaceholder":  "Select dropoff address",
+                   "affiliateShopPlaceholder":  "Select affiliate shop",
+                   "timelineTitle":  "Timeline",
+                   "refreshing":  "Refreshing order updates...",
+                   "emptyTimeline":  "No timeline events yet"
+               },
+    "componentsPage":  {
+                           "title":  "Mimo UI Kit",
+                           "subtitle":  "Chapter 7.2 component library gallery.",
+                           "buttons":  "Buttons",
+                           "inputs":  "Inputs",
+                           "cards":  "Cards",
+                           "customerName":  "Customer name",
+                           "enterFullName":  "Enter full name",
+                           "requiredForOrderCreation":  "Required for order creation",
+                           "phoneNumber":  "Phone number",
+                           "tzFormatLater":  "TZ format later",
+                           "password":  "Password",
+                           "enterPassword":  "Enter password",
+                           "errorExample":  "Error example",
+                           "invalidValue":  "Invalid value",
+                           "fieldRequired":  "This field is required",
+                           "defaultCard":  "Default card",
+                           "standardSurface":  "Standard surface container",
+                           "useForDashboards":  "Use for dashboards, panels, and forms.",
+                           "formatting":  "Locale formatting",
+                           "moneyExample":  "Money example",
+                           "dateExample":  "Date and time example",
+                           "phoneExample":  "Phone example",
+                           "languageToggle":  "Language toggle",
+                           "showSuccess":  "Show success toast",
+                           "showInfo":  "Show info toast",
+                           "showError":  "Show error toast",
+                           "toastSuccessTitle":  "Saved successfully",
+                           "toastSuccessDescription":  "Your changes were stored.",
+                           "toastInfoTitle":  "Heads up",
+                           "toastInfoDescription":  "New delivery updates are available.",
+                           "toastErrorTitle":  "Action failed",
+                           "toastErrorDescription":  "Please try again."
+                       },
+    "onboarding":  {
+                       "common":  {
+                                      "loading":  "Loading your view",
+                                      "continue":  "Continue",
+                                      "finish":  "Finish setup",
+                                      "notNow":  "Not now",
+                                      "done":  "Setup complete",
+                                      "incomplete":  "Setup pending",
+                                      "language":  "Language",
+                                      "help":  "Help",
+                                      "whatsapp":  "WhatsApp support",
+                                      "openHelp":  "Open help"
+                                  },
+                       "help":  {
+                                    "label":  "Need help?",
+                                    "profileHelp":  "Get help for this screen",
+                                    "dashboardHelp":  "See help for this dashboard",
+                                    "publicTitle":  "Help and support",
+                                    "publicBody":  "Find setup guidance, order help, and direct support.",
+                                    "orderTitle":  "Order help",
+                                    "orderBody":  "Use this help entry when you need support on a specific order.",
+                                    "taskTitle":  "Task help",
+                                    "taskBody":  "Use this help entry when a pickup, dropoff, or stop proof needs attention.",
+                                    "financeTitle":  "Finance help",
+                                    "financeBody":  "Use this help entry for payout, balance, or settlement questions.",
+                                    "generalTitle":  "General help",
+                                    "generalBody":  "Use this help entry when you need guidance for the current screen.",
+                                    "adminDevBody":  "Use the help center for access, workflow, and operational guidance."
+                                },
+                       "customer":  {
+                                        "firstRunTitle":  "Welcome to Mimo",
+                                        "firstRunBody":  "Complete your first setup in two short steps, then start placing orders.",
+                                        "stepOneTitle":  "Choose your language",
+                                        "stepOneBody":  "Pick the language you want to use right now. You can change it later.",
+                                        "stepTwoTitle":  "Confirm your details",
+                                        "stepTwoBody":  "Check your name and phone so your first order flow starts clearly.",
+                                        "nameLabel":  "Full name",
+                                        "phoneLabel":  "Phone number",
+                                        "startButton":  "Start setup",
+                                        "completeButton":  "Finish and open home",
+                                        "skipButton":  "Skip for now",
+                                        "homeTitle":  "Customer home",
+                                        "homeBody":  "Track your active order, start a new request, and get help from one clear place.",
+                                        "ordersTitle":  "Orders",
+                                        "ordersBody":  "Your active and recent orders will appear here.",
+                                        "profileTitle":  "Profile help",
+                                        "orderDetailTitle":  "Order detail help"
+                                    },
+                       "driver":  {
+                                      "homeTitle":  "Driver home",
+                                      "homeBody":  "Review today\u0027s route, complete proofs, and handle cash prompts with minimal taps.",
+                                      "taskDetailTitle":  "Task detail help",
+                                      "setupTitle":  "Driver setup",
+                                      "setupBody":  "Review route basics, proof rules, and cash handling before you start work.",
+                                      "checklist":  [
+                                                        "Confirm your phone is charged and location is on.",
+                                                        "Review proof rules before your first stop.",
+                                                        "Know where to get help if a stop cannot be completed."
+                                                    ],
+                                      "cta":  "Mark driver setup complete"
+                                  },
+                       "hub":  {
+                                   "dashboardTitle":  "Hub dashboard",
+                                   "dashboardBody":  "Move work through intake, processing, QC, and dispatch from one operational surface.",
+                                   "issueTitle":  "Hub order help",
+                                   "setupTitle":  "Hub setup",
+                                   "setupBody":  "Review intake, stage movement, and dispatch basics before processing live work.",
+                                   "checklist":  [
+                                                     "Start with scanner-first intake rules.",
+                                                     "Keep stage updates accurate and immediate.",
+                                                     "Escalate blocked or failed items through help."
+                                                 ],
+                                   "cta":  "Mark hub setup complete"
+                               },
+                       "affiliate":  {
+                                         "dashboardTitle":  "Affiliate dashboard",
+                                         "dashboardBody":  "Create walk-in orders fast, track shop handovers, and review simple earnings visibility.",
+                                         "orderDetailTitle":  "Affiliate order help",
+                                         "financeTitle":  "Affiliate finance help",
+                                         "staffSetupTitle":  "Affiliate staff setup",
+                                         "staffSetupBody":  "Review walk-in intake, handover rules, and customer support handoff.",
+                                         "adminSetupTitle":  "Affiliate admin setup",
+                                         "adminSetupBody":  "Review shop activity, pickup readiness, and payout visibility before opening.",
+                                         "staffChecklist":  [
+                                                                "Use the fast walk-in flow for every new shop order.",
+                                                                "Confirm each handover clearly before release.",
+                                                                "Use help when an order needs intervention."
+                                                            ],
+                                         "adminChecklist":  [
+                                                                "Review shop order flow and pickup readiness.",
+                                                                "Check payout and balance visibility daily.",
+                                                                "Use help for payout or access issues."
+                                                            ],
+                                         "cta":  "Mark affiliate setup complete"
+                                     },
+                       "adminDev":  {
+                                        "title":  "Operations workspace"
+                                    }
+                   },
+    "customerPortal":  {
+                           "home":  {
+                                        "title":  "Your laundry at a glance",
+                                        "subtitle":  "See your active order, take the next step, or open recent orders.",
+                                        "activeOrderLabel":  "Active order",
+                                        "primaryCta":  "View order",
+                                        "secondaryCta":  "All orders",
+                                        "recentOrdersTitle":  "Recent orders",
+                                        "recentOrdersBody":  "Open any recent order to see status, payment, and support.",
+                                        "helpTitle":  "Need help with your current laundry?"
+                                    },
+                           "orders":  {
+                                          "title":  "Your orders",
+                                          "subtitle":  "Browse recent and past orders in one place."
+                                      },
+                           "detail":  {
+                                          "title":  "Order detail",
+                                          "subtitle":  "Track progress, confirm payment visibility, and get help if needed.",
+                                          "summaryLabel":  "Order summary",
+                                          "timelineLabel":  "Timeline",
+                                          "paymentLabel":  "Payment",
+                                          "paymentState":  "Payment due",
+                                          "helpTitle":  "Need help with this order?"
+                                      },
+                           "profile":  {
+                                           "title":  "Your profile",
+                                           "subtitle":  "Keep your account basics, addresses, language, and receipts easy to reach.",
+                                           "accountLabel":  "Account",
+                                           "addressesLabel":  "Saved addresses",
+                                           "languageLabel":  "Language",
+                                           "receiptsLabel":  "Receipts and documents"
+                                       }
+                       }
 }

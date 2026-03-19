@@ -752,3 +752,46 @@
 - Gate Result: P2.6 PASS
 
 
+
+## P2.7  Customer Portal (Implementation)
+
+- Scope:
+  - customer home implemented in the live web app
+  - customer orders list implemented in the live web app
+  - customer order detail implemented in the live web app
+  - customer profile implemented in the live web app
+  - customer portal copy now wired through the real EN/SW i18n layer
+  - customer route purpose now follows the locked P2.7 implementation baseline
+
+- Required outputs checklist:
+  - [x] docs/phase2/ux/customer_portal_spec.md
+  - [x] docs/phase2/ux/customer_order_wizard_spec.md
+  - [x] docs/phase2/ux/customer_mobile_behavior_spec.md
+  - [x] docs/phase2/copy/customer_portal_copy_en_sw.md
+  - [x] docs/phase2/implementation/p2_customer_portal_implementation_baseline.md
+  - [x] apps/web/app/app/customer/page.tsx
+  - [x] apps/web/app/app/customer/orders/page.tsx
+  - [x] apps/web/app/app/customer/orders/[id]/page.tsx
+  - [x] apps/web/app/app/customer/profile/page.tsx
+  - [x] apps/web/src/i18n/en.json
+  - [x] apps/web/src/i18n/sw.json
+  - [x] docs/changelog_phase2.md updated with P2.7 implementation
+  - [x] docs/acceptance_phase2.md updated with P2.7 implementation
+
+- Verification notes:
+  - customer home remains active-order-first and distinct from archive/profile
+  - orders list routes into the real order detail page
+  - order detail is the single customer truth surface for one order
+  - profile remains minimal and utility-focused
+  - customer-facing copy is sourced from i18n
+  - no extra customer routes were introduced
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - P2.7 implementation now installs the real customer portal route structure across home, orders, order detail, and profile. The customer experience is minimal, bilingual, route-correct, and ready for later transactional slices without duplicating page purpose.
+
+- Follow-up actions:
+  - begin P2.8 implementation only after customer home, orders, order detail, and profile are confirmed stable, minimal, bilingual, and non-redundant
+
+- Gate Result: P2.7 PASS
