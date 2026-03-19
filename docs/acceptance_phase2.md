@@ -795,3 +795,52 @@
   - begin P2.8 implementation only after customer home, orders, order detail, and profile are confirmed stable, minimal, bilingual, and non-redundant
 
 - Gate Result: P2.7 PASS
+
+## P2.8  Driver Portal (Implementation)
+
+- Scope:
+  - driver today implemented in the live web app
+  - driver tasks list implemented in the live web app
+  - driver stop detail implemented in the live web app
+  - driver profile implemented in the live web app
+  - proof, cash, retry, sync, and issue surfaces implemented
+  - EN/SW driver portal copy wired into the live translation source
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/driver_portal_spec.md
+  - [x] /docs/phase2/ux/driver_offline_resilience_spec.md
+  - [x] /docs/phase2/ux/driver_mobile_behavior_spec.md
+  - [x] /docs/phase2/copy/driver_portal_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_driver_portal_implementation_baseline.md
+  - [x] /docs/acceptance_phase2.md
+  - [x] /docs/changelog_phase2.md
+  - [x] real /app/driver route implementation
+  - [x] real /app/driver/tasks route implementation
+  - [x] real /app/driver/tasks/[id] route implementation
+  - [x] real /app/driver/profile route implementation
+  - [x] real driver mobile bottom-tab behavior
+  - [x] real proof-action execution surfaces
+  - [x] real cash collection and reconciliation surfaces
+  - [x] real poor-network / retry / sync feedback surfaces
+  - [x] real EN/SW driver portal copy wired into translation system
+
+- Verification notes:
+  - driver route model is normalized across today, tasks, stop detail, and profile
+  - today prioritizes the next task and grouped operational execution
+  - stop detail prioritizes proof action above supporting details
+  - cash prompt appears only when relevant and today-level cash summary remains visible
+  - sync and retry feedback surfaces are present in driver execution context
+  - mobile bottom tabs are installed as Today, Tasks, and Profile only
+  - translation keys are wired into apps/web/src/i18n/en.json and apps/web/src/i18n/sw.json
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The driver portal is now implemented as a coherent mobile-first execution surface. Today keeps the next stop dominant, grouped task visibility is clear, task detail keeps proof as the primary action, cash prompts remain practical, and poor-network recovery states are visible without technical clutter.
+
+- Follow-up actions:
+  1. begin P2.9 implementation only after the driver portal is confirmed stable across today, task detail, proof, cash, sync, and mobile navigation behavior
+
+- Gate Result: P2.8 PASS
+
+

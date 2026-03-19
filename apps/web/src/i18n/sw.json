@@ -277,5 +277,96 @@
                                            "languageLabel":  "Lugha",
                                            "receiptsLabel":  "Risiti na nyaraka"
                                        }
-                       }
+                       },
+    "driverPortal":  {
+                         "nav":  {
+                                     "today":  "Leo",
+                                     "tasks":  "Kazi",
+                                     "profile":  "Wasifu"
+                                 },
+                         "today":  {
+                                       "headerEyebrow":  "Dereva",
+                                       "title":  "Leo",
+                                       "subtitle":  "Ona kituo kinachofuata haraka na endelea na kazi ya siku.",
+                                       "summaryStops":  "Vituo vya leo",
+                                       "summaryZone":  "Eneo kuu",
+                                       "nextTaskTitle":  "Kazi inayofuata",
+                                       "nextTaskBody":  "Anza kituo kinachofuata kwa hatua moja iliyo wazi.",
+                                       "nextBadge":  "Ifuatayo",
+                                       "startNextTask":  "Anza kazi inayofuata",
+                                       "groupNext":  "Ifuatayo",
+                                       "groupUpcoming":  "Zinazofuata",
+                                       "groupCompleted":  "Zilizokamilika leo",
+                                       "alertsTitle":  "Tahadhari na changamoto",
+                                       "alertCash":  "Kituo 1 kinahitaji uthibitisho wa fedha",
+                                       "alertSync":  "Hatua 1 bado inasubiri kusawazishwa"
+                                   },
+                         "tasks":  {
+                                       "headerEyebrow":  "Dereva",
+                                       "title":  "Kazi",
+                                       "subtitle":  "Kagua vituo vyote ulivyopewa katika orodha moja rahisi."
+                                   },
+                         "stop":  {
+                                      "headerEyebrow":  "Dereva",
+                                      "title":  "Maelezo ya kituo",
+                                      "summaryTitle":  "Muhtasari wa kituo",
+                                      "issueTitle":  "Tatizo au msaada",
+                                      "issueBody":  "Tumia hii tu pale kituo hakiwezi kuendelea kawaida.",
+                                      "reportIssue":  "Ripoti tatizo",
+                                      "detailsTitle":  "Maelezo ya ziada",
+                                      "supportingDetails":  "Maelezo ya mteja, muktadha wa njia, na taarifa za kazi hubaki chini ya eneo la hatua."
+                                  },
+                         "proof":  {
+                                       "title":  "Hatua ya uthibitisho",
+                                       "body":  "Kamilisha hatua ya uthibitisho inayohitajika kabla ya kuendelea.",
+                                       "pickup":  "Thibitisha kuchukua",
+                                       "scan":  "Skani begi au kodi",
+                                       "otp":  "Thibitisha OTP",
+                                       "signature":  "Chukua saini au picha",
+                                       "delivery":  "Thibitisha kukabidhi"
+                                   },
+                         "cash":  {
+                                      "title":  "Ukusanyaji wa fedha",
+                                      "body":  "Kusanya na kuthibitisha fedha pale tu kituo hiki kinapohitaji.",
+                                      "expectedLabel":  "Kiasi kinachotarajiwa",
+                                      "confirmCollection":  "Thibitisha fedha zimekusanywa",
+                                      "proofNote":  "Uthibitisho na fedha vinaweza vyote kuhitajika kabla ya kituo kukamilika.",
+                                      "todaySummaryTitle":  "Muhtasari wa fedha",
+                                      "todaySummaryBody":  "Weka mwonekano wa fedha wazi bila kugeuza hii kuwa skrini ya fedha.",
+                                      "collectedLabel":  "Zilizokusanywa",
+                                      "pendingLabel":  "Zinazosubiri",
+                                      "reviewNeeded":  "Mapitio yanahitajika kabla ya usuluhishi wa mwisho wa siku.",
+                                      "reviewClear":  "Fedha ziko sawa kwa sasa.",
+                                      "reconciliationEntry":  "Mwonekano wa usuluhishi wa mwisho wa siku unaonekana hapa pale mapitio yanapohitajika."
+                                  },
+                         "sync":  {
+                                      "online":  "Mtandaoni",
+                                      "weak":  "Mtandao dhaifu",
+                                      "offline":  "Nje ya mtandao",
+                                      "syncing":  "Inasawazisha",
+                                      "failed":  "Usawazishaji umeshindikana",
+                                      "synced":  "Imesawazishwa",
+                                      "retry":  "Jaribu tena",
+                                      "statusHint":  "Endelea. Hali ya maendeleo yako inaonekana wazi.",
+                                      "sending":  "Inatuma sasa",
+                                      "queued":  "Imewekwa kwenye foleni ya kutuma",
+                                      "failedAction":  "Hatua hii bado haijasawazishwa"
+                                  },
+                         "states":  {
+                                        "noTasks":  "Hakuna kazi kwa sasa",
+                                        "loadingToday":  "Inapakia leo",
+                                        "loadingStop":  "Inapakia maelezo ya kituo",
+                                        "pendingProof":  "Uthibitisho bado unahitajika",
+                                        "cashDue":  "Fedha bado zinahitajika",
+                                        "issueReported":  "Tatizo limeripotiwa"
+                                    },
+                         "profile":  {
+                                         "headerEyebrow":  "Dereva",
+                                         "title":  "Wasifu",
+                                         "subtitle":  "Weka taarifa binafsi na za mwisho wa siku kuwa rahisi.",
+                                         "nameLabel":  "Jina la dereva",
+                                         "phoneLabel":  "Simu",
+                                         "zoneLabel":  "Eneo la nyumbani"
+                                     }
+                     }
 }

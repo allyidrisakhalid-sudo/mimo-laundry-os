@@ -277,5 +277,96 @@
                                            "languageLabel":  "Language",
                                            "receiptsLabel":  "Receipts and documents"
                                        }
-                       }
+                       },
+    "driverPortal":  {
+                         "nav":  {
+                                     "today":  "Today",
+                                     "tasks":  "Tasks",
+                                     "profile":  "Profile"
+                                 },
+                         "today":  {
+                                       "headerEyebrow":  "Driver",
+                                       "title":  "Today",
+                                       "subtitle":  "See the next stop fast and keep the day moving.",
+                                       "summaryStops":  "Stops today",
+                                       "summaryZone":  "Primary zone",
+                                       "nextTaskTitle":  "Next task",
+                                       "nextTaskBody":  "Start the next stop with one clear action.",
+                                       "nextBadge":  "Next",
+                                       "startNextTask":  "Start next task",
+                                       "groupNext":  "Next",
+                                       "groupUpcoming":  "Upcoming",
+                                       "groupCompleted":  "Completed today",
+                                       "alertsTitle":  "Alerts and exceptions",
+                                       "alertCash":  "1 stop needs cash confirmation",
+                                       "alertSync":  "1 action is waiting to sync"
+                                   },
+                         "tasks":  {
+                                       "headerEyebrow":  "Driver",
+                                       "title":  "Tasks",
+                                       "subtitle":  "Review all assigned stops in one simple list."
+                                   },
+                         "stop":  {
+                                      "headerEyebrow":  "Driver",
+                                      "title":  "Stop detail",
+                                      "summaryTitle":  "Stop summary",
+                                      "issueTitle":  "Issue or help",
+                                      "issueBody":  "Use this only when the stop cannot continue normally.",
+                                      "reportIssue":  "Report issue",
+                                      "detailsTitle":  "Supporting details",
+                                      "supportingDetails":  "Customer notes, route context, and operational detail stay below the action area."
+                                  },
+                         "proof":  {
+                                       "title":  "Proof action",
+                                       "body":  "Complete the required proof step before moving on.",
+                                       "pickup":  "Confirm pickup",
+                                       "scan":  "Scan bag or code",
+                                       "otp":  "Confirm OTP",
+                                       "signature":  "Capture signature or photo",
+                                       "delivery":  "Confirm delivery"
+                                   },
+                         "cash":  {
+                                      "title":  "Cash collection",
+                                      "body":  "Collect and confirm cash only when this stop requires it.",
+                                      "expectedLabel":  "Amount expected",
+                                      "confirmCollection":  "Confirm cash collected",
+                                      "proofNote":  "Proof and cash may both be required before the stop is complete.",
+                                      "todaySummaryTitle":  "Cash summary",
+                                      "todaySummaryBody":  "Keep cash visibility clear without turning this into a finance screen.",
+                                      "collectedLabel":  "Collected",
+                                      "pendingLabel":  "Pending",
+                                      "reviewNeeded":  "Review needed before end of day reconciliation.",
+                                      "reviewClear":  "Cash is clear for now.",
+                                      "reconciliationEntry":  "End-of-day reconciliation is visible here when review is needed."
+                                  },
+                         "sync":  {
+                                      "online":  "Online",
+                                      "weak":  "Weak connection",
+                                      "offline":  "Offline",
+                                      "syncing":  "Syncing",
+                                      "failed":  "Sync failed",
+                                      "synced":  "Synced",
+                                      "retry":  "Retry",
+                                      "statusHint":  "Keep going. Your progress state stays visible.",
+                                      "sending":  "Sending now",
+                                      "queued":  "Queued to send",
+                                      "failedAction":  "This action did not sync yet"
+                                  },
+                         "states":  {
+                                        "noTasks":  "No tasks right now",
+                                        "loadingToday":  "Loading today",
+                                        "loadingStop":  "Loading stop detail",
+                                        "pendingProof":  "Proof still needed",
+                                        "cashDue":  "Cash is still due",
+                                        "issueReported":  "Issue reported"
+                                    },
+                         "profile":  {
+                                         "headerEyebrow":  "Driver",
+                                         "title":  "Profile",
+                                         "subtitle":  "Keep personal and end-of-day details simple.",
+                                         "nameLabel":  "Driver name",
+                                         "phoneLabel":  "Phone",
+                                         "zoneLabel":  "Home zone"
+                                     }
+                     }
 }

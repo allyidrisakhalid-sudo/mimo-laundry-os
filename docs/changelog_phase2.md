@@ -230,3 +230,13 @@
 - implemented real customer profile
 - wired EN/SW customer portal copy into implementation
 - customer route purpose now ready for later slices
+
+## P2.8  Driver Portal (Implementation)
+- installed the Phase 2 driver portal implementation baseline
+- implemented the real driver today screen with next-task-first model
+- implemented the real stop-detail execution surface
+- implemented real cash prompt and reconciliation visibility
+- implemented real poor-network, retry, and sync UX
+- installed real driver mobile bottom-tab behavior
+- wired EN/SW driver portal copy into implementation
+- driver portal now ready for real daily execution on mobile
