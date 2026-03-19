@@ -1,5 +1,7 @@
 "use client";
 
+import { getPortalRouteForRole } from "@/lib/auth";
+
 const ACCESS_TOKEN_KEY = "mimo_access_token";
 const USER_ROLE_KEY = "mimo_user_role";
 const USER_PHONE_KEY = "mimo_user_phone";
@@ -26,4 +28,12 @@ export function getRole() {
 
 export function getPhone() {
   return localStorage.getItem(USER_PHONE_KEY);
+}
+
+export function hasSession() {
+  return Boolean(getAccessToken() && getRole());
+}
+
+export function getPortalRouteFromSession() {
+  return getPortalRouteForRole(getRole());
 }

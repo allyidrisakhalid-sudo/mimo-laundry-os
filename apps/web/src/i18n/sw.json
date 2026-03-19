@@ -16,6 +16,24 @@
   },
   "auth": {
     "welcome": "Karibu Mimo",
+    "actions": {
+      "logout": "Toka",
+      "loadLiveData": "Pakia data halisi",
+      "liveDataPayload": "Payload ya data halisi",
+      "noDataLoaded": "Bado hakuna data iliyopakiwa."
+    },
+    "session": {
+      "productionApi": "API ya uzalishaji",
+      "currentPhone": "Simu ya sasa",
+      "currentRole": "Roli ya sasa",
+      "expectedRole": "Roli inayotarajiwa",
+      "none": "hakuna",
+      "notAvailable": "Session ya kivinjari haipatikani",
+      "missingTokenOrPath": "Token au njia ya data haipo",
+      "dataLoadOk": "Upakiaji wa data umefaulu",
+      "dataLoadFailed": "Upakiaji wa data umeshindikana",
+      "loggedOut": "Umetoka"
+    },
     "login": {
       "title": "Ingia",
       "subtitle": "Fikia Laundry OS",
@@ -24,8 +42,33 @@
       "password": "Nenosiri",
       "passwordPlaceholder": "Weka nenosiri lako",
       "submit": "Ingia",
+      "submitting": "Inaingia...",
       "success": "Umeingia kwa mafanikio",
       "error": "Kuingia kumeshindikana. Kagua simu na nenosiri."
+    },
+    "signup": {
+      "title": "Fungua akaunti ya mteja",
+      "subtitle": "Usajili huu ni wa wateja tu. Akaunti za staff na admin haziundwi hapa.",
+      "fullName": "Jina kamili",
+      "fullNamePlaceholder": "Weka jina lako kamili",
+      "phone": "Namba ya simu",
+      "phonePlaceholder": "+255712345678",
+      "password": "Nenosiri",
+      "passwordPlaceholder": "Tengeneza nenosiri",
+      "submit": "Fungua akaunti",
+      "submitting": "Inafungua akaunti...",
+      "success": "Akaunti imefunguliwa kwa mafanikio. Tafadhali ingia.",
+      "error": "Usajili umeshindikana. Tafadhali jaribu tena.",
+      "customerOnlyNote": "Njia hii ya usajili ni kwa wateja tu.",
+      "linkCta": "Fungua akaunti ya mteja",
+      "loginCta": "Rudi kwenye kuingia"
+    },
+    "forbidden": {
+      "title": "Huruhusiwi kufikia",
+      "subtitle": "Portal hii haipatikani kwa roli yako ya sasa.",
+      "body": "Tumia portal sahihi ya akaunti yako au ingia tena kwa taarifa sahihi.",
+      "goToLogin": "Nenda kuingia",
+      "goToPortal": "Nenda kwenye portal yangu"
     }
   },
   "home": {

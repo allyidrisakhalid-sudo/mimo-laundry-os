@@ -195,3 +195,17 @@
 - added baseline searchability and performance verification targets for the launch-critical public routes
 - public site is now ready for auth and routed entry implementation
 
+
+## P2.5  Unified Auth UX (Implementation)
+- installed the Phase 2 auth implementation baseline control file
+- identified the real login and signup route targets
+- identified the real session and i18n source targets
+- started normalization of role-based routing, logout, and forbidden-access handling
+- access model is being prepared for onboarding and role-portal buildout
+
+## P2.5  Unified Auth UX (Implementation)  status correction
+- confirmed the active Next App Router tree is apps/web/app
+- confirmed /login, /signup, and /forbidden are real live routes in the active tree
+- confirmed lint, typecheck, and production build now pass
+- confirmed role portal pages currently exist only under apps/web/src/app and are not live app-router routes
+- kept P2.5 implementation status incomplete until live /app/* role routes are created and verified

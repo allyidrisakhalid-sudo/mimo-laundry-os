@@ -16,6 +16,24 @@
   },
   "auth": {
     "welcome": "Welcome to Mimo",
+    "actions": {
+      "logout": "Logout",
+      "loadLiveData": "Load live data",
+      "liveDataPayload": "Live data payload",
+      "noDataLoaded": "No data loaded yet."
+    },
+    "session": {
+      "productionApi": "Production API",
+      "currentPhone": "Current phone",
+      "currentRole": "Current role",
+      "expectedRole": "Expected role",
+      "none": "none",
+      "notAvailable": "Browser session not available",
+      "missingTokenOrPath": "Missing token or data path",
+      "dataLoadOk": "Data load ok",
+      "dataLoadFailed": "Data load failed",
+      "loggedOut": "Logged out"
+    },
     "login": {
       "title": "Sign in",
       "subtitle": "Access Laundry OS",
@@ -24,8 +42,33 @@
       "password": "Password",
       "passwordPlaceholder": "Enter your password",
       "submit": "Login",
+      "submitting": "Signing in...",
       "success": "Login successful",
       "error": "Login failed. Check your phone and password."
+    },
+    "signup": {
+      "title": "Create your customer account",
+      "subtitle": "Customer signup only. Staff and admin accounts are not created here.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Enter your full name",
+      "phone": "Phone number",
+      "phonePlaceholder": "+255712345678",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "success": "Account created successfully. Please sign in.",
+      "error": "Signup failed. Please try again.",
+      "customerOnlyNote": "This signup route is for customers only.",
+      "linkCta": "Create customer account",
+      "loginCta": "Back to login"
+    },
+    "forbidden": {
+      "title": "Access not allowed",
+      "subtitle": "This portal is not available for your current role.",
+      "body": "Use the correct portal for your account or sign in again with the right credentials.",
+      "goToLogin": "Go to login",
+      "goToPortal": "Go to my portal"
     }
   },
   "home": {

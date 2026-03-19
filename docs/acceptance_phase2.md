@@ -696,3 +696,40 @@
 
 - Gate Result: P2.4 PASS
 
+
+## P2.5  Unified Auth UX (Implementation)
+
+- Scope:
+  - implement the approved Phase 2 login, signup, role routing, session, logout, and forbidden-access behavior as a real web access layer
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/auth_ux_spec.md
+  - [x] /docs/phase2/ux/role_routing_spec.md
+  - [x] /docs/phase2/ux/session_and_logout_spec.md
+  - [x] /docs/phase2/copy/auth_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_auth_implementation_baseline.md
+  - [x] real /login route implementation
+  - [x] real /signup route implementation
+  - [x] real post-login role router
+  - [x] real session-aware access control for /app/* routes
+  - [x] real logout action and UX
+  - [x] real EN/SW auth copy wired into implementation
+  - [x] real forbidden-access behavior
+  - [x] /docs/changelog_phase2.md updated
+  - [x] /docs/acceptance_phase2.md updated
+
+- Verification notes:
+  - pre-flight confirmed P2.4 remains committed and valid
+  - source-only inspection identified the real auth route and i18n targets
+  - PASS only after deterministic role routing, real session redirects, visible logout, and deliberate forbidden-access handling are verified
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - P2.5 implementation is now installed in the real web app. The active App Router tree contains working /login, /signup, /forbidden, and live /app/* role routes. Shared auth routing, session handling, logout behavior, bilingual auth copy, and forbidden-access enforcement are now wired into live routes, and lint, typecheck, and production build all pass.
+
+- Follow-up actions:
+  1. begin downstream portal implementation from this live auth foundation and keep all later /app/* routes aligned to the shared auth/session model
+
+
+
