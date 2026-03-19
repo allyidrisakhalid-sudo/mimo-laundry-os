@@ -293,3 +293,4 @@
 - implemented refund and credit visibility with ledger-safe wording
 - wired EN/SW support copy into the implementation
 - support is now ready for end-to-end operational use with clear visibility and audit trail
+
