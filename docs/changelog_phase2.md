@@ -135,14 +135,14 @@
 - formalized the end-to-end support and trust layer to reduce chaos while preserving order truth, ledger truth, and auditability
 
 ## P2.14  Cloudflare setup for mimolaundry.org
-- locked Cloudflare production host model for mimolaundry.org and api.mimolaundry.org
-- locked DNS structure with apex web, API subdomain, and WWW redirect
-- locked SSL/TLS to Full (strict)
-- locked public-page-only caching rules
-- locked redirect and security-header model
-- deferred HSTS until stable verification
-- locked Cloudflare operator runbook
-- formalized domain, SSL, and routing polish for secure production delivery
+- installed the Phase 2 Cloudflare implementation baseline as the production control layer
+- corrected public web canonical routing to apex with www redirect behavior
+- removed app.mimolaundry.org from the locked public production host model
+- confirmed secure API reachability on api.mimolaundry.org
+- verified that Full (strict) did not remain stable for the live web origin
+- verified that live web responses still emit HSTS, so deferred-HSTS validation is not yet satisfied
+- verified that private app reachability is not yet confirmed because /app returned 404 during live checks
+- left P2.14 implementation in a documented FAIL state pending strict-TLS, deferred-HSTS, and app-route validation resolution
 
 ## P2.15  Role-based journey tests (device-ready)
 - locked role-based launch journey test plan
@@ -293,4 +293,5 @@
 - implemented refund and credit visibility with ledger-safe wording
 - wired EN/SW support copy into the implementation
 - support is now ready for end-to-end operational use with clear visibility and audit trail
+
 
