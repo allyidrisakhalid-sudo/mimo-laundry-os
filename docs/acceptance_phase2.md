@@ -479,6 +479,7 @@
   - live web responses still emit Strict-Transport-Security: max-age=63072000
   - /app now resolves on apex and redirects to /login with private no-store behavior
   - deferred-HSTS requirement is therefore not satisfied in live production behavior
+  - Phase 2 Infrastructure Constraint: live Vercel web responses continue to emit Strict-Transport-Security: max-age=63072000 despite repo-level header override and Cloudflare-side HSTS disablement
 
 - PASS / FAIL: FAIL
 
@@ -1089,5 +1090,6 @@
   1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
 
 - Gate Result: P2.13 PASS
+
 
 
