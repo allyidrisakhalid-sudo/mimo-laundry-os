@@ -844,3 +844,47 @@
 - Gate Result: P2.8 PASS
 
 
+
+## P2.9  Hub Portal (Implementation)
+- Scope:
+  - implement the approved hub portal as a real tablet/web operational workspace covering dashboard, intake, processing, QC, dispatch, shared state surfaces, and EN/SW copy wiring
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/hub_portal_spec.md
+  - [x] /docs/phase2/ux/hub_processing_and_dispatch_spec.md
+  - [x] /docs/phase2/ux/hub_tablet_behavior_spec.md
+  - [x] /docs/phase2/copy/hub_portal_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_hub_portal_implementation_baseline.md
+  - [x] /docs/acceptance_phase2.md
+  - [x] /docs/changelog_phase2.md
+  - [x] real /app/hub route implementation
+  - [x] real /app/hub/intake route implementation
+  - [x] real /app/hub/processing route implementation
+  - [x] real /app/hub/orders/[id] route implementation
+  - [x] real intake scan/input execution surface
+  - [x] real processing board implementation
+  - [x] real QC action implementation
+  - [x] real dispatch batching implementation with zone-filtered drivers
+  - [x] real EN/SW hub portal copy wired into the translation system
+
+- Verification notes:
+  - pre-flight confirmed P2.8 implementation is committed at 327e034 and the working tree was clean before P2.9 work began
+  - hub source-of-truth docs were verified present before implementation
+  - the app-router hub ownership was normalized to apps/web/app/app/hub for dashboard, intake, processing, and order-detail routes
+  - the hub dashboard now acts as a routing surface with KPI row, action queue, and active operational list
+  - the intake screen now prioritizes scanner/manual input, queue visibility, active receiving detail, and clear issue strip behavior
+  - the processing route now provides the approved operational columns with visible issue flags and explicit stage movement
+  - QC pass/fail or issue-open actions are now available from processing flow and order detail
+  - dispatch batching now shows ready items only, uses zone as primary filter, and constrains driver selection to valid zone context
+  - hub loading/empty/issue/assignment states are now surfaced through shared implementation patterns
+  - EN/SW hub portal copy is now wired into apps/web/src/i18n/en.json and apps/web/src/i18n/sw.json
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved P2.9 hub portal model is now installed as a real implementation layer for tablet and web operations. Hub staff can route from the dashboard into scanner-first intake, move orders through clean processing stages, make explicit QC decisions, and assign ready work to zone-valid drivers without depending on admin intervention. The hub portal now follows the approved route model, copy model, and operational state model closely enough to serve as the stable execution surface for downstream affiliate implementation.
+
+- Follow-up actions:
+  1. begin P2.10 implementation only after the hub portal is confirmed stable across dashboard, intake, processing, QC, dispatch, and tablet/web operational behavior
+
+- Gate Result: P2.9 PASS

@@ -240,3 +240,13 @@
 - installed real driver mobile bottom-tab behavior
 - wired EN/SW driver portal copy into implementation
 - driver portal now ready for real daily execution on mobile
+
+## P2.9  Hub Portal (Implementation)
+- installed the Phase 2 hub portal implementation baseline
+- implemented the real hub dashboard
+- implemented the real scanner-first intake screen
+- implemented the real processing board
+- implemented the real QC decision flow
+- implemented real dispatch batching with zone-filtered drivers
+- wired EN/SW hub portal copy into implementation
+- hub portal is now ready for real operational use on tablet and web
