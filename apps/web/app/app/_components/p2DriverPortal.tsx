@@ -11,7 +11,10 @@ import {
   CardTitle,
   StatusBadge,
 } from "@mimo/ui";
-import { PortalHelpEntry, useOnboardingMessages } from "./p2Onboarding";
+import { PortalHelpEntry } from "./p2Onboarding";
+import i18n from "../../../src/i18n";
+import en from "../../../src/i18n/en.json";
+import sw from "../../../src/i18n/sw.json";
 
 type DriverTaskGroup = "next" | "upcoming" | "completed";
 type SyncState = "online" | "weak" | "offline" | "syncing" | "failed" | "synced";
@@ -74,6 +77,14 @@ const driverTasks: DriverTask[] = [
 
 const groupOrder: DriverTaskGroup[] = ["next", "upcoming", "completed"];
 
+function getDriverMessages() {
+  return (i18n.resolvedLanguage === "sw" ? sw : en) as any;
+}
+
+function getDriverLocale() {
+  return i18n.resolvedLanguage === "sw" ? "sw" : "en";
+}
+
 function toneForSync(state: SyncState): "success" | "warning" | "danger" | "info" | "neutral" {
   switch (state) {
     case "online":
@@ -97,6 +108,7 @@ function proofTone(step: ProofStep): "info" | "warning" | "success" {
 }
 
 export function useDriverPortalData() {
+  const t = getDriverMessages();
   const nextTask = driverTasks.find((task) => task.group === "next") ?? driverTasks[0];
   const groupedTasks = groupOrder.map((group) => ({
     group,
@@ -112,10 +124,7 @@ export function useDriverPortalData() {
       pending: "TZS 18,000",
       needsReview: true,
     },
-    alerts: [
-      t.driverPortal.today.alertCash,
-      t.driverPortal.today.alertSync,
-    ],
+    alerts: [t.driverPortal.today.alertCash, t.driverPortal.today.alertSync],
   };
 }
 
@@ -126,7 +135,7 @@ export function DriverSyncBanner({
   state: SyncState;
   onRetry?: () => void;
 }) {
-  const { t } = useOnboardingMessages();
+  const t = getDriverMessages();
 
   const label =
     state === "online"
@@ -155,7 +164,7 @@ export function DriverSyncBanner({
 }
 
 export function DriverMobileTabs({ active }: { active: "today" | "tasks" | "profile" }) {
-  const { t } = useOnboardingMessages();
+  const t = getDriverMessages();
 
   const tabs = [
     { key: "today", href: "/app/driver", label: t.driverPortal.nav.today },
@@ -185,8 +194,10 @@ export function DriverMobileTabs({ active }: { active: "today" | "tasks" | "prof
 }
 
 export function DriverTodayScreen() {
-  const { locale, t } = useOnboardingMessages();
+  const t = getDriverMessages();
+  const locale = getDriverLocale();
   const { groupedTasks, nextTask, cashSummary } = useDriverPortalData();
+  const safeNextTask = nextTask ?? groupedTasks.flatMap((group) => group.tasks)[0] ?? driverTasks[0]!;
   const [syncState, setSyncState] = useState<SyncState>("weak");
   const [isLoadingToday] = useState(false);
   const alerts = [t.driverPortal.today.alertCash, t.driverPortal.today.alertSync];
@@ -236,15 +247,15 @@ export function DriverTodayScreen() {
           <div className="rounded-2xl border border-[var(--mimo-color-border)] p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="grid gap-1">
-                <div className="font-semibold">{nextTask.title}</div>
-                <div className="text-sm text-[var(--mimo-color-text-muted)]">{nextTask.customer}  {nextTask.window}</div>
-                <div className="text-sm text-[var(--mimo-color-text-muted)]">{nextTask.address}</div>
+                <div className="font-semibold">{safeNextTask.title}</div>
+                <div className="text-sm text-[var(--mimo-color-text-muted)]">{safeNextTask.customer}  {safeNextTask.window}</div>
+                <div className="text-sm text-[var(--mimo-color-text-muted)]">{safeNextTask.address}</div>
               </div>
               <StatusBadge label={t.driverPortal.today.nextBadge} tone="info" />
             </div>
           </div>
 
-          <Link href={`/app/driver/tasks/${nextTask.id}`}>
+          <Link href={`/app/driver/tasks/${safeNextTask.id}`}>
             <Button className="w-full">{t.driverPortal.today.startNextTask}</Button>
           </Link>
         </CardContent>
@@ -328,7 +339,8 @@ export function DriverTodayScreen() {
 }
 
 export function DriverTasksScreen() {
-  const { t } = useOnboardingMessages();
+  const t = getDriverMessages();
+  const locale = getDriverLocale();
   const { tasks } = useDriverPortalData();
 
   return (
@@ -364,9 +376,10 @@ export function DriverTasksScreen() {
 }
 
 export function DriverTaskDetailScreen({ taskId }: { taskId: string }) {
-  const { locale, t } = useOnboardingMessages();
+  const t = getDriverMessages();
+  const locale = getDriverLocale();
   const { tasks } = useDriverPortalData();
-  const task = useMemo(() => tasks.find((entry) => entry.id === taskId) ?? tasks[0], [taskId, tasks]);
+  const task = useMemo(() => tasks.find((entry) => entry.id === taskId) ?? tasks[0]!, [taskId, tasks]);
   const [isLoadingStop] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("offline");
   const [proofState, setProofState] = useState<"pending" | "sending" | "queued" | "failed" | "synced">("pending");
@@ -534,7 +547,8 @@ export function DriverTaskDetailScreen({ taskId }: { taskId: string }) {
 }
 
 export function DriverProfileScreen() {
-  const { locale, t } = useOnboardingMessages();
+  const t = getDriverMessages();
+  const locale = getDriverLocale();
 
   return (
     <main className="grid gap-4 pb-24 md:pb-6">
@@ -573,5 +587,9 @@ export function DriverProfileScreen() {
     </main>
   );
 }
+
+
+
+
 
 

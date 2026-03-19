@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useI18n } from "@/src/i18n";
+import i18n from "../../../src/i18n";
 
 type HubStage = "readyForProcessing" | "inProcessing" | "qcNeeded" | "readyForDispatch";
 type HubIssueState = "none" | "open";
@@ -87,7 +87,7 @@ const hubOrdersSeed: HubOrder[] = [
 ];
 
 const intakeQueueSeed: HubOrder[] = [
-  hubOrdersSeed[0],
+  hubOrdersSeed[0]!,
   {
     id: "HUB-1006",
     ref: "MM-240306",
@@ -155,7 +155,7 @@ export function HubPageHeader({
 }
 
 export function HubDashboardView() {
-  const { t } = useI18n();
+  const t = i18n.t.bind(i18n);
 
   const metrics = [
     { label: t("hub.dashboard.kpis.intakeWaiting"), value: intakeQueueSeed.length, href: "/app/hub/intake" },
@@ -279,7 +279,7 @@ export function HubDashboardView() {
 }
 
 export function HubIntakeView() {
-  const { t } = useI18n();
+  const t = i18n.t.bind(i18n);
   const [scanValue, setScanValue] = useState("");
   const [selectedId, setSelectedId] = useState(intakeQueueSeed[0]?.id ?? "");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
@@ -446,7 +446,7 @@ export function HubIntakeView() {
 }
 
 export function HubProcessingView() {
-  const { t } = useI18n();
+  const t = i18n.t.bind(i18n);
   const [issueFilter, setIssueFilter] = useState<"all" | "open">("all");
   const [tierFilter, setTierFilter] = useState<"all" | ServiceTier>("all");
   const [dispatchZone, setDispatchZone] = useState("Msasani");
@@ -755,11 +755,11 @@ export function HubProcessingView() {
 }
 
 export function HubOrderDetailView({ orderId }: { orderId: string }) {
-  const { t } = useI18n();
+  const t = i18n.t.bind(i18n);
   const [issueState, setIssueState] = useState<HubIssueState>("none");
   const [qcMessage, setQcMessage] = useState<string | null>(null);
 
-  const order = hubOrdersSeed.find((item) => item.id === orderId) ?? hubOrdersSeed[2];
+  const order = hubOrdersSeed.find((item) => item.id === orderId) ?? hubOrdersSeed[2]!;
 
   function markPass() {
     setIssueState("none");
@@ -849,3 +849,7 @@ export function HubOrderDetailView({ orderId }: { orderId: string }) {
     </div>
   );
 }
+
+
+
+

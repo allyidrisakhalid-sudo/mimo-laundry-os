@@ -888,3 +888,55 @@
   1. begin P2.10 implementation only after the hub portal is confirmed stable across dashboard, intake, processing, QC, dispatch, and tablet/web operational behavior
 
 - Gate Result: P2.9 PASS
+
+## P2.10  Affiliate Portal (Implementation)
+
+- Scope:
+  - install the Phase 2 affiliate portal implementation baseline
+  - implement the real affiliate dashboard
+  - implement real fast walk-in order creation
+  - implement the real scoped orders list
+  - implement the real shop pickup and handoff workflow
+  - implement the real affiliate-admin finance summary
+  - wire real EN/SW affiliate copy into implementation
+  - enforce own-shop scope and affiliate staff finance restriction behavior
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/affiliate_portal_spec.md
+  - [x] /docs/phase2/ux/affiliate_finance_and_pickup_spec.md
+  - [x] /docs/phase2/ux/affiliate_tablet_web_behavior_spec.md
+  - [x] /docs/phase2/copy/affiliate_portal_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_affiliate_portal_implementation_baseline.md
+  - [x] /docs/acceptance_phase2.md
+  - [x] /docs/changelog_phase2.md
+  - [x] real /app/affiliate route implementation
+  - [x] real /app/affiliate/orders/new route implementation
+  - [x] real /app/affiliate/orders route implementation
+  - [x] real /app/affiliate/orders/[id] route implementation
+  - [x] real /app/affiliate/finance route implementation
+  - [x] real walk-in order creation flow
+  - [x] real shop pickup and handoff surface
+  - [x] real finance visibility gated to affiliate admin only
+  - [x] real EN/SW affiliate portal copy wired into the translation system
+  - [x] real scope restriction behavior so affiliate users cannot see other shops
+
+- Verification notes:
+  - the affiliate portal implementation baseline is now installed as the implementation control layer for affiliate-facing portal work
+  - the affiliate dashboard now acts as a routing surface with KPI summary, action queue, orders needing attention, support access, and affiliate-admin-only finance snapshot
+  - the walk-in order route now provides one concise fast-entry form with minimal customer data, service selection, return and handoff choice, review summary, and immediate submit path
+  - the orders list now shows shop-scoped orders only with light filters, clear status, and clear pickup or return readiness
+  - the order detail route now acts as the shop-owned truth surface with summary, timeline, pickup workflow, customer handoff details, and issue or help access
+  - the finance route now provides a simple summary-based affiliate-admin-only earnings and payout surface, while non-admin affiliate users receive deliberate forbidden behavior
+  - affiliate EN/SW copy is now wired through the translation system instead of being left hardcoded in route pages
+  - the implementation keeps tablet and web counter speed primary and avoids cross-shop leakage, finance sprawl, and duplicate page purpose
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The Phase 2 affiliate portal is now installed as a real implementation layer with a coherent dashboard, fast walk-in order creation, shop-scoped orders visibility, clear pickup workflow, and simple finance visibility for affiliate admin only. The implementation follows the locked Phase 2 affiliate model, preserves fast shop-first operations, and keeps own-shop permission boundaries visible and deliberate.
+
+- Follow-up actions:
+  1. begin P2.11 implementation only after the affiliate portal is confirmed stable across dashboard, walk-in order creation, scoped orders, pickup flow, finance visibility, and own-shop permission behavior
+
+- Gate Result: P2.10 PASS
+

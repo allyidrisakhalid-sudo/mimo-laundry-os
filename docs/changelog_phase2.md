@@ -250,3 +250,15 @@
 - implemented real dispatch batching with zone-filtered drivers
 - wired EN/SW hub portal copy into implementation
 - hub portal is now ready for real operational use on tablet and web
+
+## P2.10  Affiliate Portal (Implementation)
+- installed the Phase 2 affiliate portal implementation baseline
+- implemented the real affiliate dashboard
+- implemented real fast walk-in order creation
+- implemented the real scoped orders list
+- implemented the real shop pickup and handoff workflow
+- implemented the real affiliate-admin finance summary
+- implemented real scope restriction and permission behavior
+- wired EN/SW affiliate portal copy into implementation
+- affiliate portal now ready for fast independent shop operations
+

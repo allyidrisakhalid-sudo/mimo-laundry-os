@@ -1,490 +1,509 @@
 {
-  "common": {
-    "language": "Lugha",
-    "english": "Kiingereza",
-    "swahili": "Kiswahili",
-    "ok": "Sawa",
-    "cancel": "Ghairi",
-    "save": "Hifadhi",
-    "close": "Funga",
-    "loading": "Inapakia..."
-  },
-  "nav": {
-    "home": "Nyumbani",
-    "components": "Vipengele",
-    "settings": "Mipangilio"
-  },
-  "auth": {
-    "welcome": "Karibu Mimo",
-    "actions": {
-      "logout": "Toka",
-      "loadLiveData": "Pakia data halisi",
-      "liveDataPayload": "Payload ya data halisi",
-      "noDataLoaded": "Bado hakuna data iliyopakiwa."
-    },
-    "session": {
-      "productionApi": "API ya uzalishaji",
-      "currentPhone": "Simu ya sasa",
-      "currentRole": "Roli ya sasa",
-      "expectedRole": "Roli inayotarajiwa",
-      "none": "hakuna",
-      "notAvailable": "Session ya kivinjari haipatikani",
-      "missingTokenOrPath": "Token au njia ya data haipo",
-      "dataLoadOk": "Upakiaji wa data umefaulu",
-      "dataLoadFailed": "Upakiaji wa data umeshindikana",
-      "loggedOut": "Umetoka"
-    },
-    "login": {
-      "title": "Ingia",
-      "subtitle": "Fikia Laundry OS",
-      "phone": "Namba ya simu",
-      "phonePlaceholder": "+255712345678",
-      "password": "Nenosiri",
-      "passwordPlaceholder": "Weka nenosiri lako",
-      "submit": "Ingia",
-      "submitting": "Inaingia...",
-      "success": "Umeingia kwa mafanikio",
-      "error": "Kuingia kumeshindikana. Kagua simu na nenosiri."
-    },
-    "signup": {
-      "title": "Fungua akaunti ya mteja",
-      "subtitle": "Usajili huu ni wa wateja tu. Akaunti za staff na admin haziundwi hapa.",
-      "fullName": "Jina kamili",
-      "fullNamePlaceholder": "Weka jina lako kamili",
-      "phone": "Namba ya simu",
-      "phonePlaceholder": "+255712345678",
-      "password": "Nenosiri",
-      "passwordPlaceholder": "Tengeneza nenosiri",
-      "submit": "Fungua akaunti",
-      "submitting": "Inafungua akaunti...",
-      "success": "Akaunti imefunguliwa kwa mafanikio. Tafadhali ingia.",
-      "error": "Usajili umeshindikana. Tafadhali jaribu tena.",
-      "customerOnlyNote": "Njia hii ya usajili ni kwa wateja tu.",
-      "linkCta": "Fungua akaunti ya mteja",
-      "loginCta": "Rudi kwenye kuingia"
-    },
-    "forbidden": {
-      "title": "Huruhusiwi kufikia",
-      "subtitle": "Portal hii haipatikani kwa roli yako ya sasa.",
-      "body": "Tumia portal sahihi ya akaunti yako au ingia tena kwa taarifa sahihi.",
-      "goToLogin": "Nenda kuingia",
-      "goToPortal": "Nenda kwenye portal yangu"
-    }
-  },
-  "home": {
-    "title": "Nyumbani kwa Mteja",
-    "subtitle": "Fuatilia oda, uchukuaji, na uwasilishaji.",
-    "dashboardTitle": "Nyumbani kwa walking skeleton",
-    "loggedInAs": "Umeingia kama",
-    "apiStatusLabel": "Hali ya API",
-    "apiConnected": "Imeunganishwa",
-    "apiDisconnected": "Haijaunganishwa",
-    "tokenStored": "Access token imehifadhiwa",
-    "logout": "Toka",
-    "apiBaseUrl": "API base URL"
-  },
-  "orders": {
-    "sectionTitle": "Oda mpya",
-    "channel": "Njia",
-    "tier": "Kiwango",
-    "pickupAddress": "Anwani ya kuchukua",
-    "dropoffAddress": "Anwani ya kupeleka",
-    "affiliateShop": "Duka la mshirika",
-    "submit": "Tengeneza oda",
-    "success": "Oda imetengenezwa kwa mafanikio",
-    "error": "Utengenezaji wa oda umeshindikana",
-    "door": "Mlango",
-    "shopDrop": "Duka",
-    "hybrid": "Mchanganyiko",
-    "standard48h": "Kawaida saa 48",
-    "express24h": "Haraka saa 24",
-    "sameDay": "Siku hiyo hiyo",
-    "detailsTitle": "Oda ya mwisho iliyotengenezwa",
-    "orderNumber": "Namba ya oda",
-    "statusCurrent": "Hali ya sasa",
-    "zoneId": "Zone",
-    "hubId": "Hub",
-    "bagTagCode": "Tegi ya begi",
-    "pickupAddressPlaceholder": "Chagua anwani ya kuchukua",
-    "dropoffAddressPlaceholder": "Chagua anwani ya kupeleka",
-    "affiliateShopPlaceholder": "Chagua duka la mshirika",
-    "timelineTitle": "Mfuatano wa matukio",
-    "refreshing": "Inasasisha taarifa za oda...",
-    "emptyTimeline": "Hakuna matukio ya timeline bado"
-  },
-  "componentsPage": {
-    "title": "Mimo UI Kit",
-    "subtitle": "Galeri ya vipengele ya Sura ya 7.2.",
-    "buttons": "Vitufe",
-    "inputs": "Viingizo",
-    "cards": "Kadi",
-    "customerName": "Jina la mteja",
-    "enterFullName": "Weka jina kamili",
-    "requiredForOrderCreation": "Inahitajika kwa kutengeneza oda",
-    "phoneNumber": "Namba ya simu",
-    "tzFormatLater": "Muundo wa TZ baadaye",
-    "password": "Nenosiri",
-    "enterPassword": "Weka nenosiri",
-    "errorExample": "Mfano wa kosa",
-    "invalidValue": "Thamani si sahihi",
-    "fieldRequired": "Sehemu hii inahitajika",
-    "defaultCard": "Kadi ya kawaida",
-    "standardSurface": "Kisanduku cha kawaida cha uso",
-    "useForDashboards": "Tumia kwa dashibodi, paneli, na fomu.",
-    "formatting": "Muundo wa eneo",
-    "moneyExample": "Mfano wa fedha",
-    "dateExample": "Mfano wa tarehe na muda",
-    "phoneExample": "Mfano wa simu",
-    "languageToggle": "Badili lugha",
-    "showSuccess": "Onyesha toast ya mafanikio",
-    "showInfo": "Onyesha toast ya taarifa",
-    "showError": "Onyesha toast ya kosa",
-    "toastSuccessTitle": "Imehifadhiwa kwa mafanikio",
-    "toastSuccessDescription": "Mabadiliko yako yamehifadhiwa.",
-    "toastInfoTitle": "Tahadhari",
-    "toastInfoDescription": "Taarifa mpya za uwasilishaji zinapatikana.",
-    "toastErrorTitle": "Hatua imeshindikana",
-    "toastErrorDescription": "Tafadhali jaribu tena."
-  },
-  "onboarding": {
-    "common": {
-      "loading": "Tunapakia ukurasa wako",
-      "continue": "Endelea",
-      "finish": "Kamilisha usanidi",
-      "notNow": "Sio sasa",
-      "done": "Usanidi umekamilika",
-      "incomplete": "Usanidi unasubiri",
-      "language": "Lugha",
-      "help": "Msaada",
-      "whatsapp": "Msaada wa WhatsApp",
-      "openHelp": "Fungua msaada"
-    },
-    "help": {
-      "label": "Unahitaji msaada?",
-      "profileHelp": "Pata msaada kwa ukurasa huu",
-      "dashboardHelp": "Tazama msaada wa dashibodi hii",
-      "publicTitle": "Msaada na usaidizi",
-      "publicBody": "Pata mwongozo wa usanidi, msaada wa oda, na usaidizi wa moja kwa moja.",
-      "orderTitle": "Msaada wa oda",
-      "orderBody": "Tumia ingizo hili la msaada unapohitaji usaidizi kwa oda maalum.",
-      "taskTitle": "Msaada wa kazi",
-      "taskBody": "Tumia ingizo hili la msaada pale pickup, dropoff, au uthibitisho wa stop unapohitaji usaidizi.",
-      "financeTitle": "Msaada wa fedha",
-      "financeBody": "Tumia ingizo hili la msaada kwa maswali ya payout, salio, au settlement.",
-      "generalTitle": "Msaada wa jumla",
-      "generalBody": "Tumia ingizo hili la msaada unapohitaji mwongozo kwa ukurasa wa sasa.",
-      "adminDevBody": "Tumia kituo cha msaada kwa mwongozo wa ufikiaji, kazi, na uendeshaji."
-    },
-    "customer": {
-      "firstRunTitle": "Karibu Mimo",
-      "firstRunBody": "Kamilisha usanidi wako wa kwanza kwa hatua mbili fupi, kisha anza kuagiza.",
-      "stepOneTitle": "Chagua lugha yako",
-      "stepOneBody": "Chagua lugha unayotaka kutumia sasa. Unaweza kubadilisha baadaye.",
-      "stepTwoTitle": "Thibitisha taarifa zako",
-      "stepTwoBody": "Kagua jina na namba yako ili safari yako ya kwanza ya oda ianze kwa uwazi.",
-      "nameLabel": "Jina kamili",
-      "phoneLabel": "Namba ya simu",
-      "startButton": "Anza usanidi",
-      "completeButton": "Maliza na fungua nyumbani",
-      "skipButton": "Ruka kwa sasa",
-      "homeTitle": "Nyumbani kwa mteja",
-      "homeBody": "Fuatilia oda inayoendelea, anza ombi jipya, na pata msaada kutoka sehemu moja iliyo wazi.",
-      "ordersTitle": "Oda",
-      "ordersBody": "Oda zako za sasa na za hivi karibuni zitaonekana hapa.",
-      "profileTitle": "Msaada wa profaili",
-      "orderDetailTitle": "Msaada wa maelezo ya oda"
-    },
-    "driver": {
-      "homeTitle": "Nyumbani kwa dereva",
-      "homeBody": "Kagua route ya leo, kamilisha uthibitisho, na shughulikia cash prompts kwa taps chache.",
-      "taskDetailTitle": "Msaada wa maelezo ya kazi",
-      "setupTitle": "Usanidi wa dereva",
-      "setupBody": "Kagua route basics, sheria za uthibitisho, na cash handling kabla ya kuanza kazi.",
-      "checklist": [
-        "Hakikisha simu imejaa chaji na location imewashwa.",
-        "Kagua sheria za uthibitisho kabla ya stop ya kwanza.",
-        "Jua pa kupata msaada ikiwa stop haiwezi kukamilika."
-      ],
-      "cta": "Weka usanidi wa dereva umekamilika"
-    },
-    "hub": {
-      "dashboardTitle": "Dashibodi ya hub",
-      "dashboardBody": "Hamisha kazi kupitia intake, processing, QC, na dispatch kutoka uso mmoja wa uendeshaji.",
-      "issueTitle": "Msaada wa oda ya hub",
-      "setupTitle": "Usanidi wa hub",
-      "setupBody": "Kagua intake, stage movement, na dispatch basics kabla ya kushughulikia kazi halisi.",
-      "checklist": [
-        "Anza na sheria za intake za scanner-first.",
-        "Hakikisha stage updates ni sahihi na za haraka.",
-        "Pandisha blocked au failed items kupitia msaada."
-      ],
-      "cta": "Weka usanidi wa hub umekamilika"
-    },
-    "affiliate": {
-      "dashboardTitle": "Dashibodi ya affiliate",
-      "dashboardBody": "Tengeneza walk-in orders kwa haraka, fuatilia handover za shop, na kagua earnings kwa urahisi.",
-      "orderDetailTitle": "Msaada wa oda ya affiliate",
-      "financeTitle": "Msaada wa fedha wa affiliate",
-      "staffSetupTitle": "Usanidi wa affiliate staff",
-      "staffSetupBody": "Kagua walk-in intake, handover rules, na customer support handoff.",
-      "adminSetupTitle": "Usanidi wa affiliate admin",
-      "adminSetupBody": "Kagua shop activity, pickup readiness, na payout visibility kabla ya kufungua.",
-      "staffChecklist": [
-        "Tumia fast walk-in flow kwa kila shop order mpya.",
-        "Thibitisha kila handover kwa uwazi kabla ya kutoa.",
-        "Tumia msaada wakati oda inahitaji intervention."
-      ],
-      "adminChecklist": [
-        "Kagua mtiririko wa shop order na pickup readiness.",
-        "Angalia payout na salio kila siku.",
-        "Tumia msaada kwa payout au access issues."
-      ],
-      "cta": "Weka usanidi wa affiliate umekamilika"
-    },
-    "adminDev": {
-      "title": "Eneo la uendeshaji"
-    }
-  },
-  "customerPortal": {
-    "home": {
-      "title": "Muhtasari wa nguo zako",
-      "subtitle": "Ona oda yako inayoendelea, chukua hatua inayofuata, au fungua oda za hivi karibuni.",
-      "activeOrderLabel": "Oda inayoendelea",
-      "primaryCta": "Fungua oda",
-      "secondaryCta": "Oda zote",
-      "recentOrdersTitle": "Oda za hivi karibuni",
-      "recentOrdersBody": "Fungua oda yoyote ya hivi karibuni kuona hali, malipo, na msaada.",
-      "helpTitle": "Unahitaji msaada kwa nguo zako za sasa?"
-    },
-    "orders": {
-      "title": "Oda zako",
-      "subtitle": "Angalia oda za hivi karibuni na za zamani mahali pamoja."
-    },
-    "detail": {
-      "title": "Maelezo ya oda",
-      "subtitle": "Fuatilia maendeleo, hakiki mwonekano wa malipo, na pata msaada ukihitaji.",
-      "summaryLabel": "Muhtasari wa oda",
-      "timelineLabel": "Mtiririko",
-      "paymentLabel": "Malipo",
-      "paymentState": "Malipo yanahitajika",
-      "helpTitle": "Unahitaji msaada kwa oda hii?"
-    },
-    "profile": {
-      "title": "Wasifu wako",
-      "subtitle": "Weka taarifa za akaunti, anuani, lugha, na risiti karibu nawe kwa urahisi.",
-      "accountLabel": "Akaunti",
-      "addressesLabel": "Anuani zilizohifadhiwa",
-      "languageLabel": "Lugha",
-      "receiptsLabel": "Risiti na nyaraka"
-    }
-  },
-  "driverPortal": {
-    "nav": {
-      "today": "Leo",
-      "tasks": "Kazi",
-      "profile": "Wasifu"
-    },
-    "today": {
-      "headerEyebrow": "Dereva",
-      "title": "Leo",
-      "subtitle": "Ona kituo kinachofuata haraka na endelea na kazi ya siku.",
-      "summaryStops": "Vituo vya leo",
-      "summaryZone": "Eneo kuu",
-      "nextTaskTitle": "Kazi inayofuata",
-      "nextTaskBody": "Anza kituo kinachofuata kwa hatua moja iliyo wazi.",
-      "nextBadge": "Ifuatayo",
-      "startNextTask": "Anza kazi inayofuata",
-      "groupNext": "Ifuatayo",
-      "groupUpcoming": "Zinazofuata",
-      "groupCompleted": "Zilizokamilika leo",
-      "alertsTitle": "Tahadhari na changamoto",
-      "alertCash": "Kituo 1 kinahitaji uthibitisho wa fedha",
-      "alertSync": "Hatua 1 bado inasubiri kusawazishwa"
-    },
-    "tasks": {
-      "headerEyebrow": "Dereva",
-      "title": "Kazi",
-      "subtitle": "Kagua vituo vyote ulivyopewa katika orodha moja rahisi."
-    },
-    "stop": {
-      "headerEyebrow": "Dereva",
-      "title": "Maelezo ya kituo",
-      "summaryTitle": "Muhtasari wa kituo",
-      "issueTitle": "Tatizo au msaada",
-      "issueBody": "Tumia hii tu pale kituo hakiwezi kuendelea kawaida.",
-      "reportIssue": "Ripoti tatizo",
-      "detailsTitle": "Maelezo ya ziada",
-      "supportingDetails": "Maelezo ya mteja, muktadha wa njia, na taarifa za kazi hubaki chini ya eneo la hatua."
-    },
-    "proof": {
-      "title": "Hatua ya uthibitisho",
-      "body": "Kamilisha hatua ya uthibitisho inayohitajika kabla ya kuendelea.",
-      "pickup": "Thibitisha kuchukua",
-      "scan": "Skani begi au kodi",
-      "otp": "Thibitisha OTP",
-      "signature": "Chukua saini au picha",
-      "delivery": "Thibitisha kukabidhi"
-    },
-    "cash": {
-      "title": "Ukusanyaji wa fedha",
-      "body": "Kusanya na kuthibitisha fedha pale tu kituo hiki kinapohitaji.",
-      "expectedLabel": "Kiasi kinachotarajiwa",
-      "confirmCollection": "Thibitisha fedha zimekusanywa",
-      "proofNote": "Uthibitisho na fedha vinaweza vyote kuhitajika kabla ya kituo kukamilika.",
-      "todaySummaryTitle": "Muhtasari wa fedha",
-      "todaySummaryBody": "Weka mwonekano wa fedha wazi bila kugeuza hii kuwa skrini ya fedha.",
-      "collectedLabel": "Zilizokusanywa",
-      "pendingLabel": "Zinazosubiri",
-      "reviewNeeded": "Mapitio yanahitajika kabla ya usuluhishi wa mwisho wa siku.",
-      "reviewClear": "Fedha ziko sawa kwa sasa.",
-      "reconciliationEntry": "Mwonekano wa usuluhishi wa mwisho wa siku unaonekana hapa pale mapitio yanapohitajika."
-    },
-    "sync": {
-      "online": "Mtandaoni",
-      "weak": "Mtandao dhaifu",
-      "offline": "Nje ya mtandao",
-      "syncing": "Inasawazisha",
-      "failed": "Usawazishaji umeshindikana",
-      "synced": "Imesawazishwa",
-      "retry": "Jaribu tena",
-      "statusHint": "Endelea. Hali ya maendeleo yako inaonekana wazi.",
-      "sending": "Inatuma sasa",
-      "queued": "Imewekwa kwenye foleni ya kutuma",
-      "failedAction": "Hatua hii bado haijasawazishwa"
-    },
-    "states": {
-      "noTasks": "Hakuna kazi kwa sasa",
-      "loadingToday": "Inapakia leo",
-      "loadingStop": "Inapakia maelezo ya kituo",
-      "pendingProof": "Uthibitisho bado unahitajika",
-      "cashDue": "Fedha bado zinahitajika",
-      "issueReported": "Tatizo limeripotiwa"
-    },
-    "profile": {
-      "headerEyebrow": "Dereva",
-      "title": "Wasifu",
-      "subtitle": "Weka taarifa binafsi na za mwisho wa siku kuwa rahisi.",
-      "nameLabel": "Jina la dereva",
-      "phoneLabel": "Simu",
-      "zoneLabel": "Eneo la nyumbani"
-    }
-  },
-  "hub": {
-    "actions": {
-      "openIntake": "Fungua mapokezi",
-      "openProcessing": "Fungua uchakataji",
-      "openDashboard": "Fungua dashibodi"
-    },
-    "labels": {
-      "orderRef": "Rejea ya oda",
-      "customer": "Mteja",
-      "zone": "Zone",
-      "bags": "Mifuko",
-      "sla": "SLA",
-      "stage": "Hatua",
-      "issueOpen": "Tatizo wazi",
-      "noIssue": "Hakuna tatizo"
-    },
-    "states": {
-      "noIntakeItems": "Hakuna kazi za mapokezi zinazongoja.",
-      "noProcessingItems": "Hakuna kazi katika hatua hii sasa.",
-      "qcIssueOpen": "Tatizo la QC liko wazi na linaonekana kwa wafanyakazi.",
-      "noDriverAvailable": "Hakuna dereva sahihi anayepatikana kwa zone hii sasa.",
-      "loadingIntake": "Inapakia mapokezi...",
-      "loadingProcessing": "Inapakia bodi...",
-      "assignmentComplete": "Ugawaji umekamilika na orodha ya tayari imesasishwa.",
-      "issueReported": "Tatizo limeripotiwa"
-    },
-    "dashboard": {
-      "title": "Uendeshaji wa hub",
-      "subtitle": "Elekeza mapokezi, uchakataji, QC, na dispatch kutoka sehemu moja ya tablet/web.",
-      "kpis": {
-        "intakeWaiting": "Mapokezi yanayosubiri",
-        "inProcessing": "Inachakatwa",
-        "readyForDispatch": "Tayari kwa dispatch",
-        "exceptions": "Changamoto"
-      },
-      "actionQueue": {
-        "title": "Foleni ya hatua",
-        "priorityLabel": "Hatua zinazofuata",
-        "receiveIntake": "Pokea foleni ya mapokezi",
-        "receiveIntakeDetail": "Fungua mtiririko wa mapokezi wa skana kwanza na pokea kazi zinazosubiri.",
-        "processQc": "Endesha uchakataji na QC",
-        "processQcDetail": "Hamisha kazi kwenye hatua mbalimbali na maliza kazi zinazohitaji QC.",
-        "dispatchReady": "Panga dispatch iliyo tayari",
-        "dispatchReadyDetail": "Chuja kwa zone na mpe dereva sahihi kazi iliyo tayari."
-      },
-      "activeList": {
-        "title": "Orodha ya kazi zinazoendelea",
-        "liveLabel": "Kazi hai"
-      }
-    },
-    "intake": {
-      "title": "Mapokezi ya hub",
-      "subtitle": "Skani au andika code kwanza, kisha pokea oda sahihi bila kuondoka kwenye foleni.",
-      "scanLabel": "Skani au andika code ya oda",
-      "scanPlaceholder": "Skani QR / barcode ya mfuko au andika rejea ya oda",
-      "openItem": "Fungua kazi",
-      "scanSupport": "Inasaidia skana na kuandika code kwa mkono.",
-      "scanFound": "Oda imepatikana na kufunguliwa kwenye paneli ya mapokezi.",
-      "scanMissing": "Hakuna kazi ya mapokezi iliyolingana na code hiyo.",
-      "issueStrip": "Kazi hii ina tatizo wazi. Pokea kwa makini na liendelee kuonekana.",
-      "queueTitle": "Foleni ya mapokezi",
-      "activeTitle": "Kazi ya mapokezi inayotumika",
-      "openDetail": "Fungua maelezo ya oda",
-      "receiveAction": "Pokea kazi",
-      "moveToProcessing": "Peleka uchakataji",
-      "bags": "mifuko"
-    },
-    "processing": {
-      "title": "Bodi ya uchakataji",
-      "subtitle": "Hamisha kazi kwenye hatua wazi za uendeshaji huku alama za tatizo na vitendo vya QC vikionekana.",
-      "advanceAction": "Sogeza hatua",
-      "filters": {
-        "issue": "Kichujio cha tatizo",
-        "tier": "Kiwango cha huduma",
-        "sla": "Kipaumbele / SLA"
-      },
-      "filterValues": {
-        "allIssues": "Matatizo yote",
-        "openIssues": "Matatizo wazi tu",
-        "allTiers": "Viwango vyote",
-        "livePriority": "Mwonekano wa kipaumbele hai"
-      },
-      "stages": {
-        "readyForProcessing": "Tayari kwa uchakataji",
-        "inProcessing": "Inachakatwa",
-        "qcNeeded": "QC inahitajika",
-        "readyForDispatch": "Tayari kwa dispatch"
-      }
-    },
-    "qc": {
-      "title": "Uamuzi wa QC",
-      "subtitle": "Fanya uamuzi wa haraka wa kupitisha au kufungua tatizo.",
-      "pass": "Pita",
-      "fail": "Shindwa / Fungua tatizo",
-      "passComplete": "QC imepita na kazi imesogezwa hatua inayofuata sahihi.",
-      "failComplete": "QC imeshindikana na tatizo wazi sasa linaonekana kwenye oda.",
-      "issueReason": "Hali ya tatizo"
-    },
-    "dispatch": {
-      "title": "Ufungaji wa dispatch",
-      "readyOnly": "Kazi zilizo tayari tu",
-      "zoneFilter": "Kichujio cha zone",
-      "driverTitle": "Madereva sahihi",
-      "zoneFiltered": "Imechujwa kwa zone",
-      "assignAction": "Panga dispatch",
-      "assignmentComplete": "Ugawaji wa dispatch umekamilika.",
-      "itemsReady": "kazi tayari",
-      "openOrder": "Fungua oda",
-      "availability": {
-        "available": "Anapatikana",
-        "busy": "Yuko bize"
-      }
-    },
-    "orderDetail": {
-      "title": "Maelezo ya oda ya hub",
-      "summaryTitle": "Muhtasari wa uendeshaji"
-    }
-  }
+    "common":  {
+                   "language":  "Lugha",
+                   "english":  "Kiingereza",
+                   "swahili":  "Kiswahili",
+                   "ok":  "Sawa",
+                   "cancel":  "Ghairi",
+                   "save":  "Hifadhi",
+                   "close":  "Funga",
+                   "loading":  "Inapakia..."
+               },
+    "nav":  {
+                "home":  "Nyumbani",
+                "components":  "Vipengele",
+                "settings":  "Mipangilio"
+            },
+    "auth":  {
+                 "welcome":  "Karibu Mimo",
+                 "actions":  {
+                                 "logout":  "Toka",
+                                 "loadLiveData":  "Pakia data halisi",
+                                 "liveDataPayload":  "Payload ya data halisi",
+                                 "noDataLoaded":  "Bado hakuna data iliyopakiwa."
+                             },
+                 "session":  {
+                                 "productionApi":  "API ya uzalishaji",
+                                 "currentPhone":  "Simu ya sasa",
+                                 "currentRole":  "Roli ya sasa",
+                                 "expectedRole":  "Roli inayotarajiwa",
+                                 "none":  "hakuna",
+                                 "notAvailable":  "Session ya kivinjari haipatikani",
+                                 "missingTokenOrPath":  "Token au njia ya data haipo",
+                                 "dataLoadOk":  "Upakiaji wa data umefaulu",
+                                 "dataLoadFailed":  "Upakiaji wa data umeshindikana",
+                                 "loggedOut":  "Umetoka"
+                             },
+                 "login":  {
+                               "title":  "Ingia",
+                               "subtitle":  "Fikia Laundry OS",
+                               "phone":  "Namba ya simu",
+                               "phonePlaceholder":  "+255712345678",
+                               "password":  "Nenosiri",
+                               "passwordPlaceholder":  "Weka nenosiri lako",
+                               "submit":  "Ingia",
+                               "submitting":  "Inaingia...",
+                               "success":  "Umeingia kwa mafanikio",
+                               "error":  "Kuingia kumeshindikana. Kagua simu na nenosiri."
+                           },
+                 "signup":  {
+                                "title":  "Fungua akaunti ya mteja",
+                                "subtitle":  "Usajili huu ni wa wateja tu. Akaunti za staff na admin haziundwi hapa.",
+                                "fullName":  "Jina kamili",
+                                "fullNamePlaceholder":  "Weka jina lako kamili",
+                                "phone":  "Namba ya simu",
+                                "phonePlaceholder":  "+255712345678",
+                                "password":  "Nenosiri",
+                                "passwordPlaceholder":  "Tengeneza nenosiri",
+                                "submit":  "Fungua akaunti",
+                                "submitting":  "Inafungua akaunti...",
+                                "success":  "Akaunti imefunguliwa kwa mafanikio. Tafadhali ingia.",
+                                "error":  "Usajili umeshindikana. Tafadhali jaribu tena.",
+                                "customerOnlyNote":  "Njia hii ya usajili ni kwa wateja tu.",
+                                "linkCta":  "Fungua akaunti ya mteja",
+                                "loginCta":  "Rudi kwenye kuingia"
+                            },
+                 "forbidden":  {
+                                   "title":  "Huruhusiwi kufikia",
+                                   "subtitle":  "Portal hii haipatikani kwa roli yako ya sasa.",
+                                   "body":  "Tumia portal sahihi ya akaunti yako au ingia tena kwa taarifa sahihi.",
+                                   "goToLogin":  "Nenda kuingia",
+                                   "goToPortal":  "Nenda kwenye portal yangu"
+                               }
+             },
+    "home":  {
+                 "title":  "Nyumbani kwa Mteja",
+                 "subtitle":  "Fuatilia oda, uchukuaji, na uwasilishaji.",
+                 "dashboardTitle":  "Nyumbani kwa walking skeleton",
+                 "loggedInAs":  "Umeingia kama",
+                 "apiStatusLabel":  "Hali ya API",
+                 "apiConnected":  "Imeunganishwa",
+                 "apiDisconnected":  "Haijaunganishwa",
+                 "tokenStored":  "Access token imehifadhiwa",
+                 "logout":  "Toka",
+                 "apiBaseUrl":  "API base URL"
+             },
+    "orders":  {
+                   "sectionTitle":  "Oda mpya",
+                   "channel":  "Njia",
+                   "tier":  "Kiwango",
+                   "pickupAddress":  "Anwani ya kuchukua",
+                   "dropoffAddress":  "Anwani ya kupeleka",
+                   "affiliateShop":  "Duka la mshirika",
+                   "submit":  "Tengeneza oda",
+                   "success":  "Oda imetengenezwa kwa mafanikio",
+                   "error":  "Utengenezaji wa oda umeshindikana",
+                   "door":  "Mlango",
+                   "shopDrop":  "Duka",
+                   "hybrid":  "Mchanganyiko",
+                   "standard48h":  "Kawaida saa 48",
+                   "express24h":  "Haraka saa 24",
+                   "sameDay":  "Siku hiyo hiyo",
+                   "detailsTitle":  "Oda ya mwisho iliyotengenezwa",
+                   "orderNumber":  "Namba ya oda",
+                   "statusCurrent":  "Hali ya sasa",
+                   "zoneId":  "Zone",
+                   "hubId":  "Hub",
+                   "bagTagCode":  "Tegi ya begi",
+                   "pickupAddressPlaceholder":  "Chagua anwani ya kuchukua",
+                   "dropoffAddressPlaceholder":  "Chagua anwani ya kupeleka",
+                   "affiliateShopPlaceholder":  "Chagua duka la mshirika",
+                   "timelineTitle":  "Mfuatano wa matukio",
+                   "refreshing":  "Inasasisha taarifa za oda...",
+                   "emptyTimeline":  "Hakuna matukio ya timeline bado"
+               },
+    "componentsPage":  {
+                           "title":  "Mimo UI Kit",
+                           "subtitle":  "Galeri ya vipengele ya Sura ya 7.2.",
+                           "buttons":  "Vitufe",
+                           "inputs":  "Viingizo",
+                           "cards":  "Kadi",
+                           "customerName":  "Jina la mteja",
+                           "enterFullName":  "Weka jina kamili",
+                           "requiredForOrderCreation":  "Inahitajika kwa kutengeneza oda",
+                           "phoneNumber":  "Namba ya simu",
+                           "tzFormatLater":  "Muundo wa TZ baadaye",
+                           "password":  "Nenosiri",
+                           "enterPassword":  "Weka nenosiri",
+                           "errorExample":  "Mfano wa kosa",
+                           "invalidValue":  "Thamani si sahihi",
+                           "fieldRequired":  "Sehemu hii inahitajika",
+                           "defaultCard":  "Kadi ya kawaida",
+                           "standardSurface":  "Kisanduku cha kawaida cha uso",
+                           "useForDashboards":  "Tumia kwa dashibodi, paneli, na fomu.",
+                           "formatting":  "Muundo wa eneo",
+                           "moneyExample":  "Mfano wa fedha",
+                           "dateExample":  "Mfano wa tarehe na muda",
+                           "phoneExample":  "Mfano wa simu",
+                           "languageToggle":  "Badili lugha",
+                           "showSuccess":  "Onyesha toast ya mafanikio",
+                           "showInfo":  "Onyesha toast ya taarifa",
+                           "showError":  "Onyesha toast ya kosa",
+                           "toastSuccessTitle":  "Imehifadhiwa kwa mafanikio",
+                           "toastSuccessDescription":  "Mabadiliko yako yamehifadhiwa.",
+                           "toastInfoTitle":  "Tahadhari",
+                           "toastInfoDescription":  "Taarifa mpya za uwasilishaji zinapatikana.",
+                           "toastErrorTitle":  "Hatua imeshindikana",
+                           "toastErrorDescription":  "Tafadhali jaribu tena."
+                       },
+    "onboarding":  {
+                       "common":  {
+                                      "loading":  "Tunapakia ukurasa wako",
+                                      "continue":  "Endelea",
+                                      "finish":  "Kamilisha usanidi",
+                                      "notNow":  "Sio sasa",
+                                      "done":  "Usanidi umekamilika",
+                                      "incomplete":  "Usanidi unasubiri",
+                                      "language":  "Lugha",
+                                      "help":  "Msaada",
+                                      "whatsapp":  "Msaada wa WhatsApp",
+                                      "openHelp":  "Fungua msaada"
+                                  },
+                       "help":  {
+                                    "label":  "Unahitaji msaada?",
+                                    "profileHelp":  "Pata msaada kwa ukurasa huu",
+                                    "dashboardHelp":  "Tazama msaada wa dashibodi hii",
+                                    "publicTitle":  "Msaada na usaidizi",
+                                    "publicBody":  "Pata mwongozo wa usanidi, msaada wa oda, na usaidizi wa moja kwa moja.",
+                                    "orderTitle":  "Msaada wa oda",
+                                    "orderBody":  "Tumia ingizo hili la msaada unapohitaji usaidizi kwa oda maalum.",
+                                    "taskTitle":  "Msaada wa kazi",
+                                    "taskBody":  "Tumia ingizo hili la msaada pale pickup, dropoff, au uthibitisho wa stop unapohitaji usaidizi.",
+                                    "financeTitle":  "Msaada wa fedha",
+                                    "financeBody":  "Tumia ingizo hili la msaada kwa maswali ya payout, salio, au settlement.",
+                                    "generalTitle":  "Msaada wa jumla",
+                                    "generalBody":  "Tumia ingizo hili la msaada unapohitaji mwongozo kwa ukurasa wa sasa.",
+                                    "adminDevBody":  "Tumia kituo cha msaada kwa mwongozo wa ufikiaji, kazi, na uendeshaji."
+                                },
+                       "customer":  {
+                                        "firstRunTitle":  "Karibu Mimo",
+                                        "firstRunBody":  "Kamilisha usanidi wako wa kwanza kwa hatua mbili fupi, kisha anza kuagiza.",
+                                        "stepOneTitle":  "Chagua lugha yako",
+                                        "stepOneBody":  "Chagua lugha unayotaka kutumia sasa. Unaweza kubadilisha baadaye.",
+                                        "stepTwoTitle":  "Thibitisha taarifa zako",
+                                        "stepTwoBody":  "Kagua jina na namba yako ili safari yako ya kwanza ya oda ianze kwa uwazi.",
+                                        "nameLabel":  "Jina kamili",
+                                        "phoneLabel":  "Namba ya simu",
+                                        "startButton":  "Anza usanidi",
+                                        "completeButton":  "Maliza na fungua nyumbani",
+                                        "skipButton":  "Ruka kwa sasa",
+                                        "homeTitle":  "Nyumbani kwa mteja",
+                                        "homeBody":  "Fuatilia oda inayoendelea, anza ombi jipya, na pata msaada kutoka sehemu moja iliyo wazi.",
+                                        "ordersTitle":  "Oda",
+                                        "ordersBody":  "Oda zako za sasa na za hivi karibuni zitaonekana hapa.",
+                                        "profileTitle":  "Msaada wa profaili",
+                                        "orderDetailTitle":  "Msaada wa maelezo ya oda"
+                                    },
+                       "driver":  {
+                                      "homeTitle":  "Nyumbani kwa dereva",
+                                      "homeBody":  "Kagua route ya leo, kamilisha uthibitisho, na shughulikia cash prompts kwa taps chache.",
+                                      "taskDetailTitle":  "Msaada wa maelezo ya kazi",
+                                      "setupTitle":  "Usanidi wa dereva",
+                                      "setupBody":  "Kagua route basics, sheria za uthibitisho, na cash handling kabla ya kuanza kazi.",
+                                      "checklist":  [
+                                                        "Hakikisha simu imejaa chaji na location imewashwa.",
+                                                        "Kagua sheria za uthibitisho kabla ya stop ya kwanza.",
+                                                        "Jua pa kupata msaada ikiwa stop haiwezi kukamilika."
+                                                    ],
+                                      "cta":  "Weka usanidi wa dereva umekamilika"
+                                  },
+                       "hub":  {
+                                   "dashboardTitle":  "Dashibodi ya hub",
+                                   "dashboardBody":  "Hamisha kazi kupitia intake, processing, QC, na dispatch kutoka uso mmoja wa uendeshaji.",
+                                   "issueTitle":  "Msaada wa oda ya hub",
+                                   "setupTitle":  "Usanidi wa hub",
+                                   "setupBody":  "Kagua intake, stage movement, na dispatch basics kabla ya kushughulikia kazi halisi.",
+                                   "checklist":  [
+                                                     "Anza na sheria za intake za scanner-first.",
+                                                     "Hakikisha stage updates ni sahihi na za haraka.",
+                                                     "Pandisha blocked au failed items kupitia msaada."
+                                                 ],
+                                   "cta":  "Weka usanidi wa hub umekamilika"
+                               },
+                       "affiliate":  {
+                                         "dashboardTitle":  "Dashibodi ya affiliate",
+                                         "dashboardBody":  "Tengeneza walk-in orders kwa haraka, fuatilia handover za shop, na kagua earnings kwa urahisi.",
+                                         "orderDetailTitle":  "Msaada wa oda ya affiliate",
+                                         "financeTitle":  "Msaada wa fedha wa affiliate",
+                                         "staffSetupTitle":  "Usanidi wa affiliate staff",
+                                         "staffSetupBody":  "Kagua walk-in intake, handover rules, na customer support handoff.",
+                                         "adminSetupTitle":  "Usanidi wa affiliate admin",
+                                         "adminSetupBody":  "Kagua shop activity, pickup readiness, na payout visibility kabla ya kufungua.",
+                                         "staffChecklist":  [
+                                                                "Tumia fast walk-in flow kwa kila shop order mpya.",
+                                                                "Thibitisha kila handover kwa uwazi kabla ya kutoa.",
+                                                                "Tumia msaada wakati oda inahitaji intervention."
+                                                            ],
+                                         "adminChecklist":  [
+                                                                "Kagua mtiririko wa shop order na pickup readiness.",
+                                                                "Angalia payout na salio kila siku.",
+                                                                "Tumia msaada kwa payout au access issues."
+                                                            ],
+                                         "cta":  "Weka usanidi wa affiliate umekamilika"
+                                     },
+                       "adminDev":  {
+                                        "title":  "Eneo la uendeshaji"
+                                    }
+                   },
+    "customerPortal":  {
+                           "home":  {
+                                        "title":  "Muhtasari wa nguo zako",
+                                        "subtitle":  "Ona oda yako inayoendelea, chukua hatua inayofuata, au fungua oda za hivi karibuni.",
+                                        "activeOrderLabel":  "Oda inayoendelea",
+                                        "primaryCta":  "Fungua oda",
+                                        "secondaryCta":  "Oda zote",
+                                        "recentOrdersTitle":  "Oda za hivi karibuni",
+                                        "recentOrdersBody":  "Fungua oda yoyote ya hivi karibuni kuona hali, malipo, na msaada.",
+                                        "helpTitle":  "Unahitaji msaada kwa nguo zako za sasa?"
+                                    },
+                           "orders":  {
+                                          "title":  "Oda zako",
+                                          "subtitle":  "Angalia oda za hivi karibuni na za zamani mahali pamoja."
+                                      },
+                           "detail":  {
+                                          "title":  "Maelezo ya oda",
+                                          "subtitle":  "Fuatilia maendeleo, hakiki mwonekano wa malipo, na pata msaada ukihitaji.",
+                                          "summaryLabel":  "Muhtasari wa oda",
+                                          "timelineLabel":  "Mtiririko",
+                                          "paymentLabel":  "Malipo",
+                                          "paymentState":  "Malipo yanahitajika",
+                                          "helpTitle":  "Unahitaji msaada kwa oda hii?"
+                                      },
+                           "profile":  {
+                                           "title":  "Wasifu wako",
+                                           "subtitle":  "Weka taarifa za akaunti, anuani, lugha, na risiti karibu nawe kwa urahisi.",
+                                           "accountLabel":  "Akaunti",
+                                           "addressesLabel":  "Anuani zilizohifadhiwa",
+                                           "languageLabel":  "Lugha",
+                                           "receiptsLabel":  "Risiti na nyaraka"
+                                       }
+                       },
+    "driverPortal":  {
+                         "nav":  {
+                                     "today":  "Leo",
+                                     "tasks":  "Kazi",
+                                     "profile":  "Wasifu"
+                                 },
+                         "today":  {
+                                       "headerEyebrow":  "Dereva",
+                                       "title":  "Leo",
+                                       "subtitle":  "Ona kituo kinachofuata haraka na endelea na kazi ya siku.",
+                                       "summaryStops":  "Vituo vya leo",
+                                       "summaryZone":  "Eneo kuu",
+                                       "nextTaskTitle":  "Kazi inayofuata",
+                                       "nextTaskBody":  "Anza kituo kinachofuata kwa hatua moja iliyo wazi.",
+                                       "nextBadge":  "Ifuatayo",
+                                       "startNextTask":  "Anza kazi inayofuata",
+                                       "groupNext":  "Ifuatayo",
+                                       "groupUpcoming":  "Zinazofuata",
+                                       "groupCompleted":  "Zilizokamilika leo",
+                                       "alertsTitle":  "Tahadhari na changamoto",
+                                       "alertCash":  "Kituo 1 kinahitaji uthibitisho wa fedha",
+                                       "alertSync":  "Hatua 1 bado inasubiri kusawazishwa"
+                                   },
+                         "tasks":  {
+                                       "headerEyebrow":  "Dereva",
+                                       "title":  "Kazi",
+                                       "subtitle":  "Kagua vituo vyote ulivyopewa katika orodha moja rahisi."
+                                   },
+                         "stop":  {
+                                      "headerEyebrow":  "Dereva",
+                                      "title":  "Maelezo ya kituo",
+                                      "summaryTitle":  "Muhtasari wa kituo",
+                                      "issueTitle":  "Tatizo au msaada",
+                                      "issueBody":  "Tumia hii tu pale kituo hakiwezi kuendelea kawaida.",
+                                      "reportIssue":  "Ripoti tatizo",
+                                      "detailsTitle":  "Maelezo ya ziada",
+                                      "supportingDetails":  "Maelezo ya mteja, muktadha wa njia, na taarifa za kazi hubaki chini ya eneo la hatua."
+                                  },
+                         "proof":  {
+                                       "title":  "Hatua ya uthibitisho",
+                                       "body":  "Kamilisha hatua ya uthibitisho inayohitajika kabla ya kuendelea.",
+                                       "pickup":  "Thibitisha kuchukua",
+                                       "scan":  "Skani begi au kodi",
+                                       "otp":  "Thibitisha OTP",
+                                       "signature":  "Chukua saini au picha",
+                                       "delivery":  "Thibitisha kukabidhi"
+                                   },
+                         "cash":  {
+                                      "title":  "Ukusanyaji wa fedha",
+                                      "body":  "Kusanya na kuthibitisha fedha pale tu kituo hiki kinapohitaji.",
+                                      "expectedLabel":  "Kiasi kinachotarajiwa",
+                                      "confirmCollection":  "Thibitisha fedha zimekusanywa",
+                                      "proofNote":  "Uthibitisho na fedha vinaweza vyote kuhitajika kabla ya kituo kukamilika.",
+                                      "todaySummaryTitle":  "Muhtasari wa fedha",
+                                      "todaySummaryBody":  "Weka mwonekano wa fedha wazi bila kugeuza hii kuwa skrini ya fedha.",
+                                      "collectedLabel":  "Zilizokusanywa",
+                                      "pendingLabel":  "Zinazosubiri",
+                                      "reviewNeeded":  "Mapitio yanahitajika kabla ya usuluhishi wa mwisho wa siku.",
+                                      "reviewClear":  "Fedha ziko sawa kwa sasa.",
+                                      "reconciliationEntry":  "Mwonekano wa usuluhishi wa mwisho wa siku unaonekana hapa pale mapitio yanapohitajika."
+                                  },
+                         "sync":  {
+                                      "online":  "Mtandaoni",
+                                      "weak":  "Mtandao dhaifu",
+                                      "offline":  "Nje ya mtandao",
+                                      "syncing":  "Inasawazisha",
+                                      "failed":  "Usawazishaji umeshindikana",
+                                      "synced":  "Imesawazishwa",
+                                      "retry":  "Jaribu tena",
+                                      "statusHint":  "Endelea. Hali ya maendeleo yako inaonekana wazi.",
+                                      "sending":  "Inatuma sasa",
+                                      "queued":  "Imewekwa kwenye foleni ya kutuma",
+                                      "failedAction":  "Hatua hii bado haijasawazishwa"
+                                  },
+                         "states":  {
+                                        "noTasks":  "Hakuna kazi kwa sasa",
+                                        "loadingToday":  "Inapakia leo",
+                                        "loadingStop":  "Inapakia maelezo ya kituo",
+                                        "pendingProof":  "Uthibitisho bado unahitajika",
+                                        "cashDue":  "Fedha bado zinahitajika",
+                                        "issueReported":  "Tatizo limeripotiwa"
+                                    },
+                         "profile":  {
+                                         "headerEyebrow":  "Dereva",
+                                         "title":  "Wasifu",
+                                         "subtitle":  "Weka taarifa binafsi na za mwisho wa siku kuwa rahisi.",
+                                         "nameLabel":  "Jina la dereva",
+                                         "phoneLabel":  "Simu",
+                                         "zoneLabel":  "Eneo la nyumbani"
+                                     }
+                     },
+    "affiliate":  {
+                      "dashboard":  {
+                                        "eyebrow":  "Portal ya wakala",
+                                        "title":  "Uendeshaji wa duka",
+                                        "subtitle":  "Unda oda za dukani kwa haraka, simamia ukabidhi kwa uwazi, na ubaki ndani ya eneo la duka lako pekee.",
+                                        "createOrder":  "Unda oda",
+                                        "queueTitle":  "Foleni ya hatua",
+                                        "supportTitle":  "Msaada",
+                                        "supportBody":  "Tumia kituo cha msaada pale suala la mteja, ucheleweshaji, au swali la ukabidhi linahitaji msaada.",
+                                        "supportAction":  "Fungua msaada",
+                                        "attentionTitle":  "Oda zinazohitaji uangalizi",
+                                        "financeSnapshotTitle":  "Muhtasari wa fedha",
+                                        "financeSnapshotAction":  "Fungua muhtasari wa fedha",
+                                        "kpi":  {
+                                                    "todayOrders":  "Oda za leo",
+                                                    "ready":  "Tayari kwa kuchukuliwa",
+                                                    "readyDetail":  "Wateja wanaweza kuitwa sasa",
+                                                    "issues":  "Masuala hai",
+                                                    "issuesDetail":  "Yanahitaji ukaguzi au ufuatiliaji wa mteja",
+                                                    "finance":  "Malipo yanayosubiri",
+                                                    "financeDetail":  "Inaonekana kwa msimamizi wa wakala tu"
+                                                },
+                                        "queue":  {
+                                                      "create":  "Unda oda mpya ya dukani",
+                                                      "ready":  "Fungua oda inayofuata iliyo tayari",
+                                                      "issue":  "Tatua suala la oda"
+                                                  }
+                                    },
+                      "ordersNew":  {
+                                        "eyebrow":  "Oda ya dukani",
+                                        "title":  "Unda oda mpya ya duka",
+                                        "subtitle":  "Chukua taarifa muhimu tu na nenda moja kwa moja kwenye ukurasa unaofuata wenye faida.",
+                                        "customerTitle":  "Taarifa za mteja",
+                                        "customerName":  "Jina la mteja",
+                                        "customerPhone":  "Simu ya mteja",
+                                        "serviceTitle":  "Uchaguzi wa huduma",
+                                        "serviceType":  "Aina ya huduma",
+                                        "handoffTitle":  "Kurudisha na ukabidhi",
+                                        "handoffType":  "Njia ya kurudisha",
+                                        "reviewTitle":  "Muhtasari wa uhakiki",
+                                        "reviewPendingName":  "Jina la mteja linahitajika",
+                                        "submit":  "Unda oda",
+                                        "handoff":  {
+                                                        "shopPickup":  "Mteja atachukua dukani",
+                                                        "returnDelivery":  "Rudisha kwa usafirishaji"
+                                                    }
+                                    },
+                      "orders":  {
+                                     "eyebrow":  "Oda za duka",
+                                     "title":  "Oda",
+                                     "subtitle":  "Ni oda za duka hili tu zinaonyeshwa hapa.",
+                                     "createOrder":  "Unda oda",
+                                     "columns":  {
+                                                     "reference":  "Rejea",
+                                                     "customer":  "Mteja",
+                                                     "service":  "Huduma",
+                                                     "status":  "Hali",
+                                                     "readiness":  "Uchukuaji au urudishaji"
+                                                 },
+                                     "filters":  {
+                                                     "status":  "Hali",
+                                                     "readiness":  "Utayari",
+                                                     "all":  "Zote"
+                                                 },
+                                     "status":  {
+                                                    "draft":  "Rasimu",
+                                                    "received":  "Imepokelewa",
+                                                    "processing":  "Inachakatwa",
+                                                    "ready":  "Tayari",
+                                                    "picked_up":  "Imechukuliwa",
+                                                    "issue":  "Suala"
+                                                },
+                                     "readiness":  {
+                                                       "ready":  "Tayari kwa kuchukuliwa na mteja",
+                                                       "notReady":  "Bado haijawa tayari",
+                                                       "returnScheduled":  "Kurudisha kumepangwa"
+                                                   }
+                                 },
+                      "orderDetail":  {
+                                          "eyebrow":  "Maelezo ya oda",
+                                          "subtitle":  "Ukurasa huu ndio sehemu kuu ya ukweli inayomilikiwa na duka kwa oda hii.",
+                                          "back":  "Rudi kwenye oda",
+                                          "summaryTitle":  "Muhtasari wa oda",
+                                          "timelineTitle":  "Mtiririko wa muda",
+                                          "pickupTitle":  "Mtiririko wa uchukuaji na urudishaji",
+                                          "customerTitle":  "Taarifa za mteja na ukabidhi",
+                                          "helpTitle":  "Suala au msaada",
+                                          "helpBody":  "Tumia msaada pale uchukuaji haujakamilika vizuri au mteja anahitaji msaada.",
+                                          "helpAction":  "Fungua msaada",
+                                          "readyBody":  "Oda hii iko tayari kwa mteja. Thibitisha uchukuaji pale ukabidhi unapokamilika.",
+                                          "notReadyBody":  "Oda hii bado haijawa tayari kwa kuchukuliwa. Baki kwenye hali ya sasa na kagua tena baadaye.",
+                                          "confirmPickup":  "Thibitisha mteja amechukua",
+                                          "pickedUpTitle":  "Uchukuaji umethibitishwa",
+                                          "pickedUpBody":  "Ukabidhi kwa mteja umekamilika kwa oda hii ya duka.",
+                                          "handoffAtShop":  "Uchukuaji kwenye duka hili",
+                                          "timeline":  {
+                                                           "received":  "Oda imepokelewa dukani",
+                                                           "processing":  "Uchakataji unaendelea",
+                                                           "ready":  "Tayari kwa kuchukuliwa na mteja",
+                                                           "waiting":  "Inasubiri kuwa tayari"
+                                                       }
+                                      },
+                      "finance":  {
+                                      "eyebrow":  "Fedha za wakala",
+                                      "title":  "Mapato na malipo",
+                                      "subtitle":  "Muhtasari rahisi wa fedha kwa msimamizi wa wakala tu.",
+                                      "earned":  "Kamisheni zilizopatikana",
+                                      "pending":  "Malipo yanayosubiri",
+                                      "recent":  "Yaliyolipwa karibuni",
+                                      "activityTitle":  "Shughuli za hivi karibuni za malipo",
+                                      "forbiddenTitle":  "Fedha ni za msimamizi wa wakala tu",
+                                      "forbiddenBody":  "Jukumu lako halina ruhusa ya kuona fedha za duka hili.",
+                                      "forbiddenAction":  "Rudi kwenye dashibodi ya wakala",
+                                      "columns":  {
+                                                      "period":  "Kipindi",
+                                                      "earned":  "Yaliyopatikana",
+                                                      "pending":  "Yanayosubiri",
+                                                      "status":  "Hali"
+                                                  },
+                                      "status":  {
+                                                     "pending":  "Yanasubiri",
+                                                     "paid":  "Yamelipwa"
+                                                 }
+                                  },
+                      "state":  {
+                                    "noOrders":  "Bado hakuna oda",
+                                    "noOrdersBody":  "Unda oda ya kwanza ya dukani kwa duka hili kuanza mtiririko wa leo.",
+                                    "noReadyPickups":  "Hakuna oda tayari kuchukuliwa",
+                                    "readyForPickup":  "Oda iko tayari kwa kuchukuliwa na mteja",
+                                    "payoutPending":  "Malipo yanasubiri",
+                                    "financeUnavailable":  "Fedha hazipatikani kwa jukumu hili",
+                                    "loadingOrders":  "Tunapakia oda",
+                                    "loadingOrdersComplete":  "Oda zimepakiwa",
+                                    "loadingFinance":  "Tunapakia fedha",
+                                    "issueRaised":  "Suala limeibuliwa kwenye oda"
+                                }
+                  }
 }
