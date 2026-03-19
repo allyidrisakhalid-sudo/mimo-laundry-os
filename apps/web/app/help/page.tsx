@@ -1,17 +1,28 @@
-import type { Metadata } from "next";
-import { createPublicMetadata } from "@/lib/seo/metadata";
+"use client";
 
-export const metadata: Metadata = createPublicMetadata("help");
+import { useOnboardingMessages } from "../app/_components/p2Onboarding";
 
 export default function HelpPage() {
+  const { t } = useOnboardingMessages();
+
   return (
-    <main className="mx-auto max-w-4xl px-6 py-16 text-slate-100">
-      <div className="space-y-4">
-        <h1 className="text-4xl font-semibold">Help and support</h1>
-        <p className="text-slate-300">
-          Get answers, support guidance, and the right next step for your order.
-        </p>
-      </div>
+    <main style={{ display: "grid", gap: 24 }}>
+      <section
+        style={{
+          border: "1px solid var(--color-mist, #d7dce3)",
+          borderRadius: 24,
+          padding: 24,
+          background: "var(--color-silk, #f8f6f2)",
+        }}
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          <h1 style={{ margin: 0 }}>{t.help.publicTitle}</h1>
+          <p style={{ margin: 0 }}>{t.help.publicBody}</p>
+          <p style={{ margin: 0 }}>
+            WhatsApp: <a href="https://wa.me/255788558975" target="_blank" rel="noreferrer">+255788558975</a>
+          </p>
+        </div>
+      </section>
     </main>
   );
 }
