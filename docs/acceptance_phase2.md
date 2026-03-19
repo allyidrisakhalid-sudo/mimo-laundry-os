@@ -658,5 +658,41 @@
 
 - Gate Result: P2.3 PASS
 
+## P2.4  SEO + Searchability Foundation (Implementation)
 
+- Scope:
+  - install the approved SEO/searchability model as a real implementation layer for metadata, canonical URLs, sitemap, robots.txt, structured data, and baseline public-route verification on mimolaundry.org
+
+- Required outputs checklist:
+  - [x] docs/phase2/ux/seo_foundation_spec.md
+  - [x] docs/phase2/ux/metadata_map.md
+  - [x] docs/phase2/ux/structured_data_spec.md
+  - [x] docs/phase2/ux/performance_baseline_spec.md
+  - [x] docs/phase2/implementation/p2_seo_implementation_baseline.md
+  - [x] real route-level metadata for /, /track, /partners, /help, /login, /signup, /terms, /privacy, /refund-policy
+  - [x] real canonical host behavior aligned to https://mimolaundry.org
+  - [x] real sitemap implementation
+  - [x] real robots.txt implementation
+  - [x] real WebSite and LocalBusiness structured data implementation
+  - [x] docs/changelog_phase2.md updated
+  - [x] docs/acceptance_phase2.md updated
+
+- Verification notes:
+  - public SEO is implemented on apps/web/app, which is the real public route tree in the current repo
+  - private and role portal routes remain outside the public sitemap and are blocked from public crawl targeting
+  - canonical URLs are absolute and aligned to https://mimolaundry.org with no query-string canonical behavior
+  - one shared metadata helper and one shared structured-data helper now provide the public SEO control layer
+  - homepage publishes WebSite and LocalBusiness structured data only
+  - this chapter does not add any location or zone SEO pages
+  - baseline verification must confirm sitemap, robots, canonical tags, structured data, and stable public build behavior on /, /track, and /help
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved Phase 2 SEO/searchability model is now installed as a real implementation layer. Public and legal routes have route-correct metadata, canonical URLs resolve to https://mimolaundry.org, sitemap and robots are generated from one clean source, homepage structured data is truthful and minimal, and private app routes remain outside the public search surface.
+
+- Follow-up actions:
+  1. begin P2.5 implementation only after metadata, sitemap, robots, structured data, and baseline public performance are confirmed stable on the real public routes
+
+- Gate Result: P2.4 PASS
 

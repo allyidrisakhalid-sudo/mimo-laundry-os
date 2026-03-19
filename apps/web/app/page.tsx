@@ -1,104 +1,62 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { PublicSupportCta } from "./(public)/components/PublicSupportCta";
+import { createPublicMetadata } from "@/lib/seo/metadata";
+import {
+  getLocalBusinessStructuredData,
+  getWebsiteStructuredData,
+  toStructuredDataScript,
+} from "@/lib/seo/structured-data";
 
-function Section({ children }: { children: React.ReactNode }) {
-  return <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">{children}</section>;
-}
+export const metadata: Metadata = createPublicMetadata("home");
+
+const websiteStructuredData = toStructuredDataScript(getWebsiteStructuredData());
+const localBusinessStructuredData = toStructuredDataScript(getLocalBusinessStructuredData());
+
+const links = [
+  { href: "/track", label: "Track order", note: "Follow progress clearly from pickup to return." },
+  { href: "/partners", label: "Partners", note: "Apply as an affiliate or business partner." },
+  { href: "/help", label: "Help", note: "Get support guidance, answers, and next steps." },
+  { href: "/login", label: "Log in", note: "Secure access for existing users." },
+  { href: "/signup", label: "Sign up", note: "Create a new customer account." },
+];
 
 export default function HomePage() {
   return (
-    <div>
-      <Section>
-        <div className="max-w-2xl space-y-6">
-          <span className="inline-flex rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--color-cloud)]">
-            Laundry that feels calm
+    <main className="min-h-screen bg-slate-950 px-6 py-12 text-slate-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: websiteStructuredData }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: localBusinessStructuredData }}
+      />
+      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+        <section className="max-w-3xl space-y-4">
+          <span className="inline-flex rounded-full border border-white/15 px-3 py-1 text-xs uppercase tracking-[0.24em] text-slate-300">
+            Mimo Laundry
           </span>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Pickup, care, and return without the usual laundry stress.
+            Laundry pickup, care, tracking, and return without confusion.
           </h1>
-          <p className="max-w-xl text-base leading-7 text-[var(--color-cloud)]">
-            Mimo makes it easy to place an order, follow progress clearly, and get support quickly when needed.
+          <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Mimo Laundry keeps home and business laundry moving through one calm, premium flow with clear tracking and support.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/signup"
-              className="rounded-full bg-[var(--color-silk)] px-5 py-3 text-sm font-medium text-[var(--color-midnight)]"
-            >
-              Start now
-            </Link>
-            <Link
-              href="/track"
-              className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-[var(--color-silk)]"
-            >
-              Track order
-            </Link>
-          </div>
-        </div>
-      </Section>
+        </section>
 
-      <Section>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold">How it works</h2>
-            <p className="mt-3 text-sm text-[var(--color-cloud)]">
-              Start your order, hand off your laundry, and follow every key update from intake to return.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold">Areas served</h2>
-            <p className="mt-3 text-sm text-[var(--color-cloud)]">
-              Service availability follows defined areas so pickup, processing, and return stay reliable.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold">Trust and service proof</h2>
-            <p className="mt-3 text-sm text-[var(--color-cloud)]">
-              Clear order tracking, careful handling, and human support help every order feel accountable.
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      <Section>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-xl font-semibold">Partner with Mimo</h2>
-            <p className="mt-3 text-sm text-[var(--color-cloud)]">
-              For shops and partners who want a reliable laundry operating layer without building it alone.
-            </p>
-            <div className="mt-5">
-              <Link href="/partners" className="rounded-full border border-white/10 px-4 py-2 text-sm">
-                Explore partnerships
-              </Link>
-            </div>
-          </div>
-
-          <PublicSupportCta context="home" />
-        </div>
-      </Section>
-
-      <Section>
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
-          <h2 className="text-2xl font-semibold">Ready to start your first order?</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--color-cloud)]">
-            Open an account, place your request, and track everything with calm visibility.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {links.map((link) => (
             <Link
-              href="/signup"
-              className="rounded-full bg-[var(--color-silk)] px-5 py-3 text-sm font-medium text-[var(--color-midnight)]"
+              key={link.href}
+              href={link.href}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 transition hover:border-white/20 hover:bg-white/10"
             >
-              Start now
+              <div className="text-xl font-medium">{link.label}</div>
+              <div className="mt-2 text-sm text-slate-300">{link.note}</div>
             </Link>
-            <Link
-              href="/help"
-              className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium"
-            >
-              Get help
-            </Link>
-          </div>
-        </div>
-      </Section>
-    </div>
+          ))}
+        </section>
+      </div>
+    </main>
   );
 }

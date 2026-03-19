@@ -1,12 +1,16 @@
-import "@mimo/ui/styles.css";
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Laundry OS",
-  description: "Laundry OS web app",
+  metadataBase: new URL("https://mimolaundry.org"),
+  title: {
+    default: "Mimo Laundry",
+    template: "%s | Mimo Laundry",
+  },
+  description: "Laundry pickup, care, tracking, and return with a calm, premium experience.",
 };
 
-export default function RootLayout({
+export default function LegacySrcRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

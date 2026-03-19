@@ -186,3 +186,12 @@
 - implemented legal pages as minimal readable public documents
 - public website is now structurally ready for SEO/searchability implementation
 
+## P2.4  SEO + Searchability Foundation (Implementation)
+- installed the Phase 2 SEO implementation baseline as the control layer for canonical host, indexable public routes, non-indexable private areas, structured-data scope, and performance discipline
+- implemented real route-level metadata and canonical behavior for the approved public and legal routes on https://mimolaundry.org
+- implemented one real sitemap and one real robots.txt output for the approved public route set only
+- implemented truthful WebSite and LocalBusiness structured data with no fake ratings, reviews, hours, or unsupported claims
+- enforced the no-sprawl location-page rule by keeping this chapter focused on the approved public route set only
+- added baseline searchability and performance verification targets for the launch-critical public routes
+- public site is now ready for auth and routed entry implementation
+
