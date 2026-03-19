@@ -990,3 +990,56 @@
   1. begin P2.12 implementation only after Admin HQ is confirmed stable across dashboard, orders, operations, pricing, finance, and read-only oversight behavior
 
 - Gate Result: P2.11 PASS
+
+## P2.12  DevAdmin Console (Implementation)
+
+- Scope:
+  - install the Phase 2 DevAdmin implementation baseline
+  - implement the real DevAdmin home, diagnostics, tools, and activity routes
+  - install readable health and monitoring surfaces
+  - install failed-jobs review with safe retry behavior
+  - install feature flags management
+  - install audited override workflows with mandatory reason capture
+  - wire EN/SW DevAdmin copy into real implementation
+
+- Required outputs checklist:
+  - [x] /docs/phase2/ux/devadmin_console_spec.md
+  - [x] /docs/phase2/ux/devadmin_safety_controls_spec.md
+  - [x] /docs/phase2/ux/devadmin_override_workflow_spec.md
+  - [x] /docs/phase2/copy/devadmin_console_copy_en_sw.md
+  - [x] /docs/phase2/implementation/p2_devadmin_console_implementation_baseline.md
+  - [x] /docs/acceptance_phase2.md
+  - [x] /docs/changelog_phase2.md
+  - [x] real /app/dev route implementation
+  - [x] real /app/dev/diagnostics route implementation
+  - [x] real /app/dev/tools route implementation
+  - [x] real /app/dev/activity route implementation
+  - [x] real health and monitoring surfaces
+  - [x] real failed-jobs viewer with safe retry behavior
+  - [x] real feature flags manager surface
+  - [x] real override tools surface with mandatory reason flow
+  - [x] real activity visibility for DevAdmin actions
+  - [x] real EN/SW DevAdmin copy wired into the translation system
+
+- Verification notes:
+  - P2.11 remained committed and valid before implementation started
+  - required P2.12 docs were confirmed present before route work began
+  - DevAdmin route ownership is now normalized to /app/dev, /app/dev/diagnostics, /app/dev/tools, and /app/dev/activity
+  - diagnostics remain read-first and structured instead of acting like a raw engineering dump
+  - failed jobs are visible from a controlled tools surface and retry happens from deliberate detail context
+  - feature flags are visible with purpose, scope, and state context
+  - override actions require reason capture and show visible outcome states
+  - activity visibility shows actor, action, target, time, and outcome
+  - EN/SW DevAdmin copy is wired into the implementation through i18n keys
+  - DevAdmin can diagnose issues and apply safe controls without touching DB manually for supported scenarios
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved DevAdmin console model is now installed as a real implementation layer with coherent routes, structured diagnostics, safe retry behavior, controlled feature-flag visibility, reason-required override workflows, and readable activity visibility. The DevAdmin surface now supports safe operational control without manual database dependency for supported scenarios.
+
+- Follow-up actions:
+  1. begin P2.13 implementation only after the DevAdmin console is confirmed stable across health, diagnostics, failed jobs, feature flags, override workflows, and activity visibility
+
+- Gate Result: P2.12 PASS
+

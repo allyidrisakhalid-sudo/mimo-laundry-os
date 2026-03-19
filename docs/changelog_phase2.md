@@ -273,3 +273,14 @@
 - real read-only audit and failed-job visibility implemented
 - EN/SW admin HQ copy wired into implementation
 - Admin HQ now ready for daily business control without hunting
+
+## P2.12  DevAdmin Console (Implementation)
+- installed the Phase 2 DevAdmin implementation baseline
+- implemented the real DevAdmin home and diagnostics routes
+- implemented the real failed-jobs viewer and safe retry flow
+- implemented the real feature flags manager
+- implemented the real audited override workflow with mandatory reason capture
+- implemented real DevAdmin activity visibility
+- wired EN/SW DevAdmin copy into the implementation
+- DevAdmin console is now ready for safe operational control without manual DB dependency
+
