@@ -116,6 +116,39 @@ export function useOnboardingMessages() {
       adminDev: {
         title: t("onboarding.adminDev.title"),
       },
+      customerPortal: {
+        home: {
+          title: t("customerPortal.home.title"),
+          subtitle: t("customerPortal.home.subtitle"),
+          activeOrderLabel: t("customerPortal.home.activeOrderLabel"),
+          primaryCta: t("customerPortal.home.primaryCta"),
+          secondaryCta: t("customerPortal.home.secondaryCta"),
+          recentOrdersTitle: t("customerPortal.home.recentOrdersTitle"),
+          recentOrdersBody: t("customerPortal.home.recentOrdersBody"),
+          helpTitle: t("customerPortal.home.helpTitle"),
+        },
+        orders: {
+          title: t("customerPortal.orders.title"),
+          subtitle: t("customerPortal.orders.subtitle"),
+        },
+        detail: {
+          title: t("customerPortal.detail.title"),
+          subtitle: t("customerPortal.detail.subtitle"),
+          summaryLabel: t("customerPortal.detail.summaryLabel"),
+          timelineLabel: t("customerPortal.detail.timelineLabel"),
+          paymentLabel: t("customerPortal.detail.paymentLabel"),
+          paymentState: t("customerPortal.detail.paymentState"),
+          helpTitle: t("customerPortal.detail.helpTitle"),
+        },
+        profile: {
+          title: t("customerPortal.profile.title"),
+          subtitle: t("customerPortal.profile.subtitle"),
+          accountLabel: t("customerPortal.profile.accountLabel"),
+          addressesLabel: t("customerPortal.profile.addressesLabel"),
+          languageLabel: t("customerPortal.profile.languageLabel"),
+          receiptsLabel: t("customerPortal.profile.receiptsLabel"),
+        },
+      },
     }),
     [t],
   );
@@ -349,6 +382,7 @@ export function OperatorSetupCard(props: { role: OperatorRole }) {
     </Card>
   );
 }
+
 
 
 

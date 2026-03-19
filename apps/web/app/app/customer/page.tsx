@@ -40,12 +40,8 @@ function CustomerHome() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/app/customer/orders/ORD-24031">{t.customerPortal.home.primaryCta}</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/app/customer/orders">{t.customerPortal.home.secondaryCta}</Link>
-            </Button>
+            <Link href="/app/customer/orders/ORD-24031"><Button>{t.customerPortal.home.primaryCta}</Button></Link>
+            <Link href="/app/customer/orders"><Button variant="secondary">{t.customerPortal.home.secondaryCta}</Button></Link>
           </div>
 
           <PortalHelpEntry locale={locale} />
@@ -97,3 +93,4 @@ export default function CustomerPage() {
 
   return <CustomerHome />;
 }
+
