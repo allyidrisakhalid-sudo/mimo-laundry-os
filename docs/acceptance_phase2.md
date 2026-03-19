@@ -484,7 +484,7 @@
 - PASS / FAIL: FAIL
 
 - Summary:
-  - P2.14 corrected the public apex/www host model and preserved secure API reachability, but it did not reach a passing state because strict TLS was not left stable, HSTS remains active on live web responses, and deferred HSTS plus strict-TLS stability remain unresolved.
+  - P2.14 corrected the public apex/www host model, preserved secure API reachability, and restored /app redirect behavior, but it did not reach a passing state because Full (strict) was not stable for the live web origin and live Vercel web responses still emit HSTS as a documented infrastructure constraint.
 
 - Follow-up actions:
   1. begin P2.15 implementation only after production DNS, TLS, redirects, cache scope, and secure web/API reachability are confirmed stable, with HSTS still deferred unless explicitly proven safe
@@ -1090,6 +1090,7 @@
   1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
 
 - Gate Result: P2.13 PASS
+
 
 
 
