@@ -731,5 +731,24 @@
 - Follow-up actions:
   1. begin downstream portal implementation from this live auth foundation and keep all later /app/* routes aligned to the shared auth/session model
 
+## P2.6  First-Run Onboarding (Implementation)
+
+- Scope:
+  - customer first-run onboarding implemented in the live web app
+  - operator setup prompts implemented for driver, hub, affiliate staff, and affiliate admin
+  - help entry points implemented for each required role surface
+  - completion logic prevents repeated first-run interruption after finish
+  - onboarding/help copy now wired through the real EN/SW i18n layer
+  - onboarding/help UI now uses the shared UI component system rather than one-off inline UI
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - P2.6 implementation is now aligned with the real repo architecture. Customer first-run onboarding remains limited to two steps, operator setup prompts are present for all required roles, role help entries are present, completion state persists correctly, copy is sourced from the real EN/SW translation layer, and the onboarding surface now uses the shared component system already exported by the UI package.
+
+- Follow-up actions:
+  1. begin P2.7 implementation only after first-run onboarding, setup prompts, and role help entries are confirmed stable, minimal, and non-redundant
+
+- Gate Result: P2.6 PASS
 
 

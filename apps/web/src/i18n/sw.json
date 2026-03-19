@@ -145,5 +145,104 @@
     "toastInfoDescription": "Taarifa mpya za uwasilishaji zinapatikana.",
     "toastErrorTitle": "Hatua imeshindikana",
     "toastErrorDescription": "Tafadhali jaribu tena."
+  },
+  "onboarding": {
+    "common": {
+      "loading": "Tunapakia ukurasa wako",
+      "continue": "Endelea",
+      "finish": "Kamilisha usanidi",
+      "notNow": "Sio sasa",
+      "done": "Usanidi umekamilika",
+      "incomplete": "Usanidi unasubiri",
+      "language": "Lugha",
+      "help": "Msaada",
+      "whatsapp": "Msaada wa WhatsApp",
+      "openHelp": "Fungua msaada"
+    },
+    "help": {
+      "label": "Unahitaji msaada?",
+      "profileHelp": "Pata msaada kwa ukurasa huu",
+      "dashboardHelp": "Tazama msaada wa dashibodi hii",
+      "publicTitle": "Msaada na usaidizi",
+      "publicBody": "Pata mwongozo wa usanidi, msaada wa oda, na usaidizi wa moja kwa moja.",
+      "orderTitle": "Msaada wa oda",
+      "orderBody": "Tumia ingizo hili la msaada unapohitaji usaidizi kwa oda maalum.",
+      "taskTitle": "Msaada wa kazi",
+      "taskBody": "Tumia ingizo hili la msaada pale pickup, dropoff, au uthibitisho wa stop unapohitaji usaidizi.",
+      "financeTitle": "Msaada wa fedha",
+      "financeBody": "Tumia ingizo hili la msaada kwa maswali ya payout, salio, au settlement.",
+      "generalTitle": "Msaada wa jumla",
+      "generalBody": "Tumia ingizo hili la msaada unapohitaji mwongozo kwa ukurasa wa sasa.",
+      "adminDevBody": "Tumia kituo cha msaada kwa mwongozo wa ufikiaji, kazi, na uendeshaji."
+    },
+    "customer": {
+      "firstRunTitle": "Karibu Mimo",
+      "firstRunBody": "Kamilisha usanidi wako wa kwanza kwa hatua mbili fupi, kisha anza kuagiza.",
+      "stepOneTitle": "Chagua lugha yako",
+      "stepOneBody": "Chagua lugha unayotaka kutumia sasa. Unaweza kubadilisha baadaye.",
+      "stepTwoTitle": "Thibitisha taarifa zako",
+      "stepTwoBody": "Kagua jina na namba yako ili safari yako ya kwanza ya oda ianze kwa uwazi.",
+      "nameLabel": "Jina kamili",
+      "phoneLabel": "Namba ya simu",
+      "startButton": "Anza usanidi",
+      "completeButton": "Maliza na fungua nyumbani",
+      "skipButton": "Ruka kwa sasa",
+      "homeTitle": "Nyumbani kwa mteja",
+      "homeBody": "Fuatilia oda inayoendelea, anza ombi jipya, na pata msaada kutoka sehemu moja iliyo wazi.",
+      "ordersTitle": "Oda",
+      "ordersBody": "Oda zako za sasa na za hivi karibuni zitaonekana hapa.",
+      "profileTitle": "Msaada wa profaili",
+      "orderDetailTitle": "Msaada wa maelezo ya oda"
+    },
+    "driver": {
+      "homeTitle": "Nyumbani kwa dereva",
+      "homeBody": "Kagua route ya leo, kamilisha uthibitisho, na shughulikia cash prompts kwa taps chache.",
+      "taskDetailTitle": "Msaada wa maelezo ya kazi",
+      "setupTitle": "Usanidi wa dereva",
+      "setupBody": "Kagua route basics, sheria za uthibitisho, na cash handling kabla ya kuanza kazi.",
+      "checklist": [
+        "Hakikisha simu imejaa chaji na location imewashwa.",
+        "Kagua sheria za uthibitisho kabla ya stop ya kwanza.",
+        "Jua pa kupata msaada ikiwa stop haiwezi kukamilika."
+      ],
+      "cta": "Weka usanidi wa dereva umekamilika"
+    },
+    "hub": {
+      "dashboardTitle": "Dashibodi ya hub",
+      "dashboardBody": "Hamisha kazi kupitia intake, processing, QC, na dispatch kutoka uso mmoja wa uendeshaji.",
+      "issueTitle": "Msaada wa oda ya hub",
+      "setupTitle": "Usanidi wa hub",
+      "setupBody": "Kagua intake, stage movement, na dispatch basics kabla ya kushughulikia kazi halisi.",
+      "checklist": [
+        "Anza na sheria za intake za scanner-first.",
+        "Hakikisha stage updates ni sahihi na za haraka.",
+        "Pandisha blocked au failed items kupitia msaada."
+      ],
+      "cta": "Weka usanidi wa hub umekamilika"
+    },
+    "affiliate": {
+      "dashboardTitle": "Dashibodi ya affiliate",
+      "dashboardBody": "Tengeneza walk-in orders kwa haraka, fuatilia handover za shop, na kagua earnings kwa urahisi.",
+      "orderDetailTitle": "Msaada wa oda ya affiliate",
+      "financeTitle": "Msaada wa fedha wa affiliate",
+      "staffSetupTitle": "Usanidi wa affiliate staff",
+      "staffSetupBody": "Kagua walk-in intake, handover rules, na customer support handoff.",
+      "adminSetupTitle": "Usanidi wa affiliate admin",
+      "adminSetupBody": "Kagua shop activity, pickup readiness, na payout visibility kabla ya kufungua.",
+      "staffChecklist": [
+        "Tumia fast walk-in flow kwa kila shop order mpya.",
+        "Thibitisha kila handover kwa uwazi kabla ya kutoa.",
+        "Tumia msaada wakati oda inahitaji intervention."
+      ],
+      "adminChecklist": [
+        "Kagua mtiririko wa shop order na pickup readiness.",
+        "Angalia payout na salio kila siku.",
+        "Tumia msaada kwa payout au access issues."
+      ],
+      "cta": "Weka usanidi wa affiliate umekamilika"
+    },
+    "adminDev": {
+      "title": "Eneo la uendeshaji"
+    }
   }
 }

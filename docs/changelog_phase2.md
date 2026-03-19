@@ -209,3 +209,15 @@
 - confirmed lint, typecheck, and production build now pass
 - confirmed role portal pages currently exist only under apps/web/src/app and are not live app-router routes
 - kept P2.5 implementation status incomplete until live /app/* role routes are created and verified
+
+## P2.6  First-Run Onboarding (Implementation)
+- installed the Phase 2 onboarding implementation baseline
+- implemented real customer first-run onboarding inside the customer portal
+- implemented real operator setup prompts for driver, hub, and affiliate roles
+- installed real contextual help entry points across role surfaces
+- moved onboarding/help copy into apps/web/src/i18n/en.json and apps/web/src/i18n/sw.json
+- replaced embedded onboarding message object with real react-i18next usage
+- replaced one-off onboarding UI with shared UI components already exported by the UI package
+- kept customer first-run flow to two short steps and preserved role help/setup coverage
+
+
