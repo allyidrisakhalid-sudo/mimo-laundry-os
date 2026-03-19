@@ -488,6 +488,7 @@
 
 - Follow-up actions:
   1. begin P2.15 implementation only after production DNS, TLS, redirects, cache scope, and secure web/API reachability are confirmed stable, with HSTS still deferred unless explicitly proven safe
+  2. treat docs/phase2/implementation/p2_cloudflare_infrastructure_constraint.md as the authoritative blocker record for the current P2.14 fail state
 
 ## P2.15  Role-Based Journey Tests (Device-ready)
 
@@ -1090,6 +1091,7 @@
   1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
 
 - Gate Result: P2.13 PASS
+
 
 
 

@@ -143,6 +143,7 @@
 - verified that live web responses still emit HSTS, so deferred-HSTS validation is not yet satisfied
 - verified that apex /app now resolves and redirects to /login with private no-store behavior
 - classified the remaining deferred-HSTS blocker as a Phase 2 Infrastructure Constraint because live Vercel web responses still emit Strict-Transport-Security despite repo-level override and Cloudflare-side HSTS disablement
+- recorded the frozen infrastructure constraint in docs/phase2/implementation/p2_cloudflare_infrastructure_constraint.md
 - left P2.14 implementation in a documented FAIL state pending strict-TLS and deferred-HSTS/platform-constraint resolution
 
 ## P2.15  Role-based journey tests (device-ready)
@@ -294,6 +295,7 @@
 - implemented refund and credit visibility with ledger-safe wording
 - wired EN/SW support copy into the implementation
 - support is now ready for end-to-end operational use with clear visibility and audit trail
+
 
 
 
