@@ -141,7 +141,7 @@
 - confirmed secure API reachability on api.mimolaundry.org
 - verified that Full (strict) did not remain stable for the live web origin
 - verified that live web responses still emit HSTS, so deferred-HSTS validation is not yet satisfied
-- verified that private app reachability is not yet confirmed because /app returned 404 during live checks
+- verified that apex /app now resolves and redirects to /login with private no-store behavior
 - left P2.14 implementation in a documented FAIL state pending strict-TLS, deferred-HSTS, and app-route validation resolution
 
 ## P2.15  Role-based journey tests (device-ready)
@@ -293,5 +293,6 @@
 - implemented refund and credit visibility with ledger-safe wording
 - wired EN/SW support copy into the implementation
 - support is now ready for end-to-end operational use with clear visibility and audit trail
+
 
 

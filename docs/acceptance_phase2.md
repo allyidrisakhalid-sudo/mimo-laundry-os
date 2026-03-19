@@ -468,7 +468,7 @@
   - [ ] baseline security-header behavior verified
   - [ ] HSTS deferred unless explicitly proven safe
   - [x] secure API reachability verified
-  - [ ] secure web/app behavior fully verified
+  - [x] secure web/app behavior verified for apex /app redirect flow
 
 - Verification notes:
   - apex host now resolves and serves as canonical production host
@@ -477,13 +477,13 @@
   - api.mimolaundry.org is reachable securely over HTTPS
   - Full (strict) caused production web host failure and was not left as stable production state
   - live web responses still emit Strict-Transport-Security: max-age=63072000
-  - /app currently returns 404 and is not yet verified as a working private app route
+  - /app now resolves on apex and redirects to /login with private no-store behavior
   - deferred-HSTS requirement is therefore not satisfied in live production behavior
 
 - PASS / FAIL: FAIL
 
 - Summary:
-  - P2.14 corrected the public apex/www host model and preserved secure API reachability, but it did not reach a passing state because strict TLS was not left stable, HSTS remains active on live web responses, and private app reachability is not yet verified.
+  - P2.14 corrected the public apex/www host model and preserved secure API reachability, but it did not reach a passing state because strict TLS was not left stable, HSTS remains active on live web responses, and deferred HSTS plus strict-TLS stability remain unresolved.
 
 - Follow-up actions:
   1. begin P2.15 implementation only after production DNS, TLS, redirects, cache scope, and secure web/API reachability are confirmed stable, with HSTS still deferred unless explicitly proven safe
@@ -1089,4 +1089,5 @@
   1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
 
 - Gate Result: P2.13 PASS
+
 
