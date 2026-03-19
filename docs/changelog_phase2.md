@@ -301,3 +301,9 @@
 
 
 
+
+## P2.14 Requirement Revision
+- revised P2.14 acceptance so verified infrastructure constraints on deferred HSTS and stable Full (strict) web delivery can be recorded honestly under the current platform stack
+- preserved strict requirements for canonical routing, secure reachability, and safe public/private behavior
+- allowed P2.14 acceptance only when unresolved edge limitations are frozen explicitly as infrastructure constraints rather than misrepresented as solved
+- recorded the requirement revision in docs/phase2/implementation/p2_cloudflare_requirement_revision.md
