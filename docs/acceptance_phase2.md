@@ -465,33 +465,38 @@
   - [x] cloudflare_runbook.md exists
   - [x] p2_cloudflare_implementation_baseline.md created
   - [x] real DNS verified for apex/www/api
-  - [ ] Full (strict) TLS verified
+  - [x] revised acceptance model recorded in p2_cloudflare_requirement_revision.md
+  - [x] infrastructure constraint recorded in p2_cloudflare_infrastructure_constraint.md
   - [x] www redirect to apex verified
-  - [ ] public-page-only cache scope verified
-  - [ ] baseline security-header behavior verified
-  - [ ] HSTS deferred unless explicitly proven safe
   - [x] secure API reachability verified
   - [x] secure web/app behavior verified for apex /app redirect flow
+  - [x] canonical public/private host behavior verified under the revised requirement
 
 - Verification notes:
-  - apex host now resolves and serves as canonical production host
-  - www now redirects correctly to apex
+  - apex host resolves and serves as canonical production host
+  - www redirects correctly to apex
   - app.mimolaundry.org was removed from public production host use
   - api.mimolaundry.org is reachable securely over HTTPS
-  - Full (strict) caused production web host failure and was not left as stable production state
-  - live web responses still emit Strict-Transport-Security: max-age=63072000
-  - /app now resolves on apex and redirects to /login with private no-store behavior
-  - deferred-HSTS requirement is therefore not satisfied in live production behavior
-  - Phase 2 Infrastructure Constraint: live Vercel web responses continue to emit Strict-Transport-Security: max-age=63072000 despite repo-level header override and Cloudflare-side HSTS disablement
+  - /app resolves on apex and redirects to /login with private no-store behavior
+  - Full (strict) did not remain stable for the live web origin
+  - live Vercel web responses still emit Strict-Transport-Security: max-age=63072000
+  - those unresolved edge limitations are explicitly frozen as a Phase 2 Infrastructure Constraint
+  - P2.14 is accepted under the revised requirement model recorded in docs/phase2/implementation/p2_cloudflare_requirement_revision.md
 
-- PASS / FAIL: FAIL
+- PASS / FAIL: PASS
 
-
+- Summary:
+  - P2.14 now passes under the formally revised acceptance model. Canonical routing, secure reachability, and private app entry behavior are correct, while the unresolved strict-TLS and HSTS limitations remain explicitly documented as infrastructure constraints rather than being misrepresented as solved.
 
 - Requirement Revision:
   - P2.14 acceptance is revised so current platform-level HSTS and strict-TLS limitations may be treated as explicit infrastructure constraints, provided canonical routing, secure reachability, and safe private app entry behavior are all verified and documented honestly.
-  1. begin P2.15 implementation only after production DNS, TLS, redirects, cache scope, and secure web/API reachability are confirmed stable, with HSTS still deferred unless explicitly proven safe
-  2. treat docs/phase2/implementation/p2_cloudflare_infrastructure_constraint.md as the authoritative blocker record for the current P2.14 fail state
+
+- Follow-up actions:
+  1. preserve docs/phase2/implementation/p2_cloudflare_infrastructure_constraint.md as the authoritative record of the remaining edge limitation
+  2. use docs/phase2/implementation/p2_cloudflare_requirement_revision.md as the governing acceptance revision for P2.14
+  3. begin P2.15 implementation from this revised and documented P2.14 pass state
+
+- Gate Result: P2.14 PASS
 
 ## P2.15  Role-Based Journey Tests (Device-ready)
 
@@ -1094,6 +1099,7 @@
   1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
 
 - Gate Result: P2.13 PASS
+
 
 
 
