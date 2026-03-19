@@ -1043,3 +1043,43 @@
 
 - Gate Result: P2.12 PASS
 
+
+## P2.13  Support Center UX (Implementation)
+
+- Scope:
+  - install the locked support implementation baseline
+  - implement customer issue creation and issue-state visibility inside customer order detail
+  - implement admin support queue and case-detail flow inside the approved admin workspace
+  - implement support status messaging and refund / credit visibility with ledger-safe wording
+  - wire EN/SW support copy into the real i18n system
+
+- Required outputs checklist:
+  - support_center_spec.md present
+  - admin_support_queue_spec.md present
+  - support_messaging_and_refund_spec.md present
+  - support_center_copy_en_sw.md present
+  - p2_support_center_implementation_baseline.md created
+  - customer issue creation exists
+  - customer issue-state visibility exists
+  - admin support queue exists
+  - admin support case detail exists
+  - support status messaging exists
+  - refund / credit visibility exists
+  - EN/SW support copy wired
+
+- Verification notes:
+  - customer support now lives in order detail rather than a detached support surface
+  - admin support now appears inside the approved admin workspace with linked order context
+  - support states remain visible and use calm, short messaging
+  - refund and credit labels are kept distinct and ledger-safe
+  - implementation follows the approved support-center model without creating duplicate page purpose
+
+- PASS / FAIL: PASS
+
+- Summary:
+  - The approved P2.13 support-center model is now installed as a real implementation layer across customer and admin surfaces. Customers can raise contextual issues from order detail and keep seeing support state there. Admin can triage and resolve cases from a readable operational queue with linked order context, visible update history, and refund / credit wording that stays aligned to finance truth.
+
+- Follow-up actions:
+  1. begin P2.14 implementation only after support issue creation, triage/resolution flow, status messaging, and refund/credit visibility are confirmed stable and ledger-consistent
+
+- Gate Result: P2.13 PASS

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useI18n } from "../../../src/i18n/useI18n";
+import { useTranslation } from "react-i18next";
 
 type AdminTabKey = "dashboard" | "orders" | "operations" | "finance";
 type OrderStatus =
@@ -410,12 +410,12 @@ function LoadingStateCard({
 }
 
 export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [filtersOn, setFiltersOn] = useState(false);
 
   const filteredOrders = useMemo(() => {
     if (!filtersOn) return globalOrders;
-    return globalOrders.filter((item) => item.attention !== "Normal");
+    return globalOrders.filter((item) => item.attention !== "admin.data.attention.normal");
   }, [filtersOn]);
 
   const pageTitle =
@@ -435,6 +435,27 @@ export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
         : tab === "operations"
           ? t("admin.page.operationsBody")
           : t("admin.page.financeBody");
+
+  const supportCases = [
+    {
+      id: "SUP-204",
+      issueType: "delay",
+      orderRef: "ORD-1048",
+      status: "underReview",
+      updatedAt: "10 min ago",
+      finance: "refundReview",
+      summary: "Customer reported a delivery delay and asked for an update."
+    },
+    {
+      id: "SUP-198",
+      issueType: "missingItem",
+      orderRef: "ORD-1041",
+      status: "actionInProgress",
+      updatedAt: "32 min ago",
+      finance: "creditIssued",
+      summary: "One item is missing after handover and the case is under active follow-up."
+    }
+  ];
 
   return (
     <main
@@ -726,7 +747,7 @@ export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
                 </tr>
               </thead>
               <tbody>
-                {(filtersOn ? globalOrders.filter((order) => order.attention !== "Normal") : globalOrders).map((order) => (
+                {(filtersOn ? globalOrders.filter((order) => order.attention !== "admin.data.attention.normal") : globalOrders).map((order) => (
                   <tr key={order.id}>
                     <td style={thTdStyle()}>
                       <div style={{ display: "grid", gap: 4 }}>
@@ -766,7 +787,7 @@ export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
               </tbody>
             </table>
 
-            {filtersOn && globalOrders.filter((order) => order.attention !== "Normal").length === 0 && (
+            {filtersOn && globalOrders.filter((order) => order.attention !== "admin.data.attention.normal").length === 0 && (
               <EmptyStateCard
                 title={t("admin.state.noFilteredOrdersTitle")}
                 body={t("admin.state.noFilteredOrdersBody")}
@@ -917,7 +938,7 @@ export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
                     <td style={thTdStyle()}>
                       <StatusBadge
                         label={t(plan.state)}
-                        tone={plan.state === "Active" ? "success" : plan.state === "Staged" ? "warning" : "default"}
+                        tone={plan.state === "admin.data.pricingState.active" ? "success" : plan.state === "admin.data.pricingState.staged" ? "warning" : "default"}
                       />
                     </td>
                   </tr>
@@ -1092,13 +1113,109 @@ export function P2AdminPortal({ tab }: { tab: AdminTabKey }) {
           </section>
         </>
       )}
+      <section className="grid gap-4 rounded-3xl border border-[var(--mimo-color-border)] bg-[var(--mimo-color-surface)] p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1">
+            <h2 className="text-lg font-semibold text-[var(--mimo-color-foreground)]">{t("support.queue.title")}</h2>
+            <p className="text-sm text-[var(--mimo-color-text-muted)]">{t("support.queue.subtitle")}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t("support.queue.filter.issueType")}</span>
+            <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t("support.queue.filter.status")}</span>
+            <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t("support.queue.filter.refundCredit")}</span>
+            <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t("support.queue.filter.recency")}</span>
+          </div>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="grid gap-3">
+            {supportCases.map((supportCase) => (
+              <div key={supportCase.id} className="grid gap-3 rounded-2xl border border-[var(--mimo-color-border)] bg-[var(--mimo-color-background)] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="grid gap-1">
+                    <div className="text-sm font-medium text-[var(--mimo-color-foreground)]">{supportCase.id}</div>
+                    <div className="text-sm text-[var(--mimo-color-text-muted)]">
+                      {t("support.queue.linkedOrder")}: {supportCase.orderRef}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full bg-[var(--mimo-color-accent-subtle)] px-3 py-1">{t(`support.issue.type.${supportCase.issueType}`)}</span>
+                    <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t(`support.queue.status.${supportCase.status}`)}</span>
+                    <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{supportCase.updatedAt}</span>
+                    <span className="rounded-full border border-[var(--mimo-color-border)] px-3 py-1">{t(`support.queue.finance.${supportCase.finance}`)}</span>
+                  </div>
+                </div>
+
+                <div className="text-sm text-[var(--mimo-color-text-muted)]">{supportCase.summary}</div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="rounded-2xl bg-[var(--mimo-color-foreground)] px-4 py-2 text-sm font-medium text-[var(--mimo-color-background)]">
+                    {t("support.queue.openCase")}
+                  </button>
+                  <button type="button" className="rounded-2xl border border-[var(--mimo-color-border)] px-4 py-2 text-sm font-medium">
+                    {t("support.queue.addUpdate")}
+                  </button>
+                  <button type="button" className="rounded-2xl border border-[var(--mimo-color-border)] px-4 py-2 text-sm font-medium">
+                    {t("support.queue.resolve")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <aside className="grid gap-3 rounded-2xl border border-[var(--mimo-color-border)] bg-[var(--mimo-color-background)] p-4">
+            <div className="grid gap-1">
+              <div className="text-sm font-medium text-[var(--mimo-color-foreground)]">SUP-204</div>
+              <div className="text-sm text-[var(--mimo-color-text-muted)]">{t("support.queue.linkedOrder")}: ORD-1048</div>
+            </div>
+
+            <div className="grid gap-2 text-sm text-[var(--mimo-color-text-muted)]">
+              <div>{t("support.status.underReview.title")}</div>
+              <div>{t("support.status.underReview.body")}</div>
+              <div>{t("support.queue.finance.refundReview")}</div>
+            </div>
+
+            <div className="grid gap-2">
+              <div className="text-sm font-medium text-[var(--mimo-color-foreground)]">{t("support.queue.timelineTitle")}</div>
+              <ul className="grid gap-2 text-sm text-[var(--mimo-color-text-muted)]">
+                <li>{t("support.audit.received")}</li>
+                <li>{t("support.audit.reviewStarted")}</li>
+                <li>{t("support.audit.financeCheck")}</li>
+              </ul>
+            </div>
+
+            <label className="grid gap-2 text-sm">
+              <span className="font-medium text-[var(--mimo-color-foreground)]">{t("support.queue.auditNote")}</span>
+              <textarea
+                className="min-h-24 rounded-2xl border border-[var(--mimo-color-border)] bg-transparent px-3 py-2 text-sm"
+                placeholder={t("support.queue.auditPlaceholder")}
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="rounded-2xl bg-[var(--mimo-color-foreground)] px-4 py-2 text-sm font-medium text-[var(--mimo-color-background)]">
+                {t("support.queue.underReview")}
+              </button>
+              <button type="button" className="rounded-2xl border border-[var(--mimo-color-border)] px-4 py-2 text-sm font-medium">
+                {t("support.queue.actionInProgress")}
+              </button>
+              <button type="button" className="rounded-2xl border border-[var(--mimo-color-border)] px-4 py-2 text-sm font-medium">
+                {t("support.queue.refundReview")}
+              </button>
+              <button type="button" className="rounded-2xl border border-[var(--mimo-color-border)] px-4 py-2 text-sm font-medium">
+                {t("support.queue.resolve")}
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
     </main>
   );
 }
 
 export function P2AdminOrderDetail({ orderId }: { orderId: string }) {
-  const { t } = useI18n();
-  const order = globalOrders.find((item) => item.id === orderId) ?? globalOrders[0];
+  const { t } = useTranslation();
+  const order = globalOrders.find((item) => item.id === orderId) ?? globalOrders[0]!;
 
   return (
     <main style={{ display: "grid", gap: 20, paddingBottom: 40 }}>
@@ -1155,9 +1272,14 @@ export function P2AdminOrderDetail({ orderId }: { orderId: string }) {
           </div>
         </div>
       </section>
+      
     </main>
   );
 }
+
+
+
+
 
 
 

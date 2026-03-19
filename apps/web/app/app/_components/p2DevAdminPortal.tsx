@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useI18n } from "@/src/i18n/useI18n";
+import { useTranslation } from "react-i18next";
 
 type HealthState = "healthy" | "degraded" | "warning";
 type RetryState = "idle" | "inProgress" | "complete" | "failed";
@@ -109,7 +109,7 @@ function PageHeader({
 }
 
 function DevNav() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
 
   const links = [
     { href: "/app/dev", label: t("dev.nav.home") },
@@ -244,7 +244,7 @@ function useDevAdminData(t: (key: string) => string) {
 }
 
 export function DevAdminHomeView() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const data = useDevAdminData(t);
 
   return (
@@ -326,7 +326,7 @@ export function DevAdminHomeView() {
 }
 
 export function DevAdminDiagnosticsView() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const data = useDevAdminData(t);
 
   return (
@@ -385,7 +385,7 @@ export function DevAdminDiagnosticsView() {
 }
 
 export function DevAdminToolsView() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const data = useDevAdminData(t);
 
   const [selectedJobId, setSelectedJobId] = useState(data.failedJobs[0]?.id ?? "");
@@ -405,7 +405,7 @@ export function DevAdminToolsView() {
   const handleRetry = () => {
     setRetryState("inProgress");
     window.setTimeout(() => {
-      setRetryState(selectedJob.id === "job-payout-close" ? "complete" : "failed");
+      setRetryState(selectedJob!.id === "job-payout-close" ? "complete" : "failed");
     }, 600);
   };
 
@@ -421,7 +421,7 @@ export function DevAdminToolsView() {
 
     setOverrideState("pending");
     window.setTimeout(() => {
-      setOverrideState(selectedOverride.id === "release-driver-lock" ? "failed" : "applied");
+      setOverrideState(selectedOverride!.id === "release-driver-lock" ? "failed" : "applied");
     }, 700);
   };
 
@@ -458,8 +458,8 @@ export function DevAdminToolsView() {
 
           <article className="mimo-card mimo-stack-sm">
             <strong>{t("dev.jobs.detailTitle")}</strong>
-            <div>{t(selectedJob.typeKey)}</div>
-            <div className="mimo-muted">{t(selectedJob.detailsKey)}</div>
+            <div>{t(selectedJob!.typeKey)}</div>
+            <div className="mimo-muted">{t(selectedJob!.detailsKey)}</div>
             <div className="mimo-inline-banner mimo-inline-banner--warning">{t("dev.jobs.retryAuditReminder")}</div>
             <button type="button" className="mimo-button mimo-button--primary" onClick={handleRetry}>
               {t("dev.jobs.retry")}
@@ -499,13 +499,13 @@ export function DevAdminToolsView() {
 
           <article className="mimo-card mimo-stack-sm">
             <strong>{t("dev.flags.detailTitle")}</strong>
-            <div>{t(selectedFlag.nameKey)}</div>
-            <div>{t(selectedFlag.summaryKey)}</div>
-            <div className="mimo-muted">{t(selectedFlag.scopeKey)}</div>
-            <div className="mimo-muted">{t(selectedFlag.lastChangedKey)}</div>
+            <div>{t(selectedFlag!.nameKey)}</div>
+            <div>{t(selectedFlag!.summaryKey)}</div>
+            <div className="mimo-muted">{t(selectedFlag!.scopeKey)}</div>
+            <div className="mimo-muted">{t(selectedFlag!.lastChangedKey)}</div>
             <button
               type="button"
-              className={actionToneClass(selectedFlag.sensitivity === "high" ? "danger" : "standard")}
+              className={actionToneClass(selectedFlag!.sensitivity === "high" ? "danger" : "standard")}
               onClick={handleFlagChange}
             >
               {t("dev.flags.changeFlag")}
@@ -542,8 +542,8 @@ export function DevAdminToolsView() {
 
           <article className="mimo-card mimo-stack-sm">
             <strong>{t("dev.override.detailTitle")}</strong>
-            <div>{t(selectedOverride.nameKey)}</div>
-            <div>{t(selectedOverride.summaryKey)}</div>
+            <div>{t(selectedOverride!.nameKey)}</div>
+            <div>{t(selectedOverride!.summaryKey)}</div>
             <div className="mimo-inline-banner mimo-inline-banner--danger">{t("dev.override.auditWarning")}</div>
 
             <label className="mimo-field">
@@ -573,7 +573,7 @@ export function DevAdminToolsView() {
 }
 
 export function DevAdminActivityView() {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const data = useDevAdminData(t);
   const [filter, setFilter] = useState<"all" | "retry" | "flag" | "override">("all");
 
@@ -633,3 +633,4 @@ export function DevAdminActivityView() {
     </div>
   );
 }
+

@@ -872,8 +872,103 @@
   "dev.diagnostics.escalationTitle": "Dokezo la escalation",
   "dev.diagnostics.escalationDescription": "Tumia escalation ya binadamu pale uchunguzi unaonyesha hatari ya mfumo kupita matumizi salama ya zana.",
   "dev.diagnostics.escalationBody": "Kama hitilafu zinaendelea baada ya retry salama, eskaleti kwa njia ya uendeshaji iliyoidhinishwa."
+,
+  "support": {
+    "issue": {
+      "title": "Msaada kwa oda hii",
+      "subtitle": "Wasilisha tatizo fupi hapa na uone masasisho ndani ya muktadha huu wa oda.",
+      "report": "Ripoti tatizo",
+      "typeLabel": "Aina ya tatizo",
+      "type": {
+        "damage": "Uharibifu",
+        "missingItem": "Kitu kimekosekana",
+        "delay": "Kuchelewa",
+        "refundRequest": "Ombi la refund"
+      },
+      "description": "Maelezo mafupi",
+      "descriptionPlaceholder": "Eleza kilichotokea kwa mstari mmoja au miwili mifupi.",
+      "submit": "Wasilisha tatizo",
+      "submitted": "Tatizo limewasilishwa",
+      "viewStatus": "Angalia hali ya msaada"
+    },
+    "queue": {
+      "title": "Foleni ya msaada",
+      "subtitle": "Kagua matatizo yaliyounganishwa na oda, songesha hali mbele, na weka kila sasisho lionekane.",
+      "openCase": "Fungua kesi",
+      "newCase": "Kesi mpya",
+      "underReview": "Hamishia kwenye ukaguzi",
+      "actionInProgress": "Weka hatua inaendelea",
+      "resolve": "Maliza kesi",
+      "addUpdate": "Ongeza sasisho",
+      "linkedOrder": "Oda iliyounganishwa",
+      "refundReview": "Mapitio ya refund / credit",
+      "timelineTitle": "Kumbukumbu ya masasisho",
+      "auditNote": "Dokezo la ukaguzi",
+      "auditPlaceholder": "Ongeza sasisho fupi la kiutendaji ambalo litaonekana kwenye historia ya kesi.",
+      "filter": {
+        "issueType": "Aina ya tatizo",
+        "status": "Hali ya msaada",
+        "refundCredit": "Refund / credit inahusika",
+        "recency": "Ukaribu / kipaumbele"
+      },
+      "status": {
+        "received": "Imepokelewa",
+        "underReview": "Inapitiwa",
+        "actionInProgress": "Hatua inaendelea",
+        "refundReview": "Mapitio ya refund / credit",
+        "resolved": "Imetatuliwa"
+      },
+      "finance": {
+        "refundReview": "Mapitio ya refund / credit",
+        "creditIssued": "Credit imetolewa",
+        "refundCompleted": "Refund imekamilika"
+      }
+    },
+    "status": {
+      "received": {
+        "title": "Imepokelewa",
+        "body": "Tumepokea tatizo lako na kulihusisha na oda hii."
+      },
+      "underReview": {
+        "title": "Inapitiwa",
+        "body": "Timu yetu inapitia tatizo hili na itasasisha oda hii hatua inayofuata ikishakuwa wazi."
+      },
+      "actionInProgress": {
+        "title": "Hatua inaendelea",
+        "body": "Tunafanyia kazi tatizo hili sasa na tutaleta sasisho linalofuata hapa."
+      },
+      "refundReview": {
+        "title": "Refund au credit inapitiwa",
+        "body": "Ombi lako la refund au credit linapitiwa. Tutathibitisha matokeo hapa."
+      },
+      "resolved": {
+        "title": "Imetatuliwa",
+        "body": "Tatizo hili limetatuliwa. Bado unaweza kuona sasisho la mwisho hapa."
+      }
+    },
+    "refund": {
+      "requested": "Refund imeombwa",
+      "underReview": "Refund inapitiwa",
+      "completed": "Refund imekamilika",
+      "notApproved": "Refund haijaidhinishwa",
+      "nextStep": "Tutathibitisha hatua inayofuata hapa mara ukaguzi ukikamilika."
+    },
+    "credit": {
+      "issued": "Credit imetolewa"
+    },
+    "help": {
+      "contact": "Wasiliana na msaada",
+      "whatsApp": "Msaada wa WhatsApp",
+      "returnToOrder": "Rudi kwenye oda"
+    },
+    "state": {
+      "retry": "Jaribu tena",
+      "issueNeedsReview": "Tatizo lako linaonekana hapa wakati ukaguzi wa msaada unaendelea."
+    },
+    "audit": {
+      "received": "Tatizo limepokelewa kutoka ukurasa wa oda.",
+      "reviewStarted": "Ukaguzi wa msaada umeanza ukiwa na muktadha wa oda uliounganishwa.",
+      "financeCheck": "Maneno ya refund na credit yamebaki sambamba na ukweli wa fedha."
+    }
+  }
 }
-
-
-
-

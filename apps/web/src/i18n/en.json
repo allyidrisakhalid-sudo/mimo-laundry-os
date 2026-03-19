@@ -872,8 +872,103 @@
   "dev.diagnostics.escalationTitle": "Escalation note",
   "dev.diagnostics.escalationDescription": "Use human escalation when diagnosis shows platform risk beyond safe tool usage.",
   "dev.diagnostics.escalationBody": "If failures continue after a controlled retry, escalate through the approved operations path."
+,
+  "support": {
+    "issue": {
+      "title": "Support for this order",
+      "subtitle": "Raise a short issue here and keep updates visible in the same order context.",
+      "report": "Report an issue",
+      "typeLabel": "Issue type",
+      "type": {
+        "damage": "Damage",
+        "missingItem": "Missing item",
+        "delay": "Delay",
+        "refundRequest": "Refund request"
+      },
+      "description": "Short description",
+      "descriptionPlaceholder": "Tell us what happened in one or two short lines.",
+      "submit": "Submit issue",
+      "submitted": "Issue submitted",
+      "viewStatus": "View support status"
+    },
+    "queue": {
+      "title": "Support queue",
+      "subtitle": "Review linked order issues, move status forward, and keep every update visible.",
+      "openCase": "Open case",
+      "newCase": "New case",
+      "underReview": "Move to under review",
+      "actionInProgress": "Mark action in progress",
+      "resolve": "Resolve case",
+      "addUpdate": "Add update",
+      "linkedOrder": "Linked order",
+      "refundReview": "Refund / credit review",
+      "timelineTitle": "Update log",
+      "auditNote": "Audit note",
+      "auditPlaceholder": "Add a short operational update that stays visible to the case history.",
+      "filter": {
+        "issueType": "Issue type",
+        "status": "Support status",
+        "refundCredit": "Refund / credit involved",
+        "recency": "Recency / priority"
+      },
+      "status": {
+        "received": "Received",
+        "underReview": "Under review",
+        "actionInProgress": "Action in progress",
+        "refundReview": "Refund / credit review",
+        "resolved": "Resolved"
+      },
+      "finance": {
+        "refundReview": "Refund / credit review",
+        "creditIssued": "Credit issued",
+        "refundCompleted": "Refund completed"
+      }
+    },
+    "status": {
+      "received": {
+        "title": "Received",
+        "body": "We have received your issue and linked it to this order."
+      },
+      "underReview": {
+        "title": "Under review",
+        "body": "Our team is reviewing the issue and will update this order when the next step is clear."
+      },
+      "actionInProgress": {
+        "title": "Action in progress",
+        "body": "We are actively working on this issue and will share the next update here."
+      },
+      "refundReview": {
+        "title": "Refund or credit under review",
+        "body": "Your refund or credit request is under review. We will confirm the outcome here."
+      },
+      "resolved": {
+        "title": "Resolved",
+        "body": "This issue has been resolved. You can still review the latest update here."
+      }
+    },
+    "refund": {
+      "requested": "Refund requested",
+      "underReview": "Refund under review",
+      "completed": "Refund completed",
+      "notApproved": "Refund not approved",
+      "nextStep": "We will confirm the next step here as soon as review is complete."
+    },
+    "credit": {
+      "issued": "Credit issued"
+    },
+    "help": {
+      "contact": "Contact support",
+      "whatsApp": "WhatsApp support",
+      "returnToOrder": "Return to order"
+    },
+    "state": {
+      "retry": "Try again",
+      "issueNeedsReview": "Your issue is visible here while support review continues."
+    },
+    "audit": {
+      "received": "Issue received from order detail.",
+      "reviewStarted": "Support review started with linked order context.",
+      "financeCheck": "Refund and credit wording stays aligned to finance truth."
+    }
+  }
 }
-
-
-
-

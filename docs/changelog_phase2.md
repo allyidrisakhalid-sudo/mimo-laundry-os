@@ -284,3 +284,12 @@
 - wired EN/SW DevAdmin copy into the implementation
 - DevAdmin console is now ready for safe operational control without manual DB dependency
 
+
+## P2.13  Support center implementation
+- installed the Phase 2 support implementation baseline
+- implemented the real customer issue-creation flow inside customer order detail
+- implemented the real admin support queue and case-detail flow inside the approved admin workspace
+- implemented real support status messaging aligned to the approved status families
+- implemented refund and credit visibility with ledger-safe wording
+- wired EN/SW support copy into the implementation
+- support is now ready for end-to-end operational use with clear visibility and audit trail
